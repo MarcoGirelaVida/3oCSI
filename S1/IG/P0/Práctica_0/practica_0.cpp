@@ -41,7 +41,83 @@ void Circle (GLfloat radio, GLfloat cx, GLfloat cy, GLint n, GLenum modo)
          glVertex2f( cx+radio*cos(2.0*M_PI*i/n), cy+radio*sin(2.0*M_PI*i/n));
    glEnd();
 }
+/*
+void triangulosRevolucion (GLfloat radio, GLfloat cx, GLfloat cy, GLint n, GLenum modo, GLfloat altura)
+{
+   int i;
+   if (modo==GL_LINE)
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   else if (modo==GL_FILL)
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   else glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+   
+   glBegin( GL_TRIANGLES);
+      for (i=0;i<n;i+=2)
+      {
+         glVertex2f( cx+radio*cos(2.0*M_PI*i/n), cy+radio*sin(2.0*M_PI*i/n)); //izquierda
+         glVertex2f( cx+radio*cos(2.0*M_PI*(i+1)/n), cy+radio*sin(2.0*M_PI*(i+1)/n)); // derecha
+         glVertex2f( cx+radio*cos(2.0*M_PI*(i+0.5)/n), cy+altura+radio*sin(2.0*M_PI*(i+0.5)/n)); // Pico
+      }
+   glEnd();
+}
+*/
+// Es a un cuadrado que ocupa la escena entera con degradado sin más
+void CieloAtardecer(GLfloat R1, GLfloat G1, GLfloat B1, GLfloat R2, GLfloat G2, GLfloat B2)
+{
+   glBegin(GL_QUADS);
+      glColor3f(R1,G1,B1);
+      glVertex3f(-1.0,1.0,0.0);
+      glVertex3f(1.0,1.0,0.0);
+      glColor3f(R2,G2,B2);
+      glVertex3f(1.0,0.0,0.0);
+      glVertex3f(-1.0,0.0,0.0);
+   glEnd();
+}
 
+// Es un círculo sólido sin más
+// - Ponerle triangulitos
+// - Ponerle degradado
+void Sol(GLfloat radio, GLfloat gx, GLfloat gy)
+{
+   Circle(1.0,0.0,0.0,100,GL_FILL);
+}
+
+void LineaMontanias(GLfloat cy, GLfloat altura, GLfloat anchura, GLfloat offset = 0.0)
+{
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      glBegin(GL_TRIANGLES);
+         GLfloat progreso = -1.0 + offset;
+         while (progreso < 2.0)
+         {
+            glVertex3f(progreso, cy, 0.0); //izquierda
+            glVertex3f(progreso + anchura, cy, 0.0); // derecha
+            glVertex3f(progreso + anchura*0.5, cy+altura, 0.0); // Pico
+            progreso += anchura;
+         }
+      glEnd();
+}
+
+void PiedraGato()
+{
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glBegin(GL_TRIANGLES);
+      glVertex3f(0.22, 0.33, 0.0); // esquina superior izquierda
+      glVertex3f(1.0, 0.0, 0.0); // esquina superior derecha
+      glVertex3f(1.0, 0.33, 0.0); // Barbilla
+   glEnd();
+}
+
+void gato(GLfloat cx, GLfloat cy, GLfloat tam)
+{
+   // Cabeza
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glBegin(GL_TRIANGLES);
+      glVertex3f(cx, cy, 0.0); // Barbilla
+      glVertex3f(cx + 0.5*tam, cy + 0.5*tam, 0.0); // Esquina superior derecha
+      glVertex3f(cx + tam*0.5, cy + tam, 0.0);
+   glEnd();
+}
+/*
 void Monigote ()
 {
   
@@ -164,14 +240,14 @@ void Monigote ()
       glVertex3f(0.035, 0.3, 0.0);
    glEnd();
 }
-
+*/
 
 
 
 static void Init( )
 {
 
-   glShadeModel( GL_FLAT); // Pone las sombras planas, vamos, que no hay sombras (creo)
+   glShadeModel(GL_SMOOTH); // Pone las sombras planas, vamos, que no hay sombras (creo)
 }
 
 
