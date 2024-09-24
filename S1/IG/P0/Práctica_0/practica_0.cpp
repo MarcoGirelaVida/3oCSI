@@ -66,22 +66,47 @@ void CieloAtardecer(GLfloat R1, GLfloat G1, GLfloat B1, GLfloat R2, GLfloat G2, 
 {
    glBegin(GL_QUADS);
       glColor3f(R1,G1,B1);
-      glVertex3f(-1.0,1.0,0.0);
-      glVertex3f(1.0,1.0,0.0);
+      glVertex3f(-1.0,-0.2,0.0);
+      glVertex3f(1.0,-0.2,0.0);
       glColor3f(R2,G2,B2);
-      glVertex3f(1.0,0.0,0.0);
-      glVertex3f(-1.0,0.0,0.0);
+      glVertex3f(1.0,1.0,0.0);
+      glVertex3f(-1.0,1.0,0.0);
    glEnd();
 }
 
+void Tierra()
+{
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glBegin(GL_QUADS);
+      glColor3f(0.24,0.16,0.28);
+      glVertex3f(-1.0,-0.2,0.0);
+      glVertex3f(1.0,-0.2,0.0);
+      //glColor3f(0.0,0.3,0.0);
+      glVertex3f(1.0,-1.0,0.0);
+      glVertex3f(-1.0,-1.0,0.0);
+   glEnd();
+}
 // Es un círculo sólido sin más
 // - Ponerle triangulitos
 // - Ponerle degradado
 void Sol(GLfloat radio, GLfloat gx, GLfloat gy)
 {
-   Circle(1.0,0.0,0.0,100,GL_FILL);
+   glColor3f(0.98,0.89,0.86);
+   Circle(radio,gx,gy,100,GL_FILL);
 }
 
+void AloDelSol(GLfloat radio_inicial, GLfloat gx_inicial, GLfloat gy_inicial, GLfloat radio, GLint n)
+{
+   for (int i=0; i<n; i++)
+   {
+      //glColor3f(0.98,0.89,0.86);
+      glLineWidth(1);
+      glLineStipple(3, 0xAAAA);
+      glEnable(GL_LINE_STIPPLE);
+      Circle(radio_inicial,gx_inicial,gy_inicial,100,GL_LINE);
+      radio_inicial += radio;
+   }
+}
 void LineaMontanias(GLfloat cy, GLfloat altura, GLfloat anchura, GLfloat offset = 0.0)
 {
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -99,11 +124,12 @@ void LineaMontanias(GLfloat cy, GLfloat altura, GLfloat anchura, GLfloat offset 
 
 void PiedraGato()
 {
+   glColor3f(0.19,0.15,0.26);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glBegin(GL_TRIANGLES);
-      glVertex3f(0.22, 0.33, 0.0); // esquina superior izquierda
-      glVertex3f(1.0, 0.0, 0.0); // esquina superior derecha
-      glVertex3f(1.0, 0.33, 0.0); // Barbilla
+      glVertex3f(1.0, -1.0, 0.0); // esquina inferior derecha
+      glVertex3f(1.0, -0.2, 0.0); // esquina superior derecha
+      glVertex3f(0.0, -0.2, 0.0); // esquina superior izquierda
    glEnd();
 }
 
@@ -272,9 +298,24 @@ static void Display( )
   glClear( GL_COLOR_BUFFER_BIT );
    
   
-   
-   Ejes(6); // Pinta los ejes con grosor 6
-   Monigote();
+   GLfloat anchura_montanias = 0.7, altura_montanias = 0.3, gx_base = -0.2, offset_lineas = 0.1;
+   //Ejes(6); // Pinta los ejes con grosor 6
+   CieloAtardecer(0.21,0.21,0.35,0.88,0.44,0.22); // Pinta un cuadrado degradado de azul a rojo
+   Sol(0.25,-0.3,gx_base+0.2);
+   AloDelSol(0.25,-0.3,gx_base+0.2,0.05,7);
+   Tierra();
+
+   glColor3f(0.55,0.26,0.26);
+   LineaMontanias(gx_base,altura_montanias, anchura_montanias);
+   glColor3f(0.45,0.19,0.27);
+   LineaMontanias(gx_base-offset_lineas,altura_montanias,anchura_montanias,-anchura_montanias/2);
+   glColor3f(0.34,0.18,0.27);
+   LineaMontanias(gx_base-offset_lineas*2,altura_montanias,anchura_montanias);
+   glColor3f(0.24,0.16,0.28);
+   LineaMontanias(gx_base-offset_lineas*3,altura_montanias,anchura_montanias,-anchura_montanias/2);
+
+   //PiedraGato();
+   //gato(0.0,0.0,0.5);
 
    
    glFlush(); // Esto básicamente le dice a la gráfica "ejecuta todos las intrucciones de renderizado que te he mandado hasta ahora"
