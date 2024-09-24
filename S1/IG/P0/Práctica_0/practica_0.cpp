@@ -143,131 +143,18 @@ void gato(GLfloat cx, GLfloat cy, GLfloat tam)
       glVertex3f(cx + tam*0.5, cy + tam, 0.0);
    glEnd();
 }
-/*
-void Monigote ()
+
+void nube(GLfloat radio, GLfloat cx, GLfloat cy, GLfloat tam, GLint num)
 {
-  
- 
-// cara
-   glLineWidth(1); // Grosor de la linea 1 (debería ir donde el contorno no?)
-   glColor3f(1.0,0.8,0.6); // Pongo un color random (crema)
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Rellena un polígono tanto por dentrá como por delante
-   glBegin(GL_POLYGON); // Vamos a empezar a dibujar un polígono
-      glVertex3f(-0.2,0.0,0.0);
-      glVertex3f(0.2,0.0,0.0);
-      glVertex3f(0.2,0.55,0.0);
-      glVertex3f(-0.2,0.55,0.0); // Basicamente es un cuadrado de anchura 0.2 y altura 0.55
-   glEnd(); 
-
-   glColor3f(0.0,0.0,0.); // Pongo a negro ¿no falta un 0?
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Creo un polígono pero rellenandolo con lineas en lugar de relleno
-   glBegin(GL_POLYGON);
-      glVertex3f(-0.2,0.0,0.0);
-      glVertex3f(0.2,0.0,0.0);
-      glVertex3f(0.2,0.55,0.0);
-      glVertex3f(-0.2,0.55,0.0); // Básicamente le ha puesto un contorno negro sin más al polígono
-   glEnd(); 
-   
-   glColor3f(0.2, 0.0, 1.0);
-   Circle(0.05,0.1,0.4,50,GL_FILL);
-   Circle(0.05,-0.1,0.4,50,GL_FILL);
-
-   // ala de abajo
-   glColor3f(0.0,0.0,0.0);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Creo un polígono pero rellenandolo con lineas en lugar de relleno
-   glBegin(GL_POLYGON);
-      glVertex3f(-0.3,0.65,0.0);
-      glVertex3f(0.3,0.65,0.0);
-      glVertex3f(0.3,0.55,0.0);
-      glVertex3f(-0.3,0.55,0.0);
-   glEnd(); 
-
-//ala de arriba
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Creo un polígono pero rellenandolo con lineas en lugar de relleno
-  glBegin(GL_POLYGON);
-      glVertex3f(-0.2,0.85,0.0);
-      glVertex3f(0.2,0.85,0.0);
-      glVertex3f(0.2,0.65,0.0);
-      glVertex3f(-0.2,0.65,0.0);
-  glEnd(); 
-
-   // oreja derecha
-   glColor3f(1.0,0.8,0.6);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Creo un polígono pero rellenandolo con lineas en lugar de relleno
-   glBegin(GL_POLYGON);
-      glVertex3f(-0.25,0.4,0.0);
-      glVertex3f(-0.2,0.4,0.0);
-      glVertex3f(-0.2,0.3,0.0);
-      glVertex3f(-0.25,0.3,0.0); // Básicamente le ha puesto un contorno negro sin más al polígono
-   glEnd(); 
-
-
-   // oreja izquierda
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glBegin(GL_POLYGON);
-      glVertex3f(0.2,0.4,0.0);
-      glVertex3f(0.25,0.4,0.0);
-      glVertex3f(0.25,0.3,0.0);
-      glVertex3f(0.2,0.3,0.0);
-   glEnd();
-
-   glColor3f(7.0,0.0,0.0);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
-   glBegin(GL_TRIANGLES);
-      glVertex3f(-0.035, 0.3,0.0);
-      glVertex3f(0.0, 0.35, 0.0);
-      glVertex3f(0.035, 0.3, 0.0);
-   glEnd();
-
-   glColor3f(7.0, 0.2, 0.0);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glBegin(GL_POLYGON);
-      glVertex3f(-0.75,0.15,0.0);
-      glVertex3f(0.75,0.15,0.0);
-      glVertex3f(0.75,0.1,0.0);
-      glVertex3f(-0.75,0.1,0.0);
-   glEnd();
-
-   Circle(0.025,0.75,0.125,50,GL_FILL);
-   Circle(0.025,-0.75,0.125,50,GL_FILL);
-
-   // Pómulo izquierdo
-   //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   //glBegin(GL_POLYGON);
-   //   glVertex3f(-0.2, 0.0,0.0);
-   //   glVertex3f(-0.175, 0.0,0.0);
-   //   glVertex3f(-0.2, 0.25,0.0);
-   //   glVertex3f(-0.175, 0.25,0.0);
-   //glEnd();
-
-   // Pómulo derecho
-   //----- 
-   glColor3f(0.0,0.0,0.0);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   glBegin(GL_POLYGON);
-      glVertex3f(-0.25,0.4,0.0);
-      glVertex3f(-0.2,0.4,0.0);
-      glVertex3f(-0.2,0.3,0.0);
-      glVertex3f(-0.25,0.3,0.0); // Básicamente le ha puesto un contorno negro sin más al polígono
-   glEnd(); 
-
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Creo un polígono pero rellenandolo con lineas en lugar de relleno
-   glBegin(GL_POLYGON);
-      glVertex3f(0.2,0.4,0.0);
-      glVertex3f(0.25,0.4,0.0);
-      glVertex3f(0.25,0.3,0.0);
-      glVertex3f(0.2,0.3,0.0); // Básicamente le ha puesto un contorno negro sin más al polígono
-   glEnd(); 
-
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
-   glBegin(GL_TRIANGLES);
-      glVertex3f(-0.035, 0.3,0.0);
-      glVertex3f(0.0, 0.35, 0.0);
-      glVertex3f(0.035, 0.3, 0.0);
-   glEnd();
+   GLfloat offset = tam/num;
+   for (int i=0; i<num; i++)
+   {
+      Circle(radio, cx, cy, 100, GL_FILL);
+      Circle(radio, cx-radio, cy-radio/2.0, 100, GL_FILL);
+      cx += offset;
+   }
 }
-*/
-
 
 
 static void Init( )
@@ -300,10 +187,13 @@ static void Display( )
   
    GLfloat anchura_montanias = 0.7, altura_montanias = 0.3, gx_base = -0.2, offset_lineas = 0.1;
    //Ejes(6); // Pinta los ejes con grosor 6
-   CieloAtardecer(0.21,0.21,0.35,0.88,0.44,0.22); // Pinta un cuadrado degradado de azul a rojo
+   CieloAtardecer(0.88,0.44,0.22,0.21,0.21,0.35); // Pinta un cuadrado degradado de azul a rojo
    Sol(0.25,-0.3,gx_base+0.2);
    AloDelSol(0.25,-0.3,gx_base+0.2,0.05,7);
    Tierra();
+
+   glColor3f(0.89,0.53,0.23);
+   nube(0.02,0.75,0.3,0.25,5);
 
    glColor3f(0.55,0.26,0.26);
    LineaMontanias(gx_base,altura_montanias, anchura_montanias);
