@@ -5,27 +5,41 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/freeglut.h>
+#include <iostream>
+using namespace std;
 
-// Son convenios o palabras reservadas
-// qué parte se corresponde con visualización, síntesis, captación
-// No se le podría poner 0 de profundidad y ya en glOrtho
-// Por qué indicamos el tamaño de linea antes de dibujar el relleno
+int pulsaciones = 0;
+float grado = 0.0;
+struct Color {
+   GLfloat r;
+   GLfloat g;
+   GLfloat b;
+   GLfloat a = 1.0;
+   GLfloat r2 = 1.0;
+   GLfloat g2 = 1.0;
+   GLfloat b2 = 1.0;
+   GLfloat a2 = 1.0;
 
-void Ejes (int width) // Al crear los ejes le podemos meter el grosor que queramos
-{   
-    glLineWidth(width);
-    glBegin(GL_LINES); // Vamos a empezar a dibujar lineas
-       glColor3f(1.0,0.0,0.0); // Pon color a rojo
-       glVertex3f(-1.0,0.0,0.0); // Dibuja punto en eje X
-       glVertex3f(1.0,0.0,0.0); // Dibuja punto en eje X arriba
-       glColor3f(0.0,1.0,0.0); // Pon color a verde
-       glVertex3f(0.0,-1.0,0.0); // Dibuja punto en eje Y abajo
-       glColor3f(1.0,1.0,0.0); // Pon color a amarillo? <- Si no interpolo en reshape toma el último color, sino hace un degradado
-       glVertex3f(0.0,1.0,0.0);   // Dibuja punto en eje Y arriba
-    glEnd();
-   
-       // NO se podría poner 2f y ya está?
-}
+   void operator+(Color c)
+   {
+      r += c.r;
+      g += c.g;
+      b += c.b;
+   }
+   void operator+(GLfloat f)
+   {
+      r += f;
+      g += f;
+      b += f;
+   }
+
+   void actualizar(float grado)
+   {
+      r += (r2-r)*grado;
+      g += (g2-g)*grado;
+      b += (b2-b)*grado;
+   }
+};
 
 void Circle (GLfloat radio, GLfloat cx, GLfloat cy, GLint n, GLenum modo)
 {
@@ -41,47 +55,69 @@ void Circle (GLfloat radio, GLfloat cx, GLfloat cy, GLint n, GLenum modo)
          glVertex2f( cx+radio*cos(2.0*M_PI*i/n), cy+radio*sin(2.0*M_PI*i/n));
    glEnd();
 }
-/*
-void triangulosRevolucion (GLfloat radio, GLfloat cx, GLfloat cy, GLint n, GLenum modo, GLfloat altura)
-{
-   int i;
+
+// Función interna copiada y pegada de chatgpt
+void Ovalo(GLfloat gx, GLfloat gy, GLfloat rx, GLfloat ry, Color c, int segments = 100, GLenum modo = GL_FILL) {
+
    if (modo==GL_LINE)
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
    else if (modo==GL_FILL)
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    else glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-   
-   glBegin( GL_TRIANGLES);
-      for (i=0;i<n;i+=2)
-      {
-         glVertex2f( cx+radio*cos(2.0*M_PI*i/n), cy+radio*sin(2.0*M_PI*i/n)); //izquierda
-         glVertex2f( cx+radio*cos(2.0*M_PI*(i+1)/n), cy+radio*sin(2.0*M_PI*(i+1)/n)); // derecha
-         glVertex2f( cx+radio*cos(2.0*M_PI*(i+0.5)/n), cy+altura+radio*sin(2.0*M_PI*(i+0.5)/n)); // Pico
-      }
-   glEnd();
+
+   glColor4f(c.r,c.g,c.b,c.a);
+   glBegin(GL_POLYGON);
+   for (int i = 0; i < segments; ++i) {
+      GLfloat theta = 2.0f * M_PI * GLfloat(i) / GLfloat(segments);
+
+      // Calculamos las coordenadas x e y del punto sobre la elipse
+      GLfloat x = rx * cosf(theta); // Eje X escalado por el radio en X
+      GLfloat y = ry * sinf(theta); // Eje Y escalado por el radio en Y
+
+      // Desplazamos el óvalo según el origen dado (gx, gy)
+      glVertex2f(x + gx, y + gy);
+    }
+    glEnd();
 }
-*/
+
 // Es a un cuadrado que ocupa la escena entera con degradado sin más
-void CieloAtardecer(GLfloat R1, GLfloat G1, GLfloat B1, GLfloat R2, GLfloat G2, GLfloat B2)
+void CieloAtardecer(Color c1, Color c2)
 {
    glBegin(GL_QUADS);
-      glColor3f(R1,G1,B1);
+      c1.actualizar(grado);
+      glColor3f(c1.r,c1.g,c1.b);
       glVertex3f(-1.0,-0.2,0.0);
       glVertex3f(1.0,-0.2,0.0);
-      glColor3f(R2,G2,B2);
+      c2.actualizar(grado);
+      glColor3f(c2.r,c2.g,c2.b);
       glVertex3f(1.0,1.0,0.0);
       glVertex3f(-1.0,1.0,0.0);
    glEnd();
 }
 
-void Tierra()
+void Tierra(Color c)
+{
+   c.actualizar(grado);
+   glColor4f(c.r,c.g,c.b, c.a);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glBegin(GL_QUADS);
+      glVertex3f(-1.0,-0.2,0.0);
+      glVertex3f(1.0,-0.2,0.0);
+      glVertex3f(1.0,-1.0,0.0);
+      glVertex3f(-1.0,-1.0,0.0);
+   glEnd();
+}
+
+void ParteAtrasTierra(Color c1, Color c2)
 {
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glBegin(GL_QUADS);
-      glColor3f(0.24,0.16,0.28);
-      glVertex3f(-1.0,-0.2,0.0);
-      glVertex3f(1.0,-0.2,0.0);
-      //glColor3f(0.0,0.3,0.0);
+      c1.actualizar(grado);
+      glColor3f(c1.r,c1.g,c1.b);
+      glVertex3f(-1.0,-0.5,0.0);
+      glVertex3f(1.0,-0.5,0.0);
+      c2.actualizar(grado);
+      glColor3f(c2.r,c2.g,c2.b);
       glVertex3f(1.0,-1.0,0.0);
       glVertex3f(-1.0,-1.0,0.0);
    glEnd();
@@ -89,9 +125,9 @@ void Tierra()
 // Es un círculo sólido sin más
 // - Ponerle triangulitos
 // - Ponerle degradado
-void Sol(GLfloat radio, GLfloat gx, GLfloat gy)
+void Sol(GLfloat radio, GLfloat gx, GLfloat gy, Color c)
 {
-   glColor3f(0.98,0.89,0.86);
+   glColor4f(c.r,c.g,c.b,c.a);
    Circle(radio,gx,gy,100,GL_FILL);
 }
 
@@ -101,14 +137,16 @@ void AloDelSol(GLfloat radio_inicial, GLfloat gx_inicial, GLfloat gy_inicial, GL
    {
       //glColor3f(0.98,0.89,0.86);
       glLineWidth(1);
-      glLineStipple(3, 0xAAAA);
+      glLineStipple(6, 0xAAAA);
       glEnable(GL_LINE_STIPPLE);
       Circle(radio_inicial,gx_inicial,gy_inicial,100,GL_LINE);
       radio_inicial += radio;
    }
 }
-void LineaMontanias(GLfloat cy, GLfloat altura, GLfloat anchura, GLfloat offset = 0.0)
+void LineaMontanias(GLfloat cy, GLfloat altura, GLfloat anchura, Color c, GLfloat offset = 0.0)
 {
+      c.actualizar(grado);
+      glColor4f(c.r,c.g,c.b, c.a);
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       glBegin(GL_TRIANGLES);
          GLfloat progreso = -1.0 + offset;
@@ -122,9 +160,10 @@ void LineaMontanias(GLfloat cy, GLfloat altura, GLfloat anchura, GLfloat offset 
       glEnd();
 }
 
-void PiedraGato()
+void PiedraGato(Color c)
 {
-   glColor3f(0.19,0.15,0.26);
+   c.actualizar(grado);
+   glColor4f(c.r,c.g,c.b,c.a);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glBegin(GL_TRIANGLES);
       glVertex3f(1.0, -1.0, 0.0); // esquina inferior derecha
@@ -144,8 +183,10 @@ void gato(GLfloat cx, GLfloat cy, GLfloat tam)
    glEnd();
 }
 
-void nube(GLfloat radio, GLfloat cx, GLfloat cy, GLfloat tam, GLint num)
+void nube(GLfloat radio, GLfloat cx, GLfloat cy, GLfloat tam, GLint num, Color c)
 {
+   c.actualizar(grado);
+   glColor4f(c.r,c.g,c.b, c.a);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    GLfloat offset = tam/num;
    for (int i=0; i<num; i++)
@@ -180,35 +221,63 @@ static void Reshape( int width, int height )
 static void Display( )
 {
 
-  glClearColor(0.5,0.5,0.5,0.0);
-  // Sirve para resetear el buffer de color al que tu quieras y creo que para establecer el fondo que quieras
-  glClear( GL_COLOR_BUFFER_BIT );
+   glClearColor(0.5,0.5,0.5,0.0);
+   // Sirve para resetear el buffer de color al que tu quieras y creo que para establecer el fondo que quieras
+   glClear(GL_COLOR_BUFFER_BIT);
    
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDepthMask(GL_FALSE);
   
    GLfloat anchura_montanias = 0.7, altura_montanias = 0.3, gx_base = -0.2, offset_lineas = 0.1;
-   //Ejes(6); // Pinta los ejes con grosor 6
-   CieloAtardecer(0.88,0.44,0.22,0.21,0.21,0.35); // Pinta un cuadrado degradado de azul a rojo
-   Sol(0.25,-0.3,gx_base+0.2);
-   AloDelSol(0.25,-0.3,gx_base+0.2,0.05,7);
-   Tierra();
+   CieloAtardecer({0.88,0.44,0.22, 1.0, 0.92, 0.82, 0.58},{0.21,0.21,0.35, 1.0, 0.2, 0.66, 0.8});
+   GLfloat theta = M_PI * GLfloat(20-pulsaciones) / GLfloat(20);
+   GLfloat posx_sol = 0.4 * cosf(theta);
+   GLfloat posy_sol = 0.5 * sinf(theta);
+   LineaMontanias(gx_base+offset_lineas,altura_montanias,anchura_montanias,{0.45,0.19,0.27, 0.5, 0.0, 0.62, 0.72}, -anchura_montanias/2);
+   Sol(0.25, posx_sol, posy_sol, {0.98,0.89,0.86, 1.0});
+   AloDelSol(0.25,posx_sol, posy_sol,0.05,7);
+   //AloDelSol(0.25,posx_sol, -posy_sol,0.05,7);
+   ParteAtrasTierra({0.71,0.41,0.36, 1.0, 0.78, 0.86, 1.16}, {0.37, 0.29, 0.42, 1.0, 0.42, 0.76, 0.81});
+   // Sol del reflejo
+   Sol(0.25, posx_sol+0.2, -posy_sol-0.3, {0.98,0.89,0.86, 0.3});
+   // Montañas invertidas para hacer el reflejo sobre el lago
+   //LineaMontanias(gx_base-offset_lineas*4,-altura_montanias,anchura_montanias, {0.24,0.16,0.28, 0.3, 0.06, 0.5, 0.58}, -anchura_montanias/2);
+   LineaMontanias(gx_base-offset_lineas*3,-altura_montanias-0.2+altura_montanias*grado,anchura_montanias, {0.34,0.18,0.27, 0.3, 0.0, 0.55, 0.65});
+   LineaMontanias(gx_base-offset_lineas*2,-altura_montanias-0.2+altura_montanias*grado,anchura_montanias,{0.45,0.19,0.27, 0.3, 0.0, 0.62, 0.72}, -anchura_montanias/2);
+   LineaMontanias(gx_base-offset_lineas,-altura_montanias-0.2+altura_montanias*grado, anchura_montanias, {0.55,0.26,0.26, 0.3, 0.34, 0.7, 0.75});
+   
+   // Activamos como un modo para evitar que se pinte donde se le diga (el ovalo)
+   glEnable(GL_STENCIL_TEST);
+   glStencilFunc(GL_ALWAYS, 1, 0xFF);
+   glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); 
+   glStencilMask(0xFF);
+   Ovalo(0.2, -0.8, 0.7, 0.3,{1.0, 1.0, 1.0, 1.0});
+   // Desactivamos el modo raro y volvemos al normal
+   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+   glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+   glStencilMask(0x00);
+   Tierra({0.24,0.16,0.28, 1.0, 0.07, 0.43, 0.51});
+   glDisable(GL_STENCIL_TEST);
 
-   glColor3f(0.89,0.53,0.23);
-   nube(0.02,0.75,0.3,0.25,5);
+   // Color antiguo nube: {0.89,0.53,0.23}
+   nube(0.02+0.01*grado,0.75-1.5*0.05*pulsaciones,0.3,0.25+0.1*grado,7, {0.9, 0.7, 0.4, 0.3});
+   nube(0.02+0.01*grado,0.4-0.8*0.05*pulsaciones,0.25,0.25+0.1*grado,7, {0.9, 0.7, 0.4, 0.3});
 
-   glColor3f(0.55,0.26,0.26);
-   LineaMontanias(gx_base,altura_montanias, anchura_montanias);
-   glColor3f(0.45,0.19,0.27);
-   LineaMontanias(gx_base-offset_lineas,altura_montanias,anchura_montanias,-anchura_montanias/2);
-   glColor3f(0.34,0.18,0.27);
-   LineaMontanias(gx_base-offset_lineas*2,altura_montanias,anchura_montanias);
-   glColor3f(0.24,0.16,0.28);
-   LineaMontanias(gx_base-offset_lineas*3,altura_montanias,anchura_montanias,-anchura_montanias/2);
+   LineaMontanias(gx_base,altura_montanias, anchura_montanias, {0.55,0.26,0.26, 1.0, 0.34, 0.7, 0.75});
+   LineaMontanias(gx_base-offset_lineas,altura_montanias,anchura_montanias,{0.45,0.19,0.27, 1.0, 0.0, 0.62, 0.72}, -anchura_montanias/2);
+   LineaMontanias(gx_base-offset_lineas*2,altura_montanias,anchura_montanias, {0.34,0.18,0.27, 1.0, 0.0, 0.55, 0.65});
+   LineaMontanias(gx_base-offset_lineas*3,altura_montanias,anchura_montanias, {0.24,0.16,0.28, 1.0, 0.06, 0.5, 0.58}, -anchura_montanias/2);
 
-   //PiedraGato();
+
+   //PiedraGato({0.19,0.15,0.26});
    //gato(0.0,0.0,0.5);
-
+   glDepthMask(GL_TRUE);
+   glDisable(GL_BLEND);
    
    glFlush(); // Esto básicamente le dice a la gráfica "ejecuta todos las intrucciones de renderizado que te he mandado hasta ahora"
+   glutSwapBuffers(); // Esto hace falta para lo de GLUT_DOUBLE
 }
 
 
@@ -220,14 +289,40 @@ static void Keyboard(unsigned char key, int x, int y )
 
 }
 
+void specialKeys(int key, int x, int y) {
+    switch (key) {
+        case GLUT_KEY_UP:   // amanecer
+            //cerr << "Tecla arriba" << endl;
+            if (pulsaciones < 20)
+               pulsaciones++;
+            if (pulsaciones < 10)
+               grado+=0.1;
+            else if (pulsaciones >= 10 and pulsaciones < 20)
+               grado-=0.1;
+            break;
+        case GLUT_KEY_DOWN: // atardecer
+            //cerr << "Tecla abajo" << endl;
+            if (pulsaciones > 0)
+               pulsaciones--;
+            if (pulsaciones > 0 and pulsaciones < 10)
+               grado-=0.1;
+            else if (pulsaciones >= 10 and pulsaciones <= 20)
+               grado+=0.1;
+            break;
+        case 27:
+            exit(0);
+            break;
+    }
+    glutPostRedisplay(); // Redibujo
+}
 
 int main( int argc, char **argv )
 {
    glutInit(&argc,argv);
-   glutInitDisplayMode( GLUT_RGB ); // Si quisieramos que fuese
+   glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL); // Si quisieramos que fuese
 
    glutInitWindowPosition( 900, 500 );
-   glutInitWindowSize(700, 700 );
+   glutInitWindowSize(1000, 1000 );
    glutCreateWindow("Practica 0 IG");
 
 
@@ -235,7 +330,7 @@ int main( int argc, char **argv )
 
    glutReshapeFunc(Reshape);
    glutDisplayFunc(Display); // Su tapo una ventana 
-   glutKeyboardFunc(Keyboard);
+   glutSpecialFunc(specialKeys);
   
    glutMainLoop( );
 
