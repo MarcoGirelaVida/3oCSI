@@ -237,7 +237,15 @@ static void Display( )
    LineaMontanias(gx_base+offset_lineas,altura_montanias,anchura_montanias,{0.45,0.19,0.27, 0.5, 0.0, 0.62, 0.72}, -anchura_montanias/2);
    Sol(0.25, posx_sol, posy_sol, {0.98,0.89,0.86, 1.0});
    AloDelSol(0.25,posx_sol, posy_sol,0.05,7);
-   //AloDelSol(0.25,posx_sol, -posy_sol,0.05,7);
+   glDisable(GL_LINE_STIPPLE);
+   glLineWidth(5);
+   Ovalo(0.0, 0.00-0.2, 0.6, 0.4,{1.0, 0.0, 0.0, 0.3}, 100, GL_LINE);
+   Ovalo(0.0, 0.01-0.2, 0.6, 0.4,{1.0, 0.7, 0.0, 0.3}, 100, GL_LINE);
+   Ovalo(0.0, 0.02-0.2, 0.6, 0.4,{1.0, 1.0, 0.0, 0.3}, 100, GL_LINE);
+   Ovalo(0.0, 0.03-0.2, 0.6, 0.4,{0.2, 1.0, 0.2, 0.3}, 100, GL_LINE);
+   Ovalo(0.0, 0.04-0.2, 0.6, 0.4,{0.2, 0.2, 1.0, 0.3}, 100, GL_LINE);
+   Ovalo(0.0, 0.05-0.2, 0.6, 0.4,{0.5, 0.1, 1.0, 0.3}, 100, GL_LINE);
+   Ovalo(0.0, 0.06-0.2, 0.6, 0.4,{0.6, 0.2, 1.0, 0.3}, 100, GL_LINE);
    ParteAtrasTierra({0.71,0.41,0.36, 1.0, 0.78, 0.86, 1.16}, {0.37, 0.29, 0.42, 1.0, 0.42, 0.76, 0.81});
    // Sol del reflejo
    Sol(0.25, posx_sol+0.2, -posy_sol-0.3, {0.98,0.89,0.86, 0.3});
@@ -306,7 +314,7 @@ void specialKeys(int key, int x, int y) {
                pulsaciones--;
             if (pulsaciones > 0 and pulsaciones < 10)
                grado-=0.1;
-            else if (pulsaciones >= 10 and pulsaciones <= 20)
+            else if (pulsaciones >= 10 and pulsaciones < 20)
                grado+=0.1;
             break;
         case 27:
@@ -323,7 +331,7 @@ int main( int argc, char **argv )
 
    glutInitWindowPosition( 900, 500 );
    glutInitWindowSize(1000, 1000 );
-   glutCreateWindow("Practica 0 IG");
+   glutCreateWindow("IMPORTANTE!! PULSE LA FLECHA HACIA ARRIBA!!!");
 
 
    Init();
