@@ -24,7 +24,7 @@ GLfloat Observer_angle_y;
 GLfloat Window_width,Window_height,Front_plane,Back_plane;
 
 // variables que determninan la posicion y tamaño de la ventana X
-int UI_window_pos_x=50,UI_window_pos_y=50,UI_window_width=450,UI_window_height=450;
+int UI_window_pos_x=50,UI_window_pos_y=50,UI_window_width=1000,UI_window_height=1000;
 
 
 _piramide piramide(0.8,1.3);
@@ -101,7 +101,10 @@ glEnd();
 void draw_objects()
 {
      
- piramide.draw_puntos(1.0,0.5,0.0,5);
+ //piramide.draw_aristas(1.0,0.5,0.0,5); // Si no pones nada se hace por default
+ //piramide.draw_solido(1.0, 0.0, 0.0);
+ //piramide.draw_solido_colores();
+ cubo.draw_solido_colores();
 }
 
 

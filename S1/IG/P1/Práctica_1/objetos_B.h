@@ -38,8 +38,11 @@ public:
 void 	draw_aristas(float r, float g, float b, int grosor);
 void    draw_solido(float r, float g, float b);
 void 	draw_solido_colores();
+void 	asignar_gama_verdes();
+void	asignar_colores_aleatorios();
 
 vector<_vertex3i> caras;
+vector<_vertex3f> c_caras;
 };
 
 
@@ -67,7 +70,9 @@ public:
 };
 
 
-
+//*************************************************************************
+// clase esfera
+//*************************************************************************
 
 
 
