@@ -225,9 +225,9 @@ _cilindro::_cilindro(float radio, float altura, int num)
 {
   vector<_vertex3f> perfil;
   _vertex3f aux;
-  aux.x = radio; aux.y = altura/2.0; aux.z = 0.0;
-  perfil.push_back(aux);
   aux.x = radio; aux.y = -altura/2.0; aux.z = 0.0;
+  perfil.push_back(aux);
+  aux.x = radio; aux.y = altura/2.0; aux.z = 0.0;
   perfil.push_back(aux);
   parametros(perfil, num, true, true, 0);
   //for (int i = 0; i < num; i++)
@@ -250,9 +250,9 @@ _cono::_cono(float radio, float altura, int num)
   _vertex3f aux;
   aux.x = radio; aux.y = -altura/2.0; aux.z = 0.0;
   perfil.push_back(aux);
-  aux.x = 0; aux.y = altura/2.0; aux.z = 0.0;
+  aux.x = 0.0; aux.y = altura/2.0; aux.z = 0.0;
   perfil.push_back(aux);
-  parametros(perfil, num, true, true, 0);
+  parametros(perfil, num, true, true, 2);
 }
 
 //*************************************************************************
@@ -355,19 +355,17 @@ _vertex3i cara_aux;
 int num_aux;
 
 // tratamiento de los vértice
-float radio = sqrt(perfil[0].x*perfil[0].x+perfil[0].y*perfil[0].y);
-num_aux=perfil.size();
-if (tipo==2) num_aux = 1;
+float radio = sqrt(perfil[0].x*perfil[0].x+perfil[0].y*perfil[0].y); // pitágoras de toda la vida, z = raiz de (x^2 + y^2)
+num_aux=perfil.size(); 			// Número de puntos del perfil
+if (tipo==2) num_aux = 1; // Si es un cono, solo tiene un punto en el perfil
 vertices.resize(num_aux*num);
-for (j=0;j<num;j++)
-  {for (i=0;i<num_aux;i++)
+for (j=0;j<num;j++) // j es el perfil en el que estamos
+  {for (i=0;i<num_aux;i++)	// i es el punto del perfil en el que estamos
      {
-      vertice_aux.x=perfil[i].x*cos(2.0*M_PI*j/(1.0*num))+
-                    perfil[i].z*sin(2.0*M_PI*j/(1.0*num));
-      vertice_aux.z=-perfil[i].x*sin(2.0*M_PI*j/(1.0*num))+
-                    perfil[i].z*cos(2.0*M_PI*j/(1.0*num));
-      vertice_aux.y=perfil[i].y;
-      vertices[i+j*num_aux]=vertice_aux;
+      vertice_aux.x = perfil[i].x*cos(2.0*M_PI*j/(1.0*num)) + perfil[i].z*sin(2.0*M_PI*j/(1.0*num)); // j en este caso representa
+      vertice_aux.z = -perfil[i].x*sin(2.0*M_PI*j/(1.0*num)) + perfil[i].z*cos(2.0*M_PI*j/(1.0*num)); // roto el punto en el eje z
+      vertice_aux.y = perfil[i].y; // La y es constante siempre
+      vertices[i+j*num_aux] = vertice_aux;
      }
   }
 
@@ -378,8 +376,8 @@ for (j=0; j < num; j++) // Cada perfil
   for (size_t i = 0; i < num_aux-1; i++)
   {
     //caras[2*i + j*(num_aux-1)*2]._0= j*num_aux + i;
-    //caras[2*i + j*(num_aux-1)*2]._1= j*num_aux + i + num_aux;
-    //caras[2*i + j*(num_aux-1)*2]._2= j*num_aux + i + 1;
+    //caras[2*i + j*(num_aux-1)*2]._1= j*num_aux + i + num_aux; // el que es paralelo pero del siguiente perfil
+    //caras[2*i + j*(num_aux-1)*2]._2= j*num_aux + i + 1; // el que está arriba
     //caras[2*i+1 + j*(num_aux-1)*2]._0= j*num_aux + i + num_aux;
     //caras[2*i+1 + j*(num_aux-1)*2]._1= j*num_aux + i + num_aux + 1;
     //caras[2*i+1 + j*(num_aux-1)*2]._2= j*num_aux + i + 1;
@@ -393,37 +391,53 @@ for (j=0; j < num; j++) // Cada perfil
     caras[2*i+1 + j*(num_aux-1)*2]._2 = j*num_aux + i+1;
   }
 }
-asignar_colores_aleatorios();
 
 // tapa inferior
 
-if (tapa_in = 1)
+if (tapa_in == 1)
 {
 	_vertex3f vert_aux;
-	vert_aux.x = 0.0;
-	if (tipo=1) vert_aux.y = -radio;
-	else vertice_aux.y=perfil[0].y;
+	vert_aux.x = 0.0, vert_aux.z = 0.0;
+	if (tipo == 1) vert_aux.y = -radio; // si es una esfera
+	else vert_aux.y = perfil[0].y;	// si es una figura normal o un cono
+	vertices.push_back(vert_aux);
 
-	//verice_aux.x = perfil[i].x*cos(2.0*M_PI*j/(1.0))//algo que falta
+	// Conectamos el eje de la tapa a los puntos del perfil
+	cara_aux._0 = num_aux*num;
+	for (int i = 0; i < num; i++)
+	{
+		cara_aux._1 = i*num_aux;
+		cara_aux._2 = ((i+1)%num)*num_aux;
+		caras.push_back(cara_aux);
+	}
 }
  
 
 // tapa superior
 if (tapa_su == 1)
 {
+	_vertex3f vert_aux;
 	// punto central de la tapa
-	vertice_aux.x = 0.0;
-	vertice_aux.y = perfil[num_aux - 1].y;
-	if (tipo == 1) vertice_aux.y = radio;
-	if (tipo == 2) vertice_aux.y = perfil[1].y;
-	vertice_aux.z = 0.0;
-	vertices.push_back (vertice_aux);
+	vert_aux.x = 0.0;
+	vert_aux.y = perfil[num_aux - 1].y;
+	if (tipo == 1) vert_aux.y = radio;
+	if (tipo == 2) vert_aux.y = perfil[1].y;
+	vert_aux.z = 0.0;
+	vertices.push_back (vert_aux);
 
 	//caras tapa superior
 	if (tapa_in == 1) cara_aux._0 = num_aux*num+1;
-	// faltan cosas
+	else cara_aux._0 = num_aux*num;
+
+	for (int i = 0; i < num; i++)
+	{
+		cara_aux._1 = i*num_aux + num_aux - 1;
+		cara_aux._2 = ((i+1)%num)*num_aux + num_aux - 1;
+		caras.push_back(cara_aux);
+	}
 }
 
+asignar_colores_aleatorios();
 }
 
 //************************************************************************
@@ -465,7 +479,9 @@ for (i=0;i<num_aux;i++)
    caras[c]._2=i*2+1;    
    c=c+1;    
       
-   }   
+   }  
+
+asignar_colores_aleatorios(); 
 }
 
 

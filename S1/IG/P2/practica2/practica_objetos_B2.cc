@@ -117,8 +117,8 @@ void draw_objects()
 {
 
 switch (t_objeto){
-	case CUBO: cubo.draw(modo,1.0,0.0,0.0,5);break;
-	case PIRAMIDE: piramide.draw(modo,1.0,0.0,0.0,5);break;
+		case CUBO: cubo.draw(modo,1.0,0.0,0.0,5);break;
+		case PIRAMIDE: piramide.draw(modo,1.0,0.0,0.0,5);break;
         case OBJETO_PLY: ply.draw(modo,1.0,0.6,0.0,5);break;
         case ROTACION: rotacion.draw(modo,1.0,0.0,0.0,5);break;
         case EXTRUSION: extrusion->draw(modo,1.0,0.0,0.0,5);break;
@@ -273,7 +273,7 @@ perfil.push_back(aux);
 aux.x=1.0; aux.y=1.0; aux.z=0.0;
 perfil.push_back(aux);
 
-rotacion.parametros(perfil,6, 1, 1, 0);
+rotacion.parametros(perfil,6, true, true, 0);
 
 aux.x=1.0; aux.y=0.0; aux.z=1.0;
 poligono.push_back(aux);
