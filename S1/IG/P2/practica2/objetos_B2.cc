@@ -334,8 +334,8 @@ for (int i = 0; i < n_ver; i++)
   aux.z=ver_ply[i*3+2];
   perfil.push_back(aux);
 }
-
-parametros(perfil, num, true, true, 0);
+cerr << "NUM: " << num << endl;
+parametros(perfil, num, false, false, 0);
 }
 //************************************************************************
 // objeto por revolucion

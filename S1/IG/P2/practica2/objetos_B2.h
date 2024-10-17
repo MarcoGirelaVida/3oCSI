@@ -119,7 +119,7 @@ class _rotacion_PLY: public _rotacion
 {
 public: _rotacion_PLY();
 
-void parametros_PLY(char *archivo, int num = 10);
+void parametros_PLY(char *archivo, int num = 100);
 };
 //************************************************************************
 // objeto por extrusión
