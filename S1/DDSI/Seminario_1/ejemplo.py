@@ -3,8 +3,8 @@ import psycopg2 as pg
 # Conectarse a la base de datos
 conn = pg.connect(
     database='banco',
-    user='fran',
-    password='fran',
+    user='marco',
+    password='Hola010203',
     host='localhost',
 )
 conn.autocommit = False

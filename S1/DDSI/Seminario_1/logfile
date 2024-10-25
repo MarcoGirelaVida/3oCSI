@@ -1,0 +1,60 @@
+
+2024-10-21 16:34:29.054 CEST [232731] LOG:  starting PostgreSQL 12.17 on x86_64-conda-linux-gnu, compiled by x86_64-conda-linux-gnu-cc (Anaconda gcc) 11.2.0, 64-bit
+2024-10-21 16:34:29.055 CEST [232731] LOG:  could not bind IPv6 address "::1": Address already in use
+2024-10-21 16:34:29.055 CEST [232731] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2024-10-21 16:34:29.055 CEST [232731] LOG:  could not bind IPv4 address "127.0.0.1": Address already in use
+2024-10-21 16:34:29.055 CEST [232731] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2024-10-21 16:34:29.055 CEST [232731] WARNING:  could not create listen socket for "localhost"
+2024-10-21 16:34:29.055 CEST [232731] FATAL:  could not create any TCP/IP sockets
+2024-10-21 16:34:29.055 CEST [232731] LOG:  database system is shut down
+2024-10-21 16:37:09.700 CEST [245046] LOG:  starting PostgreSQL 12.17 on x86_64-conda-linux-gnu, compiled by x86_64-conda-linux-gnu-cc (Anaconda gcc) 11.2.0, 64-bit
+2024-10-21 16:37:09.700 CEST [245046] LOG:  listening on IPv6 address "::1", port 5432
+2024-10-21 16:37:09.700 CEST [245046] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2024-10-21 16:37:09.702 CEST [245046] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2024-10-21 16:37:09.715 CEST [245050] LOG:  database system was shut down at 2024-10-21 16:08:50 CEST
+2024-10-21 16:37:09.718 CEST [245046] LOG:  database system is ready to accept connections
+2024-10-21 16:37:55.726 CEST [245046] LOG:  received fast shutdown request
+2024-10-21 16:37:55.730 CEST [245046] LOG:  aborting any active transactions
+2024-10-21 16:37:55.731 CEST [245046] LOG:  background worker "logical replication launcher" (PID 245056) exited with exit code 1
+2024-10-21 16:37:55.731 CEST [245051] LOG:  shutting down
+2024-10-21 16:37:55.747 CEST [245046] LOG:  database system is shut down
+2024-10-21 16:39:52.209 CEST [257491] LOG:  starting PostgreSQL 12.17 on x86_64-conda-linux-gnu, compiled by x86_64-conda-linux-gnu-cc (Anaconda gcc) 11.2.0, 64-bit
+2024-10-21 16:39:52.210 CEST [257491] LOG:  listening on IPv6 address "::1", port 5432
+2024-10-21 16:39:52.210 CEST [257491] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2024-10-21 16:39:52.211 CEST [257491] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2024-10-21 16:39:52.227 CEST [257494] LOG:  database system was shut down at 2024-10-21 16:37:55 CEST
+2024-10-21 16:39:52.229 CEST [257491] LOG:  database system is ready to accept connections
+2024-10-21 16:41:24.666 CEST [262037] ERROR:  role "marco" already exists
+2024-10-21 16:41:24.666 CEST [262037] STATEMENT:  CREATE USER marco WITH PASSWORD 'Hola010203';
+2024-10-21 16:43:09.610 CEST [270548] ERROR:  syntax error at or near "CREATE" at character 33
+2024-10-21 16:43:09.610 CEST [270548] STATEMENT:  ALTER USER marco WITH SUPERUSER
+	CREATE DATABASE test;
+2024-10-21 16:49:34.613 CEST [302534] FATAL:  database "marco" does not exist
+2024-10-21 16:50:40.383 CEST [307550] FATAL:  database "banco" does not exist
+2024-10-21 16:50:56.896 CEST [306289] ERROR:  syntax error at or near "CREATE" at character 23
+2024-10-21 16:50:56.896 CEST [306289] STATEMENT:  CREATE DATABASE banco
+	CREATE DATABASE banco;
+2024-10-24 15:49:18.061 CEST [5939] LOG:  starting PostgreSQL 12.17 on x86_64-conda-linux-gnu, compiled by x86_64-conda-linux-gnu-cc (Anaconda gcc) 11.2.0, 64-bit
+2024-10-24 15:49:18.062 CEST [5939] LOG:  could not bind IPv6 address "::1": Address already in use
+2024-10-24 15:49:18.062 CEST [5939] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2024-10-24 15:49:18.062 CEST [5939] LOG:  could not bind IPv4 address "127.0.0.1": Address already in use
+2024-10-24 15:49:18.062 CEST [5939] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2024-10-24 15:49:18.062 CEST [5939] WARNING:  could not create listen socket for "localhost"
+2024-10-24 15:49:18.062 CEST [5939] FATAL:  could not create any TCP/IP sockets
+2024-10-24 15:49:18.063 CEST [5939] LOG:  database system is shut down
+2024-10-24 15:59:07.755 CEST [6502] LOG:  starting PostgreSQL 12.17 on x86_64-conda-linux-gnu, compiled by x86_64-conda-linux-gnu-cc (Anaconda gcc) 11.2.0, 64-bit
+2024-10-24 15:59:07.756 CEST [6502] LOG:  listening on IPv6 address "::1", port 5432
+2024-10-24 15:59:07.756 CEST [6502] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2024-10-24 15:59:07.762 CEST [6502] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2024-10-24 15:59:07.783 CEST [6503] LOG:  database system was interrupted; last known up at 2024-10-22 15:46:45 CEST
+2024-10-24 15:59:07.855 CEST [6503] LOG:  database system was not properly shut down; automatic recovery in progress
+2024-10-24 15:59:07.857 CEST [6503] LOG:  redo starts at 0/15EC2A0
+2024-10-24 15:59:07.857 CEST [6503] LOG:  invalid record length at 0/15EC388: wanted 24, got 0
+2024-10-24 15:59:07.857 CEST [6503] LOG:  redo done at 0/15EC350
+2024-10-24 15:59:07.876 CEST [6502] LOG:  database system is ready to accept connections
+2024-10-24 15:59:25.352 CEST [7018] FATAL:  lock file "postmaster.pid" already exists
+2024-10-24 15:59:25.352 CEST [7018] HINT:  Is another postmaster (PID 6502) running in data directory "/home/marco/Repos/3oCSI/S1/DDSI/Seminario_1/./pgdata"?
+2024-10-24 15:59:41.377 CEST [7041] FATAL:  database "ql" does not exist
+2024-10-24 16:02:53.889 CEST [7120] ERROR:  syntax error at or near "CREATE" at character 24
+2024-10-24 16:02:53.889 CEST [7120] STATEMENT:  CREATE DATABASE tienda
+	CREATE DATABASE tienda;
