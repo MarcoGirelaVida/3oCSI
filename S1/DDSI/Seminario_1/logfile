@@ -58,3 +58,27 @@
 2024-10-24 16:02:53.889 CEST [7120] ERROR:  syntax error at or near "CREATE" at character 24
 2024-10-24 16:02:53.889 CEST [7120] STATEMENT:  CREATE DATABASE tienda
 	CREATE DATABASE tienda;
+2024-10-28 16:08:59.675 CET [335023] FATAL:  database "marco" does not exist
+2024-10-28 16:18:32.444 CET [338392] FATAL:  database "marco" does not exist
+2024-10-28 16:21:08.578 CET [338399] ERROR:  syntax error at or near "drop" at character 19
+2024-10-28 16:21:08.578 CET [338399] STATEMENT:  drop table stock 
+	drop table pedido
+	drop table detalle_pedido 
+	drop table banco
+	drop table banco
+	drop table banco;
+2024-10-28 16:21:14.462 CET [338399] ERROR:  table "banco" does not exist
+2024-10-28 16:21:14.462 CET [338399] STATEMENT:  DROP TABLE banco;
+2024-10-28 16:21:18.710 CET [338399] ERROR:  table "banco" does not exist
+2024-10-28 16:21:18.710 CET [338399] STATEMENT:  DROP TABLE banco;
+2024-10-28 16:22:22.650 CET [338399] ERROR:  syntax error at or near "DROP" at character 21
+2024-10-28 16:22:22.650 CET [338399] STATEMENT:  DROP DATABASE banco
+	DROP DATABASE banco;
+2024-10-28 16:22:24.412 CET [338399] ERROR:  syntax error at or near "DROP" at character 21
+2024-10-28 16:22:24.412 CET [338399] STATEMENT:  DROP DATABASE banco
+	DROP DATABASE banco;
+2024-10-28 16:22:42.715 CET [338399] ERROR:  syntax error at or near "DROP" at character 21
+2024-10-28 16:22:42.715 CET [338399] STATEMENT:  DROP DATABASE banco
+	DROP DATABASE banco;
+2024-10-28 16:23:09.996 CET [338934] FATAL:  database "template" does not exist
+2024-10-28 16:23:15.419 CET [338937] FATAL:  database "template0" is not currently accepting connections
