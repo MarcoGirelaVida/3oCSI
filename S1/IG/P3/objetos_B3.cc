@@ -14,78 +14,13 @@
 _puntos3D::_puntos3D() {}
 
 //*************************************************************************
-// dibujar puntos
-//*************************************************************************
-
-void _puntos3D::draw_puntos(float r, float g, float b, int grosor)
-{
-    glPointSize(grosor);
-    glColor3f(r, g, b);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
-    glDrawArrays(GL_POINTS, 0, vertices.size());
-}
-
-//*************************************************************************
 // _triangulos3D
 //*************************************************************************
 
 _triangulos3D::_triangulos3D() {}
 
 //*************************************************************************
-// dibujar en modo arista
-//*************************************************************************
-
-void _triangulos3D::draw_aristas(float r, float g, float b, int grosor)
-{
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glLineWidth(grosor);
-    glColor3f(r, g, b);
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
-    glDrawElements(GL_TRIANGLES, caras.size()*3, GL_UNSIGNED_INT, &caras[0]);
-}
-
-//*************************************************************************
-// dibujar en modo sólido con un único color
-//*************************************************************************
-
-void _triangulos3D::draw_solido(float r, float g, float b)
-{
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glColor3f(r, g, b);
-    glBegin(GL_TRIANGLES);
-        for (size_t i = 0; i < caras.size(); i++)
-        {
-            glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
-            glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
-            glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
-        }
-    glEnd();
-}
-
-//*************************************************************************
-// dibujar en modo sólido con colores diferentes para cada cara
-//*************************************************************************
-
-void _triangulos3D::draw_solido_colores( )
-{
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glBegin(GL_TRIANGLES);
-        for (size_t i = 0; i < caras.size(); i++)
-        {
-            glColor3f(colores_caras[i].r, colores_caras[i].g, colores_caras[i].b);
-            glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
-            glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
-            glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
-        }
-    glEnd();
-}
-
-//*************************************************************************
-// dibujar con distintos modos
+// MODOS DE DIBUJO
 //*************************************************************************
 
 void _triangulos3D::draw(_modo modo, float r, float g, float b, float grosor)
@@ -107,24 +42,70 @@ void _triangulos3D::draw(_modo modo, float r, float g, float b, float grosor)
     }
 }
 
+void _puntos3D::draw_puntos(float r, float g, float b, int grosor)
+{
+    glPointSize(grosor);
+    glColor3f(r, g, b);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
+    glDrawArrays(GL_POINTS, 0, vertices.size());
+}
+
+void _triangulos3D::draw_aristas(float r, float g, float b, int grosor)
+{
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(grosor);
+    glColor3f(r, g, b);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
+    glDrawElements(GL_TRIANGLES, caras.size()*3, GL_UNSIGNED_INT, &caras[0]);
+}
+
+void _triangulos3D::draw_solido(float r, float g, float b)
+{
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glColor3f(r, g, b);
+    glBegin(GL_TRIANGLES);
+        for (size_t i = 0; i < caras.size(); i++)
+        {
+            glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+        }
+    glEnd();
+}
+
+void _triangulos3D::draw_solido_colores( )
+{
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBegin(GL_TRIANGLES);
+        for (size_t i = 0; i < caras.size(); i++)
+        {
+            glColor3f(colores_caras[i].r, colores_caras[i].g, colores_caras[i].b);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+        }
+    glEnd();
+}
+
 //*************************************************************************
-// asignación colores
+// COLORES
 //*************************************************************************
 
 void _triangulos3D::colors_random()
 {
-    size_t n_c = caras.size();
-    colores_caras.resize(n_c);
-    srand (time(NULL));
-    for (size_t i = 0; i < n_c; i++)  
+    colores_caras.resize(caras.size());
+    srand(time(NULL));
+    for (size_t i = 0; i < caras.size(); i++)  
     {
         colores_caras[i].r = rand() % 1000 / 1000.0;
         colores_caras[i].g = rand() % 1000 / 1000.0;
         colores_caras[i].b = rand() % 1000 / 1000.0;
     }
 }
-
-//*************************************************************************
 
 void _triangulos3D::colors_chess(float r1, float g1, float b1, float r2, float g2, float b2)
 {
@@ -149,72 +130,8 @@ void _triangulos3D::colors_chess(float r1, float g1, float b1, float r2, float g
 
 
 //*************************************************************************
-// objetos o modelos
+// OPERACIONES BÁSICAS
 //*************************************************************************
-
-//*************************************************************************
-// clase cubo
-//*************************************************************************
-
-_cubo::_cubo(float tam)
-{
-    //vertices
-    vertices.resize(8);
-    vertices[0].x = -tam;     vertices[0].y = -tam;     vertices[0].z = tam;
-    vertices[1].x = tam;      vertices[1].y = -tam;     vertices[1].z = tam;
-    vertices[2].x = tam;      vertices[2].y = tam;      vertices[2].z = tam;
-    vertices[3].x = -tam;     vertices[3].y = tam;      vertices[3].z = tam;
-    vertices[4].x = -tam;     vertices[4].y = -tam;     vertices[4].z = -tam;
-    vertices[5].x = tam;      vertices[5].y = -tam;     vertices[5].z = -tam;
-    vertices[6].x = tam;      vertices[6].y = tam;      vertices[6].z = -tam;
-    vertices[7].x = -tam;     vertices[7].y = tam;      vertices[7].z = -tam;
-
-    // triangulos
-    caras.resize(12);
-    caras[0]._0 = 0;    caras[0]._1 = 1;    caras[0]._2 = 3;
-    caras[1]._0 = 3;    caras[1]._1 = 1;    caras[1]._2 = 2;
-    caras[2]._0 = 1;    caras[2]._1 = 5;    caras[2]._2 = 2;
-    caras[3]._0 = 5;    caras[3]._1 = 6;    caras[3]._2 = 2;
-    caras[4]._0 = 5;    caras[4]._1 = 4;    caras[4]._2 = 6;
-    caras[5]._0 = 4;    caras[5]._1 = 7;    caras[5]._2 = 6;
-    caras[6]._0 = 0;    caras[6]._1 = 7;    caras[6]._2 = 4;
-    caras[7]._0 = 0;    caras[7]._1 = 3;    caras[7]._2 = 7;
-    caras[8]._0 = 3;    caras[8]._1 = 2;    caras[8]._2 = 7;
-    caras[9]._0 = 2;    caras[9]._1 = 6;    caras[9]._2 = 7;
-    caras[10]._0 =0;    caras[10]._1 =1;    caras[10]._2= 4;
-    caras[11]._0 =1;    caras[11]._1 =5;    caras[11]._2= 4; 
-
-    //colores de las caras
-    colors_random();
-}
-
-
-//*************************************************************************
-// clase piramide
-//*************************************************************************
-
-_piramide::_piramide(float tam, float al)
-{
-    //vertices 
-    vertices.resize(5); 
-    vertices[0].x = -tam; vertices[0].y = 0;    vertices[0].z = tam;
-    vertices[1].x = tam;  vertices[1].y = 0;    vertices[1].z = tam;
-    vertices[2].x = tam;  vertices[2].y = 0;    vertices[2].z = -tam;
-    vertices[3].x = -tam; vertices[3].y = 0;    vertices[3].z = -tam;
-    vertices[4].x = 0;    vertices[4].y = al;   vertices[4].z = 0;
-
-    //caras
-    caras.resize(6);
-    caras[0]._0 = 0;  caras[0]._1 = 1;  caras[0]._2 = 4;
-    caras[1]._0 = 1;  caras[1]._1 = 2;  caras[1]._2 = 4;
-    caras[2]._0 = 2;  caras[2]._1 = 3;  caras[2]._2 = 4;
-    caras[3]._0 = 3;  caras[3]._1 = 0;  caras[3]._2 = 4;
-    caras[4]._0 = 3;  caras[4]._1 = 1;  caras[4]._2 = 0;
-    caras[5]._0 = 3;  caras[5]._1 = 2;  caras[5]._2 = 1;
-
-    //colores de las caras
-    colors_random();
-}
 
 //*************************************************************************
 // clase objeto ply
@@ -229,16 +146,16 @@ void _objeto_ply::parametros(char *archivo)
     
     _file_ply::read(archivo, ver_ply, car_ply );
 
-    size_t n_ver = ver_ply.size() / 3;
-    size_t n_car = car_ply.size() / 3;
+    size_t num_vertices = ver_ply.size() / 3;
+    size_t num_caras = car_ply.size() / 3;
 
-    printf("Number of vertices=%d\nNumber of faces=%d\n", n_ver, n_car);
+    printf("Number of vertices=%d\nNumber of faces=%d\n", num_vertices, num_caras);
 
-    vertices.resize(n_ver);
-    caras.resize(n_car);
+    vertices.resize(num_vertices);
+    caras.resize(num_caras);
 
     // vértices
-    for (size_t i = 0; i < n_ver; i++)
+    for (size_t i = 0; i < num_vertices; i++)
     {
         vertices[i].x = ver_ply[3 * i];
         vertices[i].y = ver_ply[3 * i + 1];
@@ -246,17 +163,47 @@ void _objeto_ply::parametros(char *archivo)
     }
 
     // vértices
-    for (size_t i = 0; i < n_car; i++)
+    for (size_t i = 0; i < num_caras; i++)
     {
         caras[i].x = car_ply[3 * i];
         caras[i].y = car_ply[3 * i + 1];
         caras[i].z = car_ply[3 * i + 2];
     }
 
-    // colores
     colors_random();
 }
 
+//************************************************************************
+// rotacion archivo PLY (caso especial de rotacion)
+//************************************************************************
+
+_rotacion_PLY::_rotacion_PLY()  {}
+
+void _rotacion_PLY::parametros_PLY(char *archivo, int num)
+{
+    vector<_vertex3f> perfil;
+    _vertex3f aux;
+
+    vector<float> ver_ply ;
+    vector<int>   car_ply ;
+    
+    _file_ply::read(archivo, ver_ply, car_ply );
+
+    size_t num_vertices = ver_ply.size() / 3;
+    size_t num_caras    = car_ply.size() / 3;
+
+    printf("Number of vertices=%d\nNumber of faces=%d\n", num_vertices, num_caras);
+
+    for (size_t i = 0; i < num_vertices; i++)
+    {
+        aux.x = ver_ply[ i * 3];
+        aux.y = ver_ply[ i * 3 + 1];
+        aux.z = ver_ply[ i * 3 + 2];
+        perfil.push_back(aux);
+    }
+    cerr << "NUM: " << num << endl;
+    parametros(perfil, num, false, false, 0);
+}
 
 //************************************************************************
 // objeto por revolucion
@@ -264,7 +211,7 @@ void _objeto_ply::parametros(char *archivo)
 
 _rotacion::_rotacion() {}
 
-void _rotacion::parametros(vector<_vertex3f> perfil, int num, int tapa_in, int tapa_su, int tipo)
+void _rotacion::parametros(vector<_vertex3f> perfil, int num, bool tapa_inferior, bool tapa_superior, int tipo)
 {
     _vertex3f vertice_aux;
     _vertex3i cara_aux;
@@ -312,7 +259,7 @@ void _rotacion::parametros(vector<_vertex3f> perfil, int num, int tapa_in, int t
     }
     
     // tapa inferior
-    if (tapa_in == 1)
+    if (tapa_inferior)
     {
         // punto central de la tapa
         vertice_aux.x = 0.0;
@@ -323,11 +270,20 @@ void _rotacion::parametros(vector<_vertex3f> perfil, int num, int tapa_in, int t
 
         vertice_aux.z = 0.0;
         vertices.push_back(vertice_aux);
+
+        // Conectamos el eje de la tapa a los puntos del perfil
+        cara_aux._0 = num_aux * num;
+        for (int i = 0; i < num; i++)
+        {
+            cara_aux._1 = i * num_aux;
+            cara_aux._2 = ((i + 1) % num) * num_aux;
+            caras.push_back(cara_aux);
+        }
     }
     
     // tapa superior
 
-    if (tapa_su == 1)
+    if (tapa_superior)
     {
         // punto central de la tapa
         vertice_aux.x = 0.0;
@@ -338,6 +294,19 @@ void _rotacion::parametros(vector<_vertex3f> perfil, int num, int tapa_in, int t
             vertice_aux.y = perfil[1].y;
         vertice_aux.z = 0.0;
         vertices.push_back(vertice_aux);
+
+        //caras tapa superior
+        if (tapa_inferior)
+            cara_aux._0 = num_aux * num + 1;
+        else
+            cara_aux._0 = num_aux * num;
+
+        for (int i = 0; i < num; i++)
+        {
+            cara_aux._1 = i * num_aux + num_aux - 1;
+            cara_aux._2 = ((i + 1) % num) * num_aux + num_aux - 1;
+            caras.push_back(cara_aux);
+        }
     }
 
     //colores de las caras
@@ -385,11 +354,63 @@ _extrusion::_extrusion(vector<_vertex3f> poligono, float x, float y, float z)
 }
 
 //************************************************************************
+// OBJETOS BÁSICOS
 //************************************************************************
 
-//************************************************************************
-// objeto cilindro (caso especial de rotacion)
-//************************************************************************
+_cubo::_cubo(float tam)
+{
+    //vertices
+    vertices.resize(8);
+    vertices[0].x = -tam;     vertices[0].y = -tam;     vertices[0].z = tam;
+    vertices[1].x = tam;      vertices[1].y = -tam;     vertices[1].z = tam;
+    vertices[2].x = tam;      vertices[2].y = tam;      vertices[2].z = tam;
+    vertices[3].x = -tam;     vertices[3].y = tam;      vertices[3].z = tam;
+    vertices[4].x = -tam;     vertices[4].y = -tam;     vertices[4].z = -tam;
+    vertices[5].x = tam;      vertices[5].y = -tam;     vertices[5].z = -tam;
+    vertices[6].x = tam;      vertices[6].y = tam;      vertices[6].z = -tam;
+    vertices[7].x = -tam;     vertices[7].y = tam;      vertices[7].z = -tam;
+
+    // triangulos
+    caras.resize(12);
+    caras[0]._0 = 0;    caras[0]._1 = 1;    caras[0]._2 = 3;
+    caras[1]._0 = 3;    caras[1]._1 = 1;    caras[1]._2 = 2;
+    caras[2]._0 = 1;    caras[2]._1 = 5;    caras[2]._2 = 2;
+    caras[3]._0 = 5;    caras[3]._1 = 6;    caras[3]._2 = 2;
+    caras[4]._0 = 5;    caras[4]._1 = 4;    caras[4]._2 = 6;
+    caras[5]._0 = 4;    caras[5]._1 = 7;    caras[5]._2 = 6;
+    caras[6]._0 = 0;    caras[6]._1 = 7;    caras[6]._2 = 4;
+    caras[7]._0 = 0;    caras[7]._1 = 3;    caras[7]._2 = 7;
+    caras[8]._0 = 3;    caras[8]._1 = 2;    caras[8]._2 = 7;
+    caras[9]._0 = 2;    caras[9]._1 = 6;    caras[9]._2 = 7;
+    caras[10]._0 =0;    caras[10]._1 =1;    caras[10]._2= 4;
+    caras[11]._0 =1;    caras[11]._1 =5;    caras[11]._2= 4; 
+
+    //colores de las caras
+    colors_random();
+}
+
+_piramide::_piramide(float tam, float al)
+{
+    //vertices 
+    vertices.resize(5); 
+    vertices[0].x = -tam; vertices[0].y = 0;    vertices[0].z = tam;
+    vertices[1].x = tam;  vertices[1].y = 0;    vertices[1].z = tam;
+    vertices[2].x = tam;  vertices[2].y = 0;    vertices[2].z = -tam;
+    vertices[3].x = -tam; vertices[3].y = 0;    vertices[3].z = -tam;
+    vertices[4].x = 0;    vertices[4].y = al;   vertices[4].z = 0;
+
+    //caras
+    caras.resize(6);
+    caras[0]._0 = 0;  caras[0]._1 = 1;  caras[0]._2 = 4;
+    caras[1]._0 = 1;  caras[1]._1 = 2;  caras[1]._2 = 4;
+    caras[2]._0 = 2;  caras[2]._1 = 3;  caras[2]._2 = 4;
+    caras[3]._0 = 3;  caras[3]._1 = 0;  caras[3]._2 = 4;
+    caras[4]._0 = 3;  caras[4]._1 = 1;  caras[4]._2 = 0;
+    caras[5]._0 = 3;  caras[5]._1 = 2;  caras[5]._2 = 1;
+
+    //colores de las caras
+    colors_random();
+}
 
 _cilindro::_cilindro(float radio, float altura, int num)
 {
@@ -400,28 +421,22 @@ _cilindro::_cilindro(float radio, float altura, int num)
     perfil.push_back(aux);
     aux.x = radio; aux.y = altura / 2.0;    aux.z = 0.0;
     perfil.push_back(aux);
-    parametros(perfil, num, 1,1,0);
-}
 
-//************************************************************************
-// objeto cono (caso especial de rotacion)
-//************************************************************************
+    parametros(perfil, num, true, true, 0);
+}
 
 _cono::_cono(float radio, float altura, int num)
 {
     vector<_vertex3f> perfil;
     _vertex3f aux;
 
-    aux.x = radio;  aux.y = 0;      aux.z = 0.0;
+    aux.x = radio;  aux.y = -altura/2.0;    aux.z = 0.0;
     perfil.push_back(aux);
-    aux.x = 0.0;    aux.y = altura; aux.z = 0.0;
+    aux.x = 0.0;    aux.y = altura;         aux.z = 0.0;
     perfil.push_back(aux);
-    parametros(perfil, num, 1, 1, 2);
-}
 
-//************************************************************************
-// objeto esfera (caso especial de rotacion)
-//************************************************************************
+    parametros(perfil, num, true, true, 2);
+}
 
 _esfera::_esfera(float radio, int latitud, int longitud)
 {
@@ -434,319 +449,11 @@ _esfera::_esfera(float radio, int latitud, int longitud)
         aux.z = 0.0;
         perfil.push_back(aux);
     }
-    parametros(perfil, longitud, 1, 1, 1);
+    parametros(perfil, longitud, true, true, 1);
 }
 
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
 
-//************************************************************************
-// rotacion archivo PLY (caso especial de rotacion)
-//************************************************************************
-
-_rotacion_PLY::_rotacion_PLY()  {}
-
-void _rotacion_PLY::parametros_PLY(char *archivo, int num)  {}
-
-//************************************************************************
-// objeto montaña fractal
-//************************************************************************
-
-float gauss(float ga, float gf )
-{
-    float sum = 0.0;
-    for (size_t i = 0; i < 4; i++)
-        sum += rand() % 32767;
-    return gf * sum / 4.0 - ga;
-}
-
-
-_montana::_montana(int nivelmax, float sigma, float h)
-
-{
-    if (nivelmax>8) nivelmax=8;
-    int i,j,etapa;
-    float ga=sqrt(12.0);
-    float gf=2*ga/(32767*1.0);
-    int num=pow(2,nivelmax)+1;
-    srand (time(NULL));
-
-    vertices.resize(num*num);
-
-    for (j=0;j<num;j++)
-    for (i=0;i<num;i++)
-        {vertices[i+j*num].x=-0.1*(num-1)/2.0+i*0.1;
-        vertices[i+j*num].z=-0.1*(num-1)/2.0+j*0.1;
-        vertices[i+j*num].y=0.0;
-        }
-
-    vertices[0].y=sigma*gauss(ga,gf);
-    vertices[num-1].y=sigma*gauss(ga,gf);
-    vertices[num*(num-1)].y=sigma*gauss(ga,gf);
-    vertices[num*num-1].y=sigma*gauss(ga,gf);
-
-    int d1=num-1;
-    int d2=(num-1)/2;
-
-    for (etapa=0;etapa<nivelmax;etapa++)
-    {
-        sigma=sigma*pow(0.5,0.5*h);
-        for (j=d2;j<num-d2;j=j+d1)
-        for (i=d2;i<num-d2;i=i+d1)
-            {vertices[i+j*num].y=sigma*gauss(ga,gf)+
-                (vertices[i+d2+(j+d2)*num].y+vertices[i+d2+(j-d2)*num].y+
-                vertices[i-d2+(j+d2)*num].y+vertices[i-d2+(j-d2)*num].y)/4.0;
-            }
-        sigma=sigma*pow(0.5,0.5*h);
-        for (i=d2;i<num-d2;i=i+d1)
-        {vertices[i].y=sigma*gauss(ga,gf)+(vertices[i+d2].y+
-                        vertices[i-d2].y+vertices[i+d2*num].y)/3.0;
-            vertices[i+num*(num-1)].y=sigma*gauss(ga,gf)+
-                        (vertices[i+d2+num*(num-1)].y+
-                        vertices[i-d2+num*(num-1)].y+
-                        vertices[i+(num-1-d2)*num].y)/3.0;
-        vertices[i*num].y=sigma*gauss(ga,gf)+(vertices[(i+d2)*num].y+
-                        vertices[(i-d2)*num].y+vertices[d2+i*num].y)/3.0;
-            vertices[num-1+i*num].y=sigma*gauss(ga,gf)+
-                        (vertices[num-1+(i+d2)*num].y+
-                        vertices[num-1+(i-d2)*num].y+
-                        vertices[num-1-d2+i*num].y)/3;
-        }
-            
-        for (j=d2;j<num-d2;j=j+d1)
-        for (i=d1;i<num-d2;i=i+d1)
-            vertices[i+j*num].y=sigma*gauss(ga,gf)+
-                    (vertices[i+(j+d2)*num].y+vertices[i+(j-d2)*num].y+
-                        vertices[i+d2+j*num].y+vertices[i-d2+j*num].y)/4.0;
-        for (j=d1;j<num-d2;j=j+d1)
-        for (i=d2;i<num-d2;i=i+d1)
-        vertices[i+j*num].y=sigma*gauss(ga,gf)+
-                    (vertices[i+(j+d2)*num].y+vertices[i+(j-d2)*num].y+
-                        vertices[i+d2+j*num].y+vertices[i-d2+j*num].y)/4.0;
-
-        d1=(int)d1/2;
-        d2=(int)d2/2;
-        }
-
-
-    // caras 
-    caras.resize((num-1)*(num-1)*2);
-    int c=0; 
-    for (j=0;j<num-1;j++)
-    for (i=0;i<num-1;i++)
-        {caras[c]._0=i+j*num;
-        caras[c]._1=i+1+j*num; 
-        caras[c]._2=i+1+(j+1)*num;
-        c=c+1; 
-        caras[c]._0=i+j*num;
-        caras[c]._1=i+1+(j+1)*num; 
-        caras[c]._2=i+(j+1)*num;
-        c=c+1;
-        }
-    //colores de las caras
-    colors_chess(0.2,1.0,0.2,0.3,0.8,0.1);
-}
-
-//************************************************************************
-// práctica 3, objeto jerárquico articulado
-//************************************************************************
-
-//************************************************************************
-// piezas
-//************************************************************************
-
-//************************************************************************
-// pala
-//************************************************************************
-
-_pala::_pala(float radio, float ancho, int num)
-{
-    vector<_vertex3f> perfil;
-    _vertex3f vertice_aux;
-    _vertex3i cara_aux;
-    int i, j;
-
-    vertice_aux.x=radio; vertice_aux.y=0; vertice_aux.z=-ancho/2.0;
-    perfil.push_back(vertice_aux);
-    vertice_aux.z=ancho/2.0;
-    perfil.push_back(vertice_aux);
-
-    // tratamiento de los vértices
-
-    for (j=0;j<=num;j++)
-    {for (i=0;i<2;i++)	
-        {
-        vertice_aux.x=perfil[i].x*cos(M_PI*j/(1.0*num))-
-                        perfil[i].y*sin(M_PI*j/(1.0*num));
-        vertice_aux.y=perfil[i].x*sin(M_PI*j/(1.0*num))+
-                        perfil[i].y*cos(M_PI*j/(1.0*num));
-        vertice_aux.z=perfil[i].z;
-        vertices.push_back(vertice_aux);
-        }
-    }
-    
-    // tratamiento de las caras 
-
-    for (j=0;j<num;j++)
-    {cara_aux._0=j*2;
-        cara_aux._1=(j+1)*2;
-        cara_aux._2=(j+1)*2+1;
-        caras.push_back(cara_aux);
-        
-        cara_aux._0=j*2;
-        cara_aux._1=(j+1)*2+1;
-        cara_aux._2=j*2+1;
-        caras.push_back(cara_aux);
-    }
-    
-    // tapa inferior
-    vertice_aux.x=0;
-    vertice_aux.y=0;
-    vertice_aux.z=-ancho/2.0;
-    vertices.push_back(vertice_aux); 
-
-    for (j=0;j<num;j++)
-    {cara_aux._0=j*2;
-        cara_aux._1=(j+1)*2;
-        cara_aux._2=vertices.size()-1;
-        caras.push_back(cara_aux);
-    }
-    
-    // tapa superior
-    vertice_aux.x=0;
-    vertice_aux.y=0;
-    vertice_aux.z=ancho/2.0;
-    vertices.push_back(vertice_aux); 
-
-    for (j=0;j<num;j++)
-    {cara_aux._0=j*2+1;
-        cara_aux._1=(j+1)*2+1;
-        cara_aux._2=vertices.size()-1;
-        caras.push_back(cara_aux);
-    }
-    
-    colors_chess(1.0,1.0,0.0,0.0,0.0,1.0);
-}
-
-//************************************************************************
-// brazo
-//************************************************************************
-
-_brazo::_brazo()
-{
-    ancho=0.6;
-    alto=0.1;
-    fondo=0.1;
-    colors_chess(1.0,1.0,0.0,0.0,0.0,1.0);
-    };
-
-    void _brazo::draw(_modo modo, float r, float g, float b, float grosor)
-    {
-    glPushMatrix();
-    glScalef(ancho, alto, fondo);
-    glTranslatef(0.5,0,0);
-    cubo.draw(modo, r, g, b, grosor);
-    glPopMatrix();
-    };
-
-    //************************************************************************
-    // cabina
-    //************************************************************************
-
-    _cabina::_cabina()
-    {
-    ancho=0.4;
-    alto=0.6;
-    fondo=0.4;
-    cubo.colors_chess(1.0,1.0,0.0,0.0,0.0,1.0);
-    };
-
-    void _cabina::draw(_modo modo, float r, float g, float b, float grosor)
-    {
-    glPushMatrix();
-    glScalef(ancho, alto, fondo);
-    cubo.draw(modo, r, g, b, grosor);
-    glPopMatrix();
-};
-
-//************************************************************************
-// sustentación
-//************************************************************************
-
-_sustentacion::_sustentacion()
-{
-    ancho=1.2;
-    alto=0.3;
-    fondo=0.8;
-    radio=0.15;
-    base.colors_chess(1.0,1.0,0.0,0.0,0.0,1.0);
-};
-
-void _sustentacion::draw(_modo modo, float r, float g, float b, float grosor)
-{
-    glPushMatrix();
-    glTranslatef(2*ancho/6,-alto/2.0,0);
-    glRotatef(90,1,0,0);
-    glScalef(radio, fondo/2.2, radio);
-    rueda.draw(modo, r, g, b, grosor);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-2*ancho/6,-alto/2.0,0);
-    glRotatef(90,1,0,0);
-    glScalef(radio, fondo/2.2, radio);
-    rueda.draw(modo, r, g, b, grosor);
-    glPopMatrix();
-
-    glPushMatrix();
-    glScalef(ancho, alto, fondo);
-    base.draw(modo, r, g, b, grosor);
-    glPopMatrix();
-};
-
-//************************************************************************
-// excavadora (montaje del objeto final)
-//************************************************************************
-
-_excavadora::_excavadora()
-{
-    giro_cabina = 0.0;
-    giro_primer_brazo = 0.0;
-    giro_primer_brazo_max = 0;
-    giro_primer_brazo_min = -90;
-    giro_segundo_brazo = 0.0;
-    giro_segundo_brazo_max = 30;
-    giro_segundo_brazo_min = 0;
-    giro_pala = 0.0;
-    giro_pala_max = 50.0;
-    giro_pala_min = -90.0;
-
-    tamanio_pala=0.15;
-};
-
-
-void _excavadora::draw(_modo modo, float r, float g, float b, float grosor)
-{
-    glPushMatrix();
-
-    sustentacion.draw(modo, r, g, b, grosor);
-
-    glTranslatef(0,(cabina.alto+sustentacion.alto)/2.0,0);
-    glRotatef(giro_cabina,0,1,0);
-    cabina.draw(modo, r, g, b, grosor);
-
-    glTranslatef(cabina.ancho/2.0,0,0);
-    glRotatef(giro_segundo_brazo,0,0,1);
-    brazo.draw(modo, r, g, b, grosor);
-
-    glTranslatef(brazo.ancho,0,0);
-    glRotatef(giro_primer_brazo,0,0,1);
-    brazo.draw(modo, r, g, b, grosor);
-
-    glTranslatef(brazo.ancho,0,0);
-    glRotatef(giro_pala,0,0,1);
-    glTranslatef(tamanio_pala,0,0);
-    glScalef(tamanio_pala, tamanio_pala, tamanio_pala);
-    pala.draw(modo, r, g, b, grosor);
-
-    glPopMatrix();
-};
-
+// PRACTICA 3 PROPIA
