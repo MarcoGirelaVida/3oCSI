@@ -110,3 +110,97 @@ public:
 //----------------------------------------------------------------------
 // PROYECTO PROPIO P3
 
+class _escena_P3 : public _triangulos3D
+{
+public:
+    _escena_P3();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+class _suelo: public _triangulos3D
+{
+public:
+    _suelo();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _sol : public _triangulos3D
+{
+public:
+    _sol();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _nube : public _triangulos3D
+{
+public:
+    _nube();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _lluvia : public _triangulos3D
+{
+public:
+    _lluvia();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _viento : public _triangulos3D
+{
+public:
+    _viento();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _molino : public _triangulos3D
+{
+public:
+    _molino();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _helice_molino : public _triangulos3D
+{
+public:
+    _helice_molino();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _girasol : public _triangulos3D
+{
+public:
+    _girasol();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _tallo_girasol : public _triangulos3D
+{
+public:
+    _tallo_girasol();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _cabeza_girasol : public _triangulos3D
+{
+public:
+    _cabeza_girasol();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};
+
+class _petalo_girasol : public _triangulos3D
+{
+public:
+    _petalo_girasol();
+
+    void draw(_modo modo, float r, float g, float b, float grosor);
+};

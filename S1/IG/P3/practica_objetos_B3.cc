@@ -38,14 +38,14 @@ int Window_x=50,    Window_y=50,    Window_width=800,   Window_high=800;
 
 
 // objetos
-_cubo cubo;
-_piramide piramide(0.85,1.3);
-_objeto_ply  ply; 
-_rotacion rotacion;
-_cilindro cilindro(1,2,6); 
-_cono cono(1,2,6);
-_esfera esfera(1,6,6);
-_extrusion *extrusion;
+_cubo       cubo;
+_piramide   piramide(0.85,1.3);
+_objeto_ply ply; 
+_rotacion   rotacion;
+_cilindro   cilindro(1,2,100); 
+_cono       cono(1,2,100);
+_esfera     esfera(1,100,100);
+_extrusion  *extrusion;
 
 // _objeto_ply *ply;
 

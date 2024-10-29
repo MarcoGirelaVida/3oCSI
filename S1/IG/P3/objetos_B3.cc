@@ -457,3 +457,63 @@ _esfera::_esfera(float radio, int latitud, int longitud)
 //--------------------------------------------------------------------------
 
 // PRACTICA 3 PROPIA
+
+//************************************************************************
+// NATURALEZA
+//************************************************************************
+_suelo::_suelo() {}
+void _suelo::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_sol::_sol() {}
+void _sol::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_nube::_nube() {}
+void _nube::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_lluvia::_lluvia() {}
+void _lluvia::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_viento::_viento() {}
+void _viento::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+//************************************************************************
+// GIRASOL
+//************************************************************************
+_tallo_girasol::_tallo_girasol() {}
+void _tallo_girasol::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_petalo_girasol::_petalo_girasol() {}
+void _petalo_girasol::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_cabeza_girasol::_cabeza_girasol() {}
+void _cabeza_girasol::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_girasol::_girasol() {}
+void _girasol::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+//************************************************************************
+// MOLINO
+//************************************************************************
+_helice_molino::_helice_molino() {}
+void _helice_molino::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+_molino::_molino() {}
+void _molino::draw(_modo modo, float r, float g, float b, float grosor)
+{}
+
+//************************************************************************
+// BASE
+//************************************************************************
+_escena_P3::_escena_P3() {}
+void _escena_P3::draw(_modo modo, float r, float g, float b, float grosor)
+{}
