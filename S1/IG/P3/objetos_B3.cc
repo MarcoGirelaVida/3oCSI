@@ -23,18 +23,18 @@ _triangulos3D::_triangulos3D() {}
 // MODOS DE DIBUJO
 //*************************************************************************
 
-void _triangulos3D::draw(_modo modo, float r, float g, float b, float grosor)
+void _triangulos3D::draw(_modo modo, Color color, float grosor)
 {
     switch (modo)
     {
         case POINTS:
-            draw_puntos(r, g, b, grosor);
+            draw_puntos(color, grosor);
             break;
         case EDGES:
-            draw_aristas(r, g, b, grosor);
+            draw_aristas(color, grosor);
             break;
         case SOLID:
-            draw_solido(r, g, b);
+            draw_solido(color);
             break;
         case SOLID_COLORS:
             draw_solido_colores();
@@ -42,31 +42,31 @@ void _triangulos3D::draw(_modo modo, float r, float g, float b, float grosor)
     }
 }
 
-void _puntos3D::draw_puntos(float r, float g, float b, int grosor)
+void _puntos3D::draw_puntos(Color color, int grosor)
 {
     glPointSize(grosor);
-    glColor3f(r, g, b);
+    glColor3f(color.r, color.g, color.b);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
     glDrawArrays(GL_POINTS, 0, vertices.size());
 }
 
-void _triangulos3D::draw_aristas(float r, float g, float b, int grosor)
+void _triangulos3D::draw_aristas(Color color, int grosor)
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glLineWidth(grosor);
-    glColor3f(r, g, b);
+    glColor3f(color.r, color.g, color.b);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
     glDrawElements(GL_TRIANGLES, caras.size()*3, GL_UNSIGNED_INT, &caras[0]);
 }
 
-void _triangulos3D::draw_solido(float r, float g, float b)
+void _triangulos3D::draw_solido(Color color)
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glColor3f(r, g, b);
+    glColor3f(color.r, color.g, color.b);
     glBegin(GL_TRIANGLES);
         for (size_t i = 0; i < caras.size(); i++)
         {
@@ -149,7 +149,7 @@ void _objeto_ply::parametros(char *archivo)
     size_t num_vertices = ver_ply.size() / 3;
     size_t num_caras = car_ply.size() / 3;
 
-    printf("Number of vertices=%d\nNumber of faces=%d\n", num_vertices, num_caras);
+    printf("Number of vertices=%ld\nNumber of faces=%ld\n", num_vertices, num_caras);
 
     vertices.resize(num_vertices);
     caras.resize(num_caras);
@@ -179,7 +179,7 @@ void _objeto_ply::parametros(char *archivo)
 
 _rotacion_PLY::_rotacion_PLY()  {}
 
-void _rotacion_PLY::parametros_PLY(char *archivo, int num)
+void _rotacion_PLY::parametros_PLY(char *archivo, size_t num)
 {
     vector<_vertex3f> perfil;
     _vertex3f aux;
@@ -192,7 +192,7 @@ void _rotacion_PLY::parametros_PLY(char *archivo, int num)
     size_t num_vertices = ver_ply.size() / 3;
     size_t num_caras    = car_ply.size() / 3;
 
-    printf("Number of vertices=%d\nNumber of faces=%d\n", num_vertices, num_caras);
+    printf("Number of vertices=%ld\nNumber of faces=%ld\n", num_vertices, num_caras);
 
     for (size_t i = 0; i < num_vertices; i++)
     {
@@ -211,11 +211,11 @@ void _rotacion_PLY::parametros_PLY(char *archivo, int num)
 
 _rotacion::_rotacion() {}
 
-void _rotacion::parametros(vector<_vertex3f> perfil, int num, bool tapa_inferior, bool tapa_superior, int tipo)
+void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_inferior, bool tapa_superior, int tipo)
 {
     _vertex3f vertice_aux;
     _vertex3i cara_aux;
-    int num_aux;
+    size_t num_aux;
     float radio;
 
     // tratamiento de los vértice
@@ -273,7 +273,7 @@ void _rotacion::parametros(vector<_vertex3f> perfil, int num, bool tapa_inferior
 
         // Conectamos el eje de la tapa a los puntos del perfil
         cara_aux._0 = num_aux * num;
-        for (int i = 0; i < num; i++)
+        for (size_t i = 0; i < num; i++)
         {
             cara_aux._1 = i * num_aux;
             cara_aux._2 = ((i + 1) % num) * num_aux;
@@ -301,7 +301,7 @@ void _rotacion::parametros(vector<_vertex3f> perfil, int num, bool tapa_inferior
         else
             cara_aux._0 = num_aux * num;
 
-        for (int i = 0; i < num; i++)
+        for (size_t i = 0; i < num; i++)
         {
             cara_aux._1 = i * num_aux + num_aux - 1;
             cara_aux._2 = ((i + 1) % num) * num_aux + num_aux - 1;
@@ -412,7 +412,7 @@ _piramide::_piramide(float tam, float al)
     colors_random();
 }
 
-_cilindro::_cilindro(float radio, float altura, int num)
+_cilindro::_cilindro(float radio, float altura, size_t num)
 {
     vector<_vertex3f> perfil;
     _vertex3f aux;
@@ -425,7 +425,7 @@ _cilindro::_cilindro(float radio, float altura, int num)
     parametros(perfil, num, true, true, 0);
 }
 
-_cono::_cono(float radio, float altura, int num)
+_cono::_cono(float radio, float altura, size_t num)
 {
     vector<_vertex3f> perfil;
     _vertex3f aux;
@@ -438,7 +438,7 @@ _cono::_cono(float radio, float altura, int num)
     parametros(perfil, num, true, true, 2);
 }
 
-_esfera::_esfera(float radio, int latitud, int longitud)
+_esfera::_esfera(float radio, size_t latitud, size_t longitud)
 {
     vector<_vertex3f> perfil;
     _vertex3f aux;
@@ -461,59 +461,72 @@ _esfera::_esfera(float radio, int latitud, int longitud)
 //************************************************************************
 // NATURALEZA
 //************************************************************************
-_suelo::_suelo() {}
-void _suelo::draw(_modo modo, float r, float g, float b, float grosor)
+//_suelo::_suelo(Posicion pos) : posicion(pos) {}
+void _suelo::draw(_modo modo, Color color, float grosor)
+{
+    glPushMatrix();
+        glTranslatef(0, -(tam.y/2), 0);
+        glScalef(tam.x, tam.y, tam.z);
+        _cubo suelo;
+        suelo.draw(modo, color, grosor);
+    glPopMatrix();
+}
+
+//_sol::_sol(GLfloat) {}
+void _sol::draw(_modo modo, Color color, float grosor)
+{
+    glPushMatrix();
+        glTranslatef(posicion.x, posicion.y, posicion.z);
+        _esfera sol(radio, resolucion, resolucion);
+        sol.draw(modo, color, grosor);
+    glPopMatrix();
+}
+
+//_nube::_nube(Posicion pos) : posicion(pos) {}
+void _nube::draw(_modo modo, Color color, float grosor)
 {}
 
-_sol::_sol() {}
-void _sol::draw(_modo modo, float r, float g, float b, float grosor)
+//_lluvia::_lluvia(Posicion pos) : posicion(pos) {}
+void _lluvia::draw(_modo modo, Color color, float grosor)
 {}
 
-_nube::_nube() {}
-void _nube::draw(_modo modo, float r, float g, float b, float grosor)
-{}
-
-_lluvia::_lluvia() {}
-void _lluvia::draw(_modo modo, float r, float g, float b, float grosor)
-{}
-
-_viento::_viento() {}
-void _viento::draw(_modo modo, float r, float g, float b, float grosor)
+//_viento::_viento(Posicion pos) : posicion(pos) {}
+void _viento::draw(_modo modo, Color color, float grosor)
 {}
 
 //************************************************************************
 // GIRASOL
 //************************************************************************
-_tallo_girasol::_tallo_girasol() {}
-void _tallo_girasol::draw(_modo modo, float r, float g, float b, float grosor)
+//_tallo_girasol::_tallo_girasol(Posicion pos) : posicion(pos) {}
+void _tallo_girasol::draw(_modo modo, Color color, float grosor)
 {}
 
-_petalo_girasol::_petalo_girasol() {}
-void _petalo_girasol::draw(_modo modo, float r, float g, float b, float grosor)
+//_petalo_girasol::_petalo_girasol(Posicion pos) : posicion(pos) {}
+void _petalo_girasol::draw(_modo modo, Color color, float grosor)
 {}
 
-_cabeza_girasol::_cabeza_girasol() {}
-void _cabeza_girasol::draw(_modo modo, float r, float g, float b, float grosor)
+//_cabeza_girasol::_cabeza_girasol(Posicion pos) : posicion(pos) {}
+void _cabeza_girasol::draw(_modo modo, Color color, float grosor)
 {}
 
-_girasol::_girasol() {}
-void _girasol::draw(_modo modo, float r, float g, float b, float grosor)
+//_girasol::_girasol(Posicion pos) : posicion(pos) {}
+void _girasol::draw(_modo modo, Color color, float grosor)
 {}
 
 //************************************************************************
 // MOLINO
 //************************************************************************
-_helice_molino::_helice_molino() {}
-void _helice_molino::draw(_modo modo, float r, float g, float b, float grosor)
+//_helice_molino::_helice_molino(Posicion pos) : posicion(pos) {}
+void _helice_molino::draw(_modo modo, Color color, float grosor)
 {}
 
-_molino::_molino() {}
-void _molino::draw(_modo modo, float r, float g, float b, float grosor)
+//_molino::_molino(Posicion pos) : posicion(pos) {}
+void _molino::draw(_modo modo, Color color, float grosor)
 {}
 
 //************************************************************************
 // BASE
 //************************************************************************
-_escena_P3::_escena_P3() {}
-void _escena_P3::draw(_modo modo, float r, float g, float b, float grosor)
+//_escena_P3::_escena_P3(Posicion pos) : posicion(pos) {}
+void _escena_P3::draw(_modo modo, Color color, float grosor)
 {}

@@ -20,11 +20,36 @@ typedef enum
     CONO,
     ESFERA, 
     EXTRUSION,
+
+    // PRACTICA 3
+    SUELO,
+    SOL
 } _tipo_objeto;
 
-_tipo_objeto    t_objeto=CUBO;
+_tipo_objeto    t_objeto=SOL;
 _modo           modo=POINTS;
 
+// objetos
+_cubo       cubo;
+_piramide   piramide(0.85,1.3);
+_objeto_ply ply; 
+_rotacion   rotacion;
+_cilindro   cilindro(1, 2, 100); 
+_cono       cono(1, 2, 100);
+_esfera     esfera(1, 100, 100);
+_extrusion  *extrusion;
+
+
+// PRACTICA 3 OBJETOS Y ATRIBUTOS
+// Suelo
+_suelo suelo({100, 0.25, 100});
+Color color_suelo = {0.0, 1.0, 0.0};
+// Sol
+_sol sol({0, 2, 0}, 0.25);
+Color color_sol = {1.0, 1.0, 0.0};
+
+
+// **************************************************************************
 // variables que definen la posicion de la camara en coordenadas polares
 GLfloat Observer_distance;
 GLfloat Observer_angle_x;
@@ -35,19 +60,6 @@ GLfloat Size_x, Size_y, Front_plane, Back_plane;
 
 // variables que determninan la posicion y tamaño de la ventana X
 int Window_x=50,    Window_y=50,    Window_width=800,   Window_high=800;
-
-
-// objetos
-_cubo       cubo;
-_piramide   piramide(0.85,1.3);
-_objeto_ply ply; 
-_rotacion   rotacion;
-_cilindro   cilindro(1,2,100); 
-_cono       cono(1,2,100);
-_esfera     esfera(1,100,100);
-_extrusion  *extrusion;
-
-// _objeto_ply *ply;
 
 
 void clean_window()
@@ -119,28 +131,36 @@ void draw_objects()
     switch (t_objeto)
     {
         case CUBO:
-            cubo.draw(modo,1.0,0.0,0.0,5);
+            cubo.draw(modo,{1.0,0.0,0.0},5);
             break;
         case PIRAMIDE:
-            piramide.draw(modo,1.0,0.0,0.0,5);
+            piramide.draw(modo,{1.0,0.0,0.0},5);
             break;
         case OBJETO_PLY:
-            ply.draw(modo,1.0,0.6,0.0,3);
+            ply.draw(modo,{1.0,0.6,0.0},3);
             break;
         case ROTACION:
-            rotacion.draw(modo,1.0,0.0,0.0,5);
+            rotacion.draw(modo,{1.0,0.0,0.0},5);
             break;
         case CILINDRO:
-            cilindro.draw(modo,1.0,0.0,0.0,5);
+            cilindro.draw(modo,{1.0,0.0,0.0},5);
             break;
         case CONO:
-            cono.draw(modo,1.0,0.0,0.0,5);
+            cono.draw(modo,{1.0,0.0,0.0},5);
             break;
         case ESFERA:
-            esfera.draw(modo,1.0,0.0,0.0,5);
+            esfera.draw(modo,{1.0,0.0,0.0},5);
             break;
         case EXTRUSION:
-            extrusion->draw(modo,1.0,0.0,0.0,5);
+            extrusion->draw(modo,{1.0,0.0,0.0},5);
+            break;
+
+        // PRACTICA 3
+        case SUELO:
+            suelo.draw(modo, color_suelo, 1);
+            break;
+        case SOL:
+            sol.draw(modo, color_sol, 1);
             break;
 	}
 

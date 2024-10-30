@@ -572,14 +572,13 @@ _pala::_pala(float radio, float ancho, int num)
     // tratamiento de los vértices
 
     for (j=0;j<=num;j++)
-    {for (i=0;i<2;i++)	
+    {
+        for (i=0;i<2;i++)	
         {
-        vertice_aux.x=perfil[i].x*cos(M_PI*j/(1.0*num))-
-                        perfil[i].y*sin(M_PI*j/(1.0*num));
-        vertice_aux.y=perfil[i].x*sin(M_PI*j/(1.0*num))+
-                        perfil[i].y*cos(M_PI*j/(1.0*num));
-        vertice_aux.z=perfil[i].z;
-        vertices.push_back(vertice_aux);
+            vertice_aux.x=perfil[i].x*cos(M_PI*j/((float) num)) - perfil[i].y*sin(M_PI*j/((float) num));
+            vertice_aux.y=perfil[i].x*sin(M_PI*j/((float) num)) + perfil[i].y*cos(M_PI*j/((float) num));
+            vertice_aux.z=perfil[i].z;
+            vertices.push_back(vertice_aux);
         }
     }
     
@@ -636,31 +635,31 @@ _brazo::_brazo()
     alto=0.1;
     fondo=0.1;
     colors_chess(1.0,1.0,0.0,0.0,0.0,1.0);
-    };
+};
 
-    void _brazo::draw(_modo modo, float r, float g, float b, float grosor)
-    {
+void _brazo::draw(_modo modo, float r, float g, float b, float grosor)
+{
     glPushMatrix();
     glScalef(ancho, alto, fondo);
     glTranslatef(0.5,0,0);
     cubo.draw(modo, r, g, b, grosor);
     glPopMatrix();
-    };
+};
 
-    //************************************************************************
-    // cabina
-    //************************************************************************
+//************************************************************************
+// cabina
+//************************************************************************
 
-    _cabina::_cabina()
-    {
+_cabina::_cabina()
+{
     ancho=0.4;
     alto=0.6;
     fondo=0.4;
     cubo.colors_chess(1.0,1.0,0.0,0.0,0.0,1.0);
-    };
+};
 
-    void _cabina::draw(_modo modo, float r, float g, float b, float grosor)
-    {
+void _cabina::draw(_modo modo, float r, float g, float b, float grosor)
+{
     glPushMatrix();
     glScalef(ancho, alto, fondo);
     cubo.draw(modo, r, g, b, grosor);
