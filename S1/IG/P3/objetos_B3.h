@@ -1,3 +1,6 @@
+#ifndef OBJETOS_B3_H
+#define OBJETOS_B3_H
+
 #include <vector>
 #include <GL/gl.h>
 #include "vertex.h"
@@ -16,26 +19,57 @@ struct Color {
    GLfloat b2 = 1.0;
    GLfloat a2 = 1.0;
 
-   void operator+(Color c)
-   {
-      r += c.r;
-      g += c.g;
-      b += c.b;
-   }
-   void operator+(GLfloat f)
-   {
-      r += f;
-      g += f;
-      b += f;
-   }
+    Color(int r, int g, int b)
+    {
+        this->r = r/255.0;
+        this->g = g/255.0;
+        this->b = b/255.0;
+    }
 
-   void actualizar(float grado)
-   {
-      r += (r2-r)*grado;
-      g += (g2-g)*grado;
-      b += (b2-b)*grado;
-   }
+    Color(GLfloat r, GLfloat g, GLfloat b)
+    {
+        this->r = r;
+        this->g = g;
+        this->b = b;
+    }
+
+    void operator+(Color c)
+    {
+        r += c.r;
+        g += c.g;
+        b += c.b;
+    }
+    void operator+(GLfloat f)
+    {
+        r += f;
+        g += f;
+        b += f;
+    }
+
+    void actualizar(float grado)
+    {
+        r += (r2-r)*grado;
+        g += (g2-g)*grado;
+        b += (b2-b)*grado;
+    }
 };
+
+struct Dimensiones
+{
+    GLfloat x;
+    GLfloat y;
+    GLfloat z;
+};
+
+struct Posicion
+{
+    GLfloat x;
+    GLfloat y;
+    GLfloat z;
+};
+
+const Posicion pos_default = {0.0, 0.0, 0.0};
+
 //*************************************************************************
 // BASE DE TODO
 //*************************************************************************
@@ -56,7 +90,7 @@ public:
     void draw_aristas(Color color, int grosor);
     void draw_solido(Color color);
     void draw_solido_colores();
-    void draw(_modo modo, Color color, float grosor);
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 
     void colors_random();
     void colors_chess(float r1, float g1, float b1, float r2, float g2, float b2);
@@ -81,7 +115,7 @@ class _rotacion: public _triangulos3D
 {
 public:
     _rotacion();
-    void parametros(vector<_vertex3f> perfil, size_t num, bool tapa_inferior, bool tapa_superior, int tipo);
+    void parametros(vector<_vertex3f> perfil, size_t num, bool tapa_inferior, bool tapa_superior, int tipo, unsigned char porcentaje_revolucion = 100, unsigned char porcentaje_generacion_esfera = 100);
 };
 
 // tapa_in=0 sin tapa, tapa_in=1 con tapa
@@ -115,7 +149,9 @@ public:
 class _piramide: public _triangulos3D
 {
 public:
-    _piramide(float tam=0.5, float al=1.0);
+    Dimensiones tam;
+    Posicion posicion;
+    _piramide(Dimensiones tam);
 };
 class _cilindro: public _rotacion
 {
@@ -132,7 +168,10 @@ public:
 class _esfera: public _rotacion
 {
 public:
-    _esfera(float radio=1.0, size_t latitud=6, size_t longitud=6);
+    GLfloat radio;
+    const size_t resolucion;
+    const unsigned char porcentaje_generacion_x, porcentaje_generacion_y;
+    _esfera(GLfloat radio=1.0, size_t resolucion=6, bool tapa_su = true, bool tapa_in = true, unsigned char porcentaje_generacion_x = 100, unsigned char porcentaje_generacion_y = 100);
 };
 
 
@@ -140,46 +179,35 @@ public:
 //----------------------------------------------------------------------
 // PROYECTO PROPIO P3
 
-struct Dimensiones
-{
-    GLfloat x;
-    GLfloat y;
-    GLfloat z;
-};
-
-struct Posicion
-{
-    GLfloat x;
-    GLfloat y;
-    GLfloat z;
-};
-
 class _escena_P3 : public _triangulos3D
 {
 public:
     Posicion posicion;
     
-    _escena_P3(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _escena_P3(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 class _suelo: public _triangulos3D
 {
 public:
     Dimensiones tam;
+    Posicion posicion;
+    Color color_suelo;
 
-    _suelo(Dimensiones dimenisones) : tam(dimenisones) {}
-    void draw(_modo modo, Color color, float grosor);
+    _suelo(Dimensiones dimenisones, Posicion pos = pos_default) : tam(dimenisones), posicion(pos), color_suelo(0, 255, 0) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _sol : public _triangulos3D
 {
+    const size_t resolucion = 100;
 public:
-    Posicion posicion;
     GLfloat radio;
-    size_t resolucion;
+    Posicion posicion;
+    Color color_sol;
 
-    _sol(Posicion pos, GLfloat radio, size_t resolucion = 100) : posicion(pos), radio(radio), resolucion(resolucion) {};
-    void draw(_modo modo, Color color, float grosor);
+    _sol(GLfloat radio, Posicion pos = pos_default) : radio(radio), posicion(pos), color_sol(1, 1, 0) {};
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);, Posicion pos = pos_default
 };
 
 class _nube : public _triangulos3D
@@ -187,8 +215,8 @@ class _nube : public _triangulos3D
 public:
     Posicion posicion;
 
-    _nube(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _nube(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _lluvia : public _triangulos3D
@@ -196,8 +224,8 @@ class _lluvia : public _triangulos3D
 public:
     Posicion posicion;
 
-    _lluvia(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _lluvia(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _viento : public _triangulos3D
@@ -205,26 +233,66 @@ class _viento : public _triangulos3D
 public:
     Posicion posicion;
 
-    _viento(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _viento(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
+};
+
+
+class _helice_molino : public _triangulos3D
+{
+    static constexpr GLfloat largo_palo_central = 5.0;
+    static constexpr GLfloat radio_palo_central = 0.1;
+    static constexpr GLfloat largo_aspas = 2.0;
+    static constexpr GLfloat grosor_aspas = 0.2;
+    static constexpr GLfloat ancho_aspas = 0.5;
+    static constexpr size_t num_aspas = 10;
+    static constexpr GLfloat radio_bola_central = 0.3;
+protected:
+    _piramide aspa;
+    _cilindro palo_central;
+    _esfera bola_central;
+
+public:
+    Posicion posicion;
+    Color color_helice;
+
+    _helice_molino(Posicion pos = pos_default)
+        :
+        aspa({ancho_aspas, grosor_aspas, largo_aspas}),
+        palo_central(radio_palo_central, largo_palo_central, 30),
+        bola_central(radio_bola_central, 30, true, true, 50, 100),
+        posicion(pos),
+        color_helice(86, 43, 5)
+        {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _molino : public _triangulos3D
 {
+    static constexpr GLfloat altura_casa = 1.0;
+    static constexpr GLfloat radio_casa = 0.5;
+    static constexpr GLfloat altura_tejado = 0.15*altura_casa;
+    static constexpr GLfloat radio_tejado = radio_casa + 0.1*radio_casa;
+
+protected:
+    _helice_molino helice;
+    _cono tejado;
+    _cilindro casa;
+
 public:
     Posicion posicion;
+    Color color_molino_casa;
+    Color color_molino_tejado;
 
-    _molino(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
-};
-
-class _helice_molino : public _triangulos3D
-{
-public:
-    Posicion posicion;
-
-    _helice_molino(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _molino(Posicion pos = pos_default)
+    :
+    tejado(altura_tejado, radio_tejado),
+    casa(altura_casa, radio_casa, 30),
+    posicion(pos),
+    color_molino_casa(206, 219, 214),
+    color_molino_tejado(86, 5, 5)
+    {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _girasol : public _triangulos3D
@@ -232,8 +300,8 @@ class _girasol : public _triangulos3D
 public:
     Posicion posicion;
 
-    _girasol(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _girasol(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _tallo_girasol : public _triangulos3D
@@ -241,8 +309,8 @@ class _tallo_girasol : public _triangulos3D
 public:
     Posicion posicion;
 
-    _tallo_girasol(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _tallo_girasol(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _cabeza_girasol : public _triangulos3D
@@ -250,8 +318,8 @@ class _cabeza_girasol : public _triangulos3D
 public:
     Posicion posicion;
 
-    _cabeza_girasol(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _cabeza_girasol(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
 
 class _petalo_girasol : public _triangulos3D
@@ -259,6 +327,8 @@ class _petalo_girasol : public _triangulos3D
 public:
     Posicion posicion;
 
-    _petalo_girasol(Posicion pos) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor);
+    _petalo_girasol(Posicion pos = pos_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Posicion pos = pos_default);
 };
+
+#endif

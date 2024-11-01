@@ -23,31 +23,37 @@ typedef enum
 
     // PRACTICA 3
     SUELO,
-    SOL
+    SOL,
+    HELICE,
+    MOLINO
 } _tipo_objeto;
 
-_tipo_objeto    t_objeto=SOL;
+_tipo_objeto    t_objeto=MOLINO;
 _modo           modo=POINTS;
 
 // objetos
 _cubo       cubo;
-_piramide   piramide(0.85,1.3);
+_piramide   piramide({0.5, 0.2, 2});
 _objeto_ply ply; 
 _rotacion   rotacion;
 _cilindro   cilindro(1, 2, 100); 
 _cono       cono(1, 2, 100);
-_esfera     esfera(1, 100, 100);
+_esfera     esfera(1, 100, false, false, 60, 20);
 _extrusion  *extrusion;
 
 
 // PRACTICA 3 OBJETOS Y ATRIBUTOS
 // Suelo
 _suelo suelo({100, 0.25, 100});
-Color color_suelo = {0.0, 1.0, 0.0};
-// Sol
-_sol sol({0, 2, 0}, 0.25);
-Color color_sol = {1.0, 1.0, 0.0};
 
+// Sol
+Posicion pos_inicial_sol ={0, 2, 0};
+GLfloat tamanio_sol = 0.25;
+_sol sol(tamanio_sol, pos_inicial_sol);
+
+// Molino
+_helice_molino helice_molino;
+_molino molino;
 
 // **************************************************************************
 // variables que definen la posicion de la camara en coordenadas polares
@@ -157,10 +163,16 @@ void draw_objects()
 
         // PRACTICA 3
         case SUELO:
-            suelo.draw(modo, color_suelo, 1);
+            suelo.draw(modo, suelo.color_suelo, 1);
             break;
         case SOL:
-            sol.draw(modo, color_sol, 1);
+            sol.draw(modo, sol.color_sol, 1);
+            break;
+        case HELICE:
+            helice_molino.draw(modo, helice_molino.color_helice, 5);
+            break;
+        case MOLINO:
+            molino.draw(modo, molino.color_molino_casa, 5);
             break;
 	}
 

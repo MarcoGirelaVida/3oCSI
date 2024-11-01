@@ -23,7 +23,7 @@ _triangulos3D::_triangulos3D() {}
 // MODOS DE DIBUJO
 //*************************************************************************
 
-void _triangulos3D::draw(_modo modo, Color color, float grosor)
+void _triangulos3D::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {
     switch (modo)
     {
@@ -211,7 +211,7 @@ void _rotacion_PLY::parametros_PLY(char *archivo, size_t num)
 
 _rotacion::_rotacion() {}
 
-void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_inferior, bool tapa_superior, int tipo)
+void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_inferior, bool tapa_superior, int tipo, unsigned char porcentaje_revolucion, unsigned char porcentaje_generacion_esfera)
 {
     _vertex3f vertice_aux;
     _vertex3i cara_aux;
@@ -225,7 +225,9 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
     if (tipo == 2) num_aux = 1;
     vertices.resize(num_aux * num);
 
-    for (size_t j = 0; j < num; j++)
+    size_t num_revoluciones = static_cast<size_t>((porcentaje_revolucion / 100.0) * num);
+
+    for (size_t j = 0; j < num_revoluciones; j++)
     {
         for (size_t i = 0; i < num_aux; i++)
         {
@@ -241,17 +243,17 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
     // tratamiento de las caras 
     if (tipo < 2)
     {
-        for (size_t j = 0; j < num; j++)
+        for (size_t j = 0; j < num_revoluciones; j++)
         {
             for (size_t i = 0; i < num_aux - 1; i++)
             {
                 cara_aux._0 = i + j * num_aux;
-                cara_aux._1 = i + ((j + 1) % num) * num_aux;
+                cara_aux._1 = i + ((j + 1) % num_revoluciones) * num_aux;
                 cara_aux._2 = i + 1 + j * num_aux;
                 caras.push_back(cara_aux);
 
-                cara_aux._0 = i + ((j + 1) % num) * num_aux;
-                cara_aux._1 = i + 1 + ((j + 1) % num) * num_aux;
+                cara_aux._0 = i + ((j + 1) % num_revoluciones) * num_aux;
+                cara_aux._1 = i + 1 + ((j + 1) % num_revoluciones) * num_aux;
                 cara_aux._2 = i + 1 + j * num_aux;
                 caras.push_back(cara_aux);
             }
@@ -288,8 +290,10 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
         // punto central de la tapa
         vertice_aux.x = 0.0;
         vertice_aux.y = perfil[num_aux - 1].y;
-        if (tipo == 1)
+        if (tipo == 1 and porcentaje_generacion_esfera == 100)
             vertice_aux.y = radio;
+        else
+            vertice_aux.y = perfil[num_aux - 1].y;
         if (tipo == 2)
             vertice_aux.y = perfil[1].y;
         vertice_aux.z = 0.0;
@@ -389,15 +393,15 @@ _cubo::_cubo(float tam)
     colors_random();
 }
 
-_piramide::_piramide(float tam, float al)
+_piramide::_piramide(Dimensiones tam) : tam(tam)
 {
     //vertices 
     vertices.resize(5); 
-    vertices[0].x = -tam; vertices[0].y = 0;    vertices[0].z = tam;
-    vertices[1].x = tam;  vertices[1].y = 0;    vertices[1].z = tam;
-    vertices[2].x = tam;  vertices[2].y = 0;    vertices[2].z = -tam;
-    vertices[3].x = -tam; vertices[3].y = 0;    vertices[3].z = -tam;
-    vertices[4].x = 0;    vertices[4].y = al;   vertices[4].z = 0;
+    vertices[0].x = -tam.x / 2;  vertices[0].y = -tam.y / 2;  vertices[0].z = 0;         // Vértice inferior izquierdo de la base
+    vertices[1].x = tam.x / 2;   vertices[1].y = -tam.y / 2;  vertices[1].z = 0;         // Vértice inferior derecho de la base
+    vertices[2].x = tam.x / 2;   vertices[2].y = tam.y / 2;   vertices[2].z = 0;         // Vértice superior derecho de la base
+    vertices[3].x = -tam.x / 2;  vertices[3].y = tam.y / 2;   vertices[3].z = 0;         // Vértice superior izquierdo de la base
+    vertices[4].x = 0;           vertices[4].y = 0;          vertices[4].z = tam.z;     // Vértice de la punta
 
     //caras
     caras.resize(6);
@@ -438,18 +442,28 @@ _cono::_cono(float radio, float altura, size_t num)
     parametros(perfil, num, true, true, 2);
 }
 
-_esfera::_esfera(float radio, size_t latitud, size_t longitud)
+_esfera::_esfera(GLfloat radio, size_t resolucion, bool tapa_su, bool tapa_in, unsigned char porcentaje_generacion_x, unsigned char porcentaje_generacion_y)
+        : radio(radio), resolucion(resolucion), porcentaje_generacion_x(porcentaje_generacion_x), porcentaje_generacion_y(porcentaje_generacion_y)
+
 {
     vector<_vertex3f> perfil;
     _vertex3f aux;
-    for (size_t i = 1; i < latitud; i++)
+
+    if (porcentaje_generacion_x > 100 or porcentaje_generacion_x < 0 or porcentaje_generacion_y > 100 or porcentaje_generacion_y < 0)
     {
-        aux.x = radio * cos(M_PI * i / (latitud * 1.0) - M_PI / 2.0);
-        aux.y = radio * sin(M_PI * i / (latitud * 1.0) - M_PI / 2.0);
+        cerr << "Error al generar esfera, porcentaje incorrecto" << endl;
+        exit(1);
+    }
+
+    size_t limite = static_cast<size_t>((porcentaje_generacion_x / 100.0) * resolucion);
+    for (size_t i = 1; i < limite; i++)
+    {
+        aux.x = radio * cos(M_PI * i / (resolucion * 1.0) - M_PI / 2.0);
+        aux.y = radio * sin(M_PI * i / (resolucion * 1.0) - M_PI / 2.0);
         aux.z = 0.0;
         perfil.push_back(aux);
     }
-    parametros(perfil, longitud, true, true, 1);
+    parametros(perfil, resolucion, 1, tapa_in, tapa_su, porcentaje_generacion_y, porcentaje_generacion_x);
 }
 
 //--------------------------------------------------------------------------
@@ -462,71 +476,119 @@ _esfera::_esfera(float radio, size_t latitud, size_t longitud)
 // NATURALEZA
 //************************************************************************
 //_suelo::_suelo(Posicion pos) : posicion(pos) {}
-void _suelo::draw(_modo modo, Color color, float grosor)
+void _suelo::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {
     glPushMatrix();
         glTranslatef(0, -(tam.y/2), 0);
         glScalef(tam.x, tam.y, tam.z);
-        _cubo suelo;
-        suelo.draw(modo, color, grosor);
+        _cubo cubo;
+        cubo.draw(modo, color_suelo, grosor);
     glPopMatrix();
 }
 
 //_sol::_sol(GLfloat) {}
-void _sol::draw(_modo modo, Color color, float grosor)
+void _sol::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {
     glPushMatrix();
         glTranslatef(posicion.x, posicion.y, posicion.z);
-        _esfera sol(radio, resolucion, resolucion);
-        sol.draw(modo, color, grosor);
+        _esfera bola(radio, resolucion, resolucion);
+        bola.draw(modo, color_sol, grosor);
     glPopMatrix();
 }
 
 //_nube::_nube(Posicion pos) : posicion(pos) {}
-void _nube::draw(_modo modo, Color color, float grosor)
+void _nube::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
 
 //_lluvia::_lluvia(Posicion pos) : posicion(pos) {}
-void _lluvia::draw(_modo modo, Color color, float grosor)
+void _lluvia::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
 
 //_viento::_viento(Posicion pos) : posicion(pos) {}
-void _viento::draw(_modo modo, Color color, float grosor)
+void _viento::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
 
 //************************************************************************
 // GIRASOL
 //************************************************************************
 //_tallo_girasol::_tallo_girasol(Posicion pos) : posicion(pos) {}
-void _tallo_girasol::draw(_modo modo, Color color, float grosor)
+void _tallo_girasol::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
 
 //_petalo_girasol::_petalo_girasol(Posicion pos) : posicion(pos) {}
-void _petalo_girasol::draw(_modo modo, Color color, float grosor)
+void _petalo_girasol::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
 
 //_cabeza_girasol::_cabeza_girasol(Posicion pos) : posicion(pos) {}
-void _cabeza_girasol::draw(_modo modo, Color color, float grosor)
+void _cabeza_girasol::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
 
 //_girasol::_girasol(Posicion pos) : posicion(pos) {}
-void _girasol::draw(_modo modo, Color color, float grosor)
+void _girasol::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
 
 //************************************************************************
 // MOLINO
 //************************************************************************
 //_helice_molino::_helice_molino(Posicion pos) : posicion(pos) {}
-void _helice_molino::draw(_modo modo, Color color, float grosor)
-{}
+void _helice_molino::draw(_modo modo, Color color, float grosor) // , Posicion pos)
+{
+    if (num_aspas == 0)
+    {
+        cerr << "Error, número de aspas = 0" << endl;
+        exit(0);
+    }
+
+    // Dibujo palo central
+    glPushMatrix();
+        glTranslatef(0.0, largo_palo_central / 2.0, 0.0);
+        palo_central.draw(modo, color_helice, grosor);
+    glPopMatrix();
+
+    // Dibujo la bola central
+    glPushMatrix();
+        glTranslatef(0.0, grosor_aspas/2.0, 0.0);
+        bola_central.draw(modo, color_helice, grosor);
+    glPopMatrix();
+
+    // Dibujo las hélices
+    for (size_t aspa_i = 0; aspa_i < num_aspas; ++aspa_i)
+    {
+        glPushMatrix();
+            // Voy rotando cada aspa
+            glRotatef(360.0f / num_aspas * aspa_i, 0, 1, 0);
+            // La ajusto al centro
+            glTranslatef(0.0, 0.0, -largo_aspas);
+            aspa.draw(modo, color_helice, grosor);
+        glPopMatrix();
+    }
+}
 
 //_molino::_molino(Posicion pos) : posicion(pos) {}
-void _molino::draw(_modo modo, Color color, float grosor)
-{}
+void _molino::draw(_modo modo, Color color, float grosor) // , Posicion pos)
+{
+    glPushMatrix();
+        // Dibujo el pirulo
+        glPushMatrix();
+            glTranslatef(0.0, altura_casa, 0.0);
+            tejado.draw(modo, color_molino_tejado, grosor);
+        glPopMatrix();
+
+        // Dibulo la casa
+        casa.draw(modo, color_molino_casa, grosor);
+
+        // Dibujo la hélice
+        glPushMatrix();
+            glTranslatef(0.9*radio_casa, 0.75*altura_casa, 0.0);
+            glRotatef(90, 1, 0, 0);
+            helice.draw(modo, helice.color_helice, grosor);
+        glPopMatrix();
+    glPopMatrix();
+}
 
 //************************************************************************
 // BASE
 //************************************************************************
 //_escena_P3::_escena_P3(Posicion pos) : posicion(pos) {}
-void _escena_P3::draw(_modo modo, Color color, float grosor)
+void _escena_P3::draw(_modo modo, Color color, float grosor) // , Posicion pos)
 {}
