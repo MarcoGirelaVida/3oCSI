@@ -137,28 +137,28 @@ void draw_objects()
     switch (t_objeto)
     {
         case CUBO:
-            cubo.draw(modo,{1.0,0.0,0.0},5);
+            cubo.draw(modo,{1.0f,0.0f,0.0f},5);
             break;
         case PIRAMIDE:
-            piramide.draw(modo,{1.0,0.0,0.0},5);
+            piramide.draw(modo,{1.0f,0.0f,0.0f},5);
             break;
         case OBJETO_PLY:
-            ply.draw(modo,{1.0,0.6,0.0},3);
+            ply.draw(modo,{1.0f,0.6f,0.0f},3);
             break;
         case ROTACION:
-            rotacion.draw(modo,{1.0,0.0,0.0},5);
+            rotacion.draw(modo,{1.0f,0.0f,0.0f},5);
             break;
         case CILINDRO:
-            cilindro.draw(modo,{1.0,0.0,0.0},5);
+            cilindro.draw(modo,{1.0f,0.0f,0.0f},5);
             break;
         case CONO:
-            cono.draw(modo,{1.0,0.0,0.0},5);
+            cono.draw(modo,{1.0f,0.0f,0.0f},5);
             break;
         case ESFERA:
-            esfera.draw(modo,{1.0,0.0,0.0},5);
+            esfera.draw(modo,{1.0f,0.0f,0.0f},5);
             break;
         case EXTRUSION:
-            extrusion->draw(modo,{1.0,0.0,0.0},5);
+            extrusion->draw(modo,{1.0f,0.0f,0.0f},5);
             break;
 
         // PRACTICA 3

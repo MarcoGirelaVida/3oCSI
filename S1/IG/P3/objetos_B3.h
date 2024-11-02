@@ -240,19 +240,19 @@ public:
 
 class _helice_molino : public _triangulos3D
 {
-    static constexpr GLfloat largo_palo_central = 5.0;
-    static constexpr GLfloat radio_palo_central = 0.1;
-    static constexpr GLfloat largo_aspas = 2.0;
-    static constexpr GLfloat grosor_aspas = 0.2;
-    static constexpr GLfloat ancho_aspas = 0.5;
-    static constexpr size_t num_aspas = 10;
-    static constexpr GLfloat radio_bola_central = 0.3;
 protected:
     _piramide aspa;
     _cilindro palo_central;
     _esfera bola_central;
 
 public:
+    static constexpr GLfloat largo_aspas = 2.0;
+    static constexpr GLfloat grosor_aspas = largo_aspas / 10.0;
+    static constexpr GLfloat ancho_aspas = largo_aspas / 4.0;
+    static constexpr size_t num_aspas = 10;
+    static constexpr GLfloat radio_palo_central = grosor_aspas / 2.0;
+    static constexpr GLfloat radio_bola_central = radio_palo_central * 3.0;
+    static constexpr GLfloat largo_palo_central = largo_aspas / 2.0;
     Posicion posicion;
     Color color_helice;
 
@@ -269,10 +269,6 @@ public:
 
 class _molino : public _triangulos3D
 {
-    static constexpr GLfloat altura_casa = 1.0;
-    static constexpr GLfloat radio_casa = 0.5;
-    static constexpr GLfloat altura_tejado = 0.15*altura_casa;
-    static constexpr GLfloat radio_tejado = radio_casa + 0.1*radio_casa;
 
 protected:
     _helice_molino helice;
@@ -280,14 +276,18 @@ protected:
     _cilindro casa;
 
 public:
+    static constexpr GLfloat altura_casa = 1.0;
+    static constexpr GLfloat radio_casa = 0.5;
+    static constexpr GLfloat altura_tejado = 0.45*altura_casa;
+    static constexpr GLfloat radio_tejado = radio_casa + 0.2*radio_casa;
     Posicion posicion;
     Color color_molino_casa;
     Color color_molino_tejado;
 
     _molino(Posicion pos = pos_default)
     :
-    tejado(altura_tejado, radio_tejado),
-    casa(altura_casa, radio_casa, 30),
+    tejado(radio_tejado, altura_tejado),
+    casa(radio_casa, altura_casa, 30),
     posicion(pos),
     color_molino_casa(206, 219, 214),
     color_molino_tejado(86, 5, 5)

@@ -436,7 +436,7 @@ _cono::_cono(float radio, float altura, size_t num)
 
     aux.x = radio;  aux.y = -altura/2.0;    aux.z = 0.0;
     perfil.push_back(aux);
-    aux.x = 0.0;    aux.y = altura;         aux.z = 0.0;
+    aux.x = 0.0;    aux.y = altura/2.0;         aux.z = 0.0;
     perfil.push_back(aux);
 
     parametros(perfil, num, true, true, 2);
@@ -541,7 +541,7 @@ void _helice_molino::draw(_modo modo, Color color, float grosor) // , Posicion p
 
     // Dibujo palo central
     glPushMatrix();
-        glTranslatef(0.0, largo_palo_central / 2.0, 0.0);
+        glTranslatef(0.0, largo_palo_central/2.0 + grosor_aspas/2.0, 0.0);
         palo_central.draw(modo, color_helice, grosor);
     glPopMatrix();
 
@@ -570,16 +570,24 @@ void _molino::draw(_modo modo, Color color, float grosor) // , Posicion pos)
     glPushMatrix();
         // Dibujo el pirulo
         glPushMatrix();
+            // Lo subo al tejado
             glTranslatef(0.0, altura_casa, 0.0);
+            // Lo elevo sobre el nivel base
+            glTranslatef(0.0, altura_tejado/2.0, 0.0);
             tejado.draw(modo, color_molino_tejado, grosor);
         glPopMatrix();
 
         // Dibulo la casa
-        casa.draw(modo, color_molino_casa, grosor);
+        glPushMatrix();
+            glTranslatef(0.0, altura_casa/2.0, 0.0);
+            casa.draw(modo, color_molino_casa, grosor);
+        glPopMatrix();
 
         // Dibujo la hélice
         glPushMatrix();
-            glTranslatef(0.9*radio_casa, 0.75*altura_casa, 0.0);
+            glTranslatef(0.0, 0.3*altura_tejado + altura_casa, -(radio_casa*0.8));
+            glScalef(0.2, 0.2, 0.2);
+            glTranslatef(0.0, 0.0, -(helice.largo_palo_central + helice.radio_bola_central/2.0));
             glRotatef(90, 1, 0, 0);
             helice.draw(modo, helice.color_helice, grosor);
         glPopMatrix();
