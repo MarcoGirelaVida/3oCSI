@@ -831,8 +831,38 @@ void _molino::draw(_modo modo, float grosor) // , Coordenadas pos)
 // BASE
 //************************************************************************
 //_escena_P3::_escena_P3(Coordenadas pos) : posicion(pos) {}
-void _escena_P3::draw(_modo modo, Color color, float grosor) // , Coordenadas pos)
-{}
+void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
+{
+    glPushMatrix();
+
+        // Suelo
+        glPushMatrix();
+            suelo.draw(modo, grosor);
+        glPopMatrix();
+
+        // Molino
+        glPushMatrix();
+            glScalef(1.5, 1.5, 1.5);
+            glRotatef(180, 0, 1, 0);
+            molino.draw(modo, grosor);
+        glPopMatrix();
+
+        // Girasol/es
+        glPushMatrix();
+            glTranslatef(molino.radio_tejado*2, 0.0, molino.radio_tejado*2);
+            glScalef(0.1, 0.1, 0.1);
+            girasol.draw(modo, grosor);
+        glPopMatrix();
+
+        // Sol
+        glPushMatrix();
+            sol.posicion = {0., 3*(molino.altura_casa+molino.altura_tejado), 0.0};
+            sol.draw(modo, grosor);
+        glPopMatrix();
+
+
+    glPopMatrix();
+};
 
 
 //************************************************************************

@@ -41,11 +41,12 @@ typedef enum
     PETALO,
     CABEZA_GIRASOL,
     HOJA_GIRASOL,
-    GIRASOL
+    GIRASOL,
+    ESCENA_P3
 } _tipo_objeto;
 
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=GIRASOL;
+_tipo_objeto    t_objeto=ESCENA_P3;
 _modo           modo=POINTS;
 _modo_interfaz  modo_interfaz=NORMAL;
 
@@ -79,6 +80,9 @@ _cabeza_girasol cabeza_girasol;
 _tallo_girasol tallo_girasol;
 _hoja_girasol hoja_girasol;
 _girasol girasol;
+
+// ESCENA
+_escena_P3 escena_p3;
 
 // **************************************************************************
 // variables que definen la posicion de la camara en coordenadas polares
@@ -213,6 +217,9 @@ void draw_objects()
             break;
         case GIRASOL:
             girasol.draw(modo);
+            break;
+        case ESCENA_P3:
+            escena_p3.draw(modo);
             break;
 	}
 
@@ -420,7 +427,8 @@ void initialize(void)
 
     // se indica el color para limpiar la ventana	(r,v,a,al)
     // blanco=(1,1,1,1) rojo=(1,0,0,1), ...
-    glClearColor(1,1,1,1);
+    Color color_fondo(102, 151, 200);
+    glClearColor(color_fondo.r, color_fondo.g, color_fondo.b, 1);
 
     // se habilita el z-bufer
     glEnable(GL_DEPTH_TEST);

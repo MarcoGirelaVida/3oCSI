@@ -205,15 +205,6 @@ public:
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 // PROYECTO PROPIO P3
-
-class _escena_P3 : public _triangulos3D
-{
-public:
-    Coordenadas posicion;
-    
-    _escena_P3(Coordenadas pos = coordenadas_default) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
-};
 class _suelo: public _triangulos3D
 {
 public:
@@ -221,7 +212,7 @@ public:
     Coordenadas posicion;
     Color color_suelo;
 
-    _suelo(Coordenadas dimenisones, Coordenadas pos = coordenadas_default) : tam(dimenisones), posicion(pos), color_suelo(0, 255, 0) {}
+    _suelo(Coordenadas dimenisones = {100, 0.25, 100}, Coordenadas pos = coordenadas_default) : tam(dimenisones), posicion(pos), color_suelo(108, 136, 52) {}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 
@@ -233,7 +224,7 @@ public:
     Coordenadas posicion;
     Color color_sol;
 
-    _sol(GLfloat radio, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol(1, 1, 0) {};
+    _sol(GLfloat radio = 0.25, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol(255, 205, 29) {};
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);, Coordenadas pos = coordenadas_default
 };
 
@@ -392,7 +383,6 @@ public:
 
 };
 
-
 class _girasol : public _triangulos3D
 {
 private:
@@ -412,6 +402,22 @@ public:
     Coordenadas posicion;
 
     _girasol(Coordenadas pos = coordenadas_default);
+    void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
+};
+
+class _escena_P3 : public _triangulos3D
+{
+
+protected:
+    _suelo suelo;
+    _sol sol;
+    _molino molino;
+    _girasol girasol;
+
+public:
+    Coordenadas posicion;
+    
+    _escena_P3(Coordenadas pos = coordenadas_default) : posicion(pos) {}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 #endif
