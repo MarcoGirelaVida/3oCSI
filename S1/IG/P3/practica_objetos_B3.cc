@@ -12,6 +12,17 @@ using namespace std;
 // tipos
 typedef enum
 {
+    NORMAL,
+    CALIBRACION_CURVAS
+} _modo_interfaz;
+
+typedef enum
+{
+    PUNTO_1,
+    PUNTO_2
+} _punto_en_calibracion;
+typedef enum
+{
     CUBO,
     PIRAMIDE,
     OBJETO_PLY,
@@ -25,11 +36,18 @@ typedef enum
     SUELO,
     SOL,
     HELICE,
-    MOLINO
+    MOLINO,
+    TALLO_GIRASOL,
+    PETALO,
+    CABEZA_GIRASOL,
+    HOJA_GIRASOL,
+    GIRASOL
 } _tipo_objeto;
 
-_tipo_objeto    t_objeto=MOLINO;
+_punto_en_calibracion punto_en_calibracion=PUNTO_1;
+_tipo_objeto    t_objeto=GIRASOL;
 _modo           modo=POINTS;
+_modo_interfaz  modo_interfaz=NORMAL;
 
 // objetos
 _cubo       cubo;
@@ -37,8 +55,8 @@ _piramide   piramide({0.5, 0.2, 2});
 _objeto_ply ply; 
 _rotacion   rotacion;
 _cilindro   cilindro(1, 2, 100); 
-_cono       cono(1, 2, 100);
-_esfera     esfera(1, 100, false, false, 60, 20);
+_cono       cono(1, 2, 20, {2, 2, 0});
+_esfera     esfera(0.5, 100, true, true, 50, 100);
 _extrusion  *extrusion;
 
 
@@ -47,13 +65,20 @@ _extrusion  *extrusion;
 _suelo suelo({100, 0.25, 100});
 
 // Sol
-Posicion pos_inicial_sol ={0, 2, 0};
+Coordenadas pos_inicial_sol ={0, 2, 0};
 GLfloat tamanio_sol = 0.25;
 _sol sol(tamanio_sol, pos_inicial_sol);
 
 // Molino
 _helice_molino helice_molino;
 _molino molino;
+
+//GIRASOL
+_petalo_girasol petalo_girasol;
+_cabeza_girasol cabeza_girasol;
+_tallo_girasol tallo_girasol;
+_hoja_girasol hoja_girasol;
+_girasol girasol;
 
 // **************************************************************************
 // variables que definen la posicion de la camara en coordenadas polares
@@ -163,16 +188,31 @@ void draw_objects()
 
         // PRACTICA 3
         case SUELO:
-            suelo.draw(modo, suelo.color_suelo, 1);
+            suelo.draw(modo);
             break;
         case SOL:
-            sol.draw(modo, sol.color_sol, 1);
+            sol.draw(modo);
             break;
         case HELICE:
-            helice_molino.draw(modo, helice_molino.color_helice, 5);
+            helice_molino.draw(modo);
             break;
         case MOLINO:
-            molino.draw(modo, molino.color_molino_casa, 5);
+            molino.draw(modo);
+            break;
+        case PETALO:
+            petalo_girasol.draw(modo, petalo_girasol.color_petalo);
+            break;
+        case CABEZA_GIRASOL:
+            cabeza_girasol.draw(modo);
+            break;
+        case TALLO_GIRASOL:
+            tallo_girasol.draw(modo);
+            break;
+        case HOJA_GIRASOL:
+            hoja_girasol.draw(modo);
+            break;
+        case GIRASOL:
+            girasol.draw(modo);
             break;
 	}
 
@@ -227,11 +267,35 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
 
     case 'O':   t_objeto = OBJETO_PLY;  break;	
     case 'R':   t_objeto = ROTACION;    break;
-    case 'P':   t_objeto = PIRAMIDE;    break;
+    case 'P':   if(modo_interfaz==CALIBRACION_CURVAS)
+                {
+                    if (punto_en_calibracion == PUNTO_1)
+                        punto_en_calibracion = PUNTO_2;
+                    else
+                        punto_en_calibracion = PUNTO_1;
+                }
+                else
+                    t_objeto = PIRAMIDE;
+                break;
     case 'C':   t_objeto = CUBO;        break;
     case 'L':   t_objeto = CILINDRO;    break;
     case 'N':   t_objeto = CONO;        break;
     case 'E':   t_objeto = ESFERA;      break;
+
+    // PRÁCTICA 3
+    case 'M':
+        if (modo_interfaz == NORMAL)
+        {
+            modo_interfaz = CALIBRACION_CURVAS;
+            t_objeto = HOJA_GIRASOL;
+            cout << "Modo calibración curvas activado" << endl;
+        }
+        else
+        {
+            modo_interfaz = NORMAL;
+            cout << "Modo calibración curvas desactivado" << endl;
+        }
+        break;
 	}
     glutPostRedisplay();
 }
@@ -252,25 +316,78 @@ void special_key(int tecla_pulsada, int x, int y)
     switch (tecla_pulsada)
     {
         case GLUT_KEY_LEFT:
-            Observer_angle_y--;
+            if (modo_interfaz == CALIBRACION_CURVAS)
+            {
+                if (punto_en_calibracion == PUNTO_1)
+                    hoja_girasol.punto_curva_1.x -= 0.1;
+                else
+                    hoja_girasol.punto_curva_2.x -= 0.1;
+            }
+            else
+                Observer_angle_y--;
             break;
         case GLUT_KEY_RIGHT:
-            Observer_angle_y++;
+            if (modo_interfaz == CALIBRACION_CURVAS)
+            {
+                if (punto_en_calibracion == PUNTO_1)
+                    hoja_girasol.punto_curva_1.x += 0.1;
+                else
+                    hoja_girasol.punto_curva_2.x += 0.1;
+            }
+            else
+                Observer_angle_y++;
             break;
         case GLUT_KEY_UP:
-            Observer_angle_x--;
+            if (modo_interfaz == CALIBRACION_CURVAS)
+            {
+                if (punto_en_calibracion == PUNTO_1)
+                    hoja_girasol.punto_curva_1.y += 0.1;
+                else
+                    hoja_girasol.punto_curva_2.y += 0.1;
+            }
+            else
+                Observer_angle_x--;
             break;
         case GLUT_KEY_DOWN:
-            Observer_angle_x++;
+            if (modo_interfaz == CALIBRACION_CURVAS)
+            {
+                if (punto_en_calibracion == PUNTO_1)
+                    hoja_girasol.punto_curva_1.y -= 0.1;
+                else
+                    hoja_girasol.punto_curva_2.y -= 0.1;
+            }
+            else
+                Observer_angle_x++;
             break;
         case GLUT_KEY_PAGE_UP:
-            Observer_distance *= 1.2;
+            if (modo_interfaz == CALIBRACION_CURVAS)
+            {
+                if (punto_en_calibracion == PUNTO_1)
+                    hoja_girasol.punto_curva_1.z += 0.1;
+                else
+                    hoja_girasol.punto_curva_2.z += 0.1;
+            }
+            else
+                Observer_distance *= 1.2;
             break;
         case GLUT_KEY_PAGE_DOWN:
-            Observer_distance /= 1.2;
+            if (modo_interfaz == CALIBRACION_CURVAS)
+            {
+                if (punto_en_calibracion == PUNTO_1)
+                    hoja_girasol.punto_curva_1.z -= 0.1;
+                else
+                    hoja_girasol.punto_curva_2.z -= 0.1;
+            }
+            else
+                Observer_distance /= 1.2;
             break;
     }
 
+    if (modo_interfaz == CALIBRACION_CURVAS)
+    {
+        cerr << "Punto 1: " << hoja_girasol.punto_curva_1.x << " " << hoja_girasol.punto_curva_1.y << " " << hoja_girasol.punto_curva_1.z << endl;
+        cerr << "Punto 2: " << hoja_girasol.punto_curva_2.x << " " << hoja_girasol.punto_curva_2.y << " " << hoja_girasol.punto_curva_2.z << endl;
+    }
     glutPostRedisplay();
 }
 
