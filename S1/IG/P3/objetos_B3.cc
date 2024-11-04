@@ -997,9 +997,9 @@ Coordenadas _girasol::lanzar_semilla(GLfloat velocidad)
 {
     // Creo una semilla
     //semillas.push_back(_semilla());
-    unsigned instante_actual = glutGet(GLUT_ELAPSED_TIME);
-    GLfloat pos_x = velocidad * instante_actual / 1000.0;
-    GLfloat pos_y = velocidad * instante_actual / 1000.0 - 1/2*9.8*instante_actual/1000.0*instante_actual/1000.0;
+    //unsigned instante_actual = glutGet(GLUT_ELAPSED_TIME);
+    //GLfloat pos_x = velocidad * instante_actual / 1000.0;
+    //GLfloat pos_y = velocidad * instante_actual / 1000.0 - 1/2*9.8*instante_actual/1000.0*instante_actual/1000.0;
 
 
 }
@@ -1121,7 +1121,7 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
             girasol.draw(modo, grosor);
         glPopMatrix();
 
-    printear_info();
+    //printear_info();
 
     glPopMatrix();
 };
@@ -1138,12 +1138,6 @@ void _escena_P3::actualizar_hora()
         hora += porcion_del_dia_transcurrido*24.0;
 }
 
-void _escena_P3::printear_info()
-{
-    cerr << "HORA: " << hora << endl;
-    cerr << "VELOCIADAD VIENTO: " << viento.velocidad << endl;
-}
-
 //************************************************************************
 // OTRAS COSAS
 //************************************************************************
@@ -1156,12 +1150,12 @@ float aleatorio(float minimo, float maximo)
     return distribucion(gen);
 }
 
-void dibujar_texto(int x, int y, float r, float g, float b, int font, char *string)
+void dibujar_texto(const char *string, Coordenadas pos, Color color)
 {
-  glColor3f( r, g, b );
-  glRasterPos2f(x, y);
+  glColor4f(color.actual.r, color.actual.g, color.actual.b, color.actual.a);
+  glRasterPos2f(pos.x, pos.y);
   int len, i;
   len = (int)strlen(string);
   for (i = 0; i < len; i++)
-    glutBitmapCharacter((void*)GLUT_BITMAP_HELVETICA_18, string[i]);
+    glutBitmapCharacter((void*)GLUT_BITMAP_HELVETICA_10, string[i]);
 }

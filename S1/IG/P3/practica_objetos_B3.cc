@@ -5,6 +5,7 @@
 #include <GL/glut.h>
 #include <ctype.h>
 #include <math.h>
+#include <string>
 #include <vector>
 #include "objetos_B3.h"
 using namespace std;
@@ -62,7 +63,7 @@ typedef enum
 } _tipo_objeto;
 
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=TEXTO;
+_tipo_objeto    t_objeto=VIENTO_OBJ;
 _modo           modo=SOLID;
 _modo_interfaz  modo_interfaz=_modo_interfaz::ESCENA_P3;
 _variable_seleccionada variable_seleccionada = PASO_TIEMPO_MANUAL;
@@ -257,13 +258,47 @@ void draw_objects()
             viento.draw(modo);
             break;
         case TEXTO:
-            dibujar_texto(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "Practica 3");
-            break;
+            {
+                glPushMatrix();
+                //glScalef(3, 3, 3);
+                dibujar_texto("Practica 3", {2, 2});
+                glPopMatrix();
+                break;
+            }
         case ESCENA_FINAL:
             escena_p3.draw(modo);
             break;
 	}
 
+}
+std::string to_string_with_precision(float value, int precision = 2) {
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(precision) << value;
+    return out.str();
+}
+void printear_info()
+{
+    glPushMatrix();
+        char *modo_interfaz_str;
+        switch (modo_interfaz)
+        {
+            case ESCENA_P3: modo_interfaz_str = "MODO INTERFAZ: [ESCENA P3]"; break;
+            case NORMAL: modo_interfaz_str = "MODO INTERFAZ: [NORMAL]"; break;
+            case CALIBRACION_CURVAS: modo_interfaz_str = "MODO INTERFAZ: [CALIBRACION CURVAS]"; break;
+        }
+        float entre_lineas = 0.2;
+        dibujar_texto(modo_interfaz_str, {10, 5+entre_lineas*2}, {211u, 211, 211, 0.8});
+        if (modo_interfaz == ESCENA_P3)
+        {
+            dibujar_texto("-----------------", {3, 5}, {211u, 211, 211, 0.8});
+            dibujar_texto("INFORMACION SOBRE ESCENA", {3, 5-entre_lineas}, {211u, 211, 211, 0.8});
+            dibujar_texto(("VARIABLE SELECCIONADA: " + to_string(variable_seleccionada)).c_str(), {3, 5-entre_lineas*2}, {211u, 211, 211, 0.8});
+            dibujar_texto(("HORA: " + to_string_with_precision(escena_p3.hora)).c_str(), {3, 5-entre_lineas*3}, {211u, 211, 211, 0.8});
+            dibujar_texto(("VELOCIDAD VIENTO: " + to_string_with_precision(escena_p3.viento.velocidad)).c_str(), {3, 5-entre_lineas*4}, {211u, 211, 211, 0.8});
+            dibujar_texto("-----------------", {3, 5-entre_lineas*5}, {211u, 211, 211, 0.8});
+        }
+
+    glPopMatrix();
 }
 
 void draw(void)
@@ -287,6 +322,7 @@ void draw(void)
     
     draw_axis();
     draw_objects();
+    printear_info();
     glutSwapBuffers();
 }
 

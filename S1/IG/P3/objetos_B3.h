@@ -16,7 +16,6 @@ using namespace std;
 const float AXIS_SIZE=5000;
 typedef enum{POINTS,EDGES,SOLID,SOLID_COLORS} _modo;
 
-void dibujar_texto(int x, int y, float r, float g, float b, int font, char *string);
 
 float aleatorio(float minimo = 0.0, float maximo = 1.0);
 
@@ -248,6 +247,7 @@ struct Coordenadas
 
 const Coordenadas coordenadas_default = {0.0, 0.0, 0.0};
 
+void dibujar_texto(const char *string, Coordenadas pos = coordenadas_default, Color color = Color::c_default);
 //*************************************************************************
 // BASE DE TODO
 //*************************************************************************
