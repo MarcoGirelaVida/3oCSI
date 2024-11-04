@@ -48,7 +48,7 @@ void _triangulos3D::draw(_modo modo, Color color, float grosor, Coordenadas pos)
 void _puntos3D::draw_puntos(Color color, int grosor)
 {
     glPointSize(grosor);
-    glColor3f(color.actual.r, color.actual.g, color.actual.b);
+    glColor4f(color.actual.r, color.actual.g, color.actual.b, color.actual.a);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
@@ -59,7 +59,7 @@ void _triangulos3D::draw_aristas(Color color, int grosor)
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glLineWidth(grosor);
-    glColor3f(color.actual.r, color.actual.g, color.actual.b);
+    glColor4f(color.actual.r, color.actual.g, color.actual.b, color.actual.a);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, &vertices[0]);
@@ -69,7 +69,7 @@ void _triangulos3D::draw_aristas(Color color, int grosor)
 void _triangulos3D::draw_solido(Color color)
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glColor3f(color.actual.r, color.actual.g, color.actual.b);
+    glColor4f(color.actual.r, color.actual.g, color.actual.b, color.actual.a);
     glBegin(GL_TRIANGLES);
         for (size_t i = 0; i < caras.size(); i++)
         {
@@ -86,7 +86,7 @@ void _triangulos3D::draw_solido_colores( )
     glBegin(GL_TRIANGLES);
         for (size_t i = 0; i < caras.size(); i++)
         {
-            glColor3f(colores_caras[i].r, colores_caras[i].g, colores_caras[i].b);
+            glColor4f(colores_caras[i].r, colores_caras[i].g, colores_caras[i].b, 1.0);
             glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
             glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
             glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
@@ -503,7 +503,7 @@ void _sol::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
     glPushMatrix();
         glTranslatef(posicion.x, posicion.y, posicion.z);
-        glColor3f(color_sol.actual.r, color_sol.actual.g, color_sol.actual.b);
+        glColor4f(color_sol.actual.r, color_sol.actual.g, color_sol.actual.b, color_sol.actual.a);
         glutSolidSphere(radio, resolucion, resolucion);
     glPopMatrix();
 }
@@ -547,12 +547,13 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
     else if (velocidad < 0)
         velocidad = 0.0;
 
+    hay_brisa_en_x_0 = false;
     // Si el viento no se mueve no hay viento xd
     if (velocidad)
     {
         glPushMatrix();
             glTranslatef(posicion.x, posicion.y, posicion.z);
-            glTranslatef(-area_efecto.x/2.0, 0.0, -area_efecto.z/2.0);
+            glTranslatef(-area_efecto.x/2.0, -area_efecto.y/2.0, -area_efecto.z/2.0);
             // Actualizo la hora actual y la distancia transcurrida
             unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
             //float tiempo_transcurrido = (instante_actual - instante_previo) / 1000.0f; // Diferencia de tiempo en segundos
@@ -562,7 +563,7 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
             // (Supongo que la velocidad está en kilometros por hora)
             GLfloat distancia_recorrida_en_un_segundo = (velocidad/3600)*1000;
             GLfloat distancia_recorrida = distancia_recorrida_en_un_segundo*instante_actual/1000.0f; // (en "metros")
-            //GLfloat escalado_brisa = (velocidad / velocidad_max) * escalado_max_brisas;
+            GLfloat escalado_brisa = (velocidad / velocidad_max) * escalado_max_brisas;
             onda.frecuencia = frecuencia_min + (((velocidad / velocidad_max) * (frecuencia_max-frecuencia_min)*10)/10);
             onda.longitud = distancia_recorrida_en_un_segundo / onda.frecuencia;
             //cerr << "Frecuencia: " << onda.frecuencia << endl;
@@ -592,6 +593,8 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
             {
                 glPushMatrix();
                     GLfloat pos_x = fmod(x_i + distancia_recorrida, area_efecto.x);
+                    if (pos_x < brisa_viento.largo and pos_x > 0.0)
+                        hay_brisa_en_x_0 = true;
                     //cerr << "Pos x: " << pos_x << endl;
                     //if ((x_i+distancia_recorrida) < area_efecto.x)
                     //    pos_x = x_i+distancia_recorrida;
@@ -615,13 +618,13 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
                         {
                             glPushMatrix();
                                 // La traslado a donde toque 
-                                //glScalef(escalado_brisa, 0.0, escalado_brisa/2.0);
                                 glTranslatef(0, 0, (area_efecto.z/num_brisas_por_lado)*(z_i+1)+offset_z*offset);
                                 glTranslatef(0, (area_efecto.y/num_brisas_por_lado)*(y_i+1), 0);
 
                                 // Dibujo la brisa
                                 glRotatef(90, 0, 1, 0);
                                 glRotatef(-90, 1, 0, 0);
+                                glScalef(0.5+escalado_brisa, 0.5+escalado_brisa, 0.5+escalado_brisa);
                                 brisa_viento.draw(modo, grosor);
                             glPopMatrix();
 
@@ -677,6 +680,33 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
     }
     glPopMatrix();
     */
+}
+
+GLfloat _viento::giro_helice(GLfloat rozamiento, bool tiempo_ingame, GLfloat hora_ingame, Coordenadas pos)
+{
+    GLfloat angulo_giro = 0.0;
+    if (hay_brisa_en_x_0)
+    {
+        velocidad_giro_molino = velocidad;
+    }
+    else if (velocidad_giro_molino)
+        velocidad_giro_molino -= rozamiento;
+
+
+    // Muevo la hélice a la velocidad
+    unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
+    //float tiempo_transcurrido = (instante_actual - instante_previo) / 1000.0f; // Diferencia de tiempo en segundos
+    //instante_previo = instante_actual;
+
+    // Tiempo que tarda en el viento la distancia de una helice
+    GLfloat metros_por_segundo = (velocidad_giro_molino/3600)*1000;
+    GLfloat porcion_radio_recorrida = metros_por_segundo / 3.0;
+    GLfloat angulos_por_segundo = 90.0 * porcion_radio_recorrida;
+
+    //cerr << "Velocidad giro molino: " << velocidad_giro_molino << endl;
+    angulo_giro = fmod(angulos_por_segundo*instante_actual/1000.0, 360.0);
+    //cerr << "Angulo: " << angulo_giro << endl;
+    return angulo_giro;
 }
 //************************************************************************
 // GIRASOL
@@ -981,11 +1011,11 @@ void _molino::draw(_modo modo, float grosor) // , Coordenadas pos)
             glScalef(0.2, 0.2, 0.2);
             glTranslatef(0.0, 0.0, -(helice.largo_palo_central + helice.radio_bola_central/2.0));
             glRotatef(90, 1, 0, 0);
+            glRotatef(angulo_helice, 0, 1, 0);
             helice.draw(modo, grosor);
         glPopMatrix();
     glPopMatrix();
 }
-
 //************************************************************************
 // BASE
 //************************************************************************
@@ -1005,6 +1035,7 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
         // Dibulo el viento
         glPushMatrix();
             viento.draw(modo);
+            molino.angulo_helice = viento.giro_helice();
         glPopMatrix();
 
         // Suelo
@@ -1026,7 +1057,7 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
             girasol.draw(modo, grosor);
         glPopMatrix();
 
-
+    printear_info();
 
     glPopMatrix();
 };
@@ -1041,6 +1072,12 @@ void _escena_P3::actualizar_hora()
 
     if (hora < 24.0)
         hora += porcion_del_dia_transcurrido*24.0;
+}
+
+void _escena_P3::printear_info()
+{
+    cerr << "HORA: " << hora << endl;
+    cerr << "VELOCIADAD VIENTO: " << viento.velocidad << endl;
 }
 
 //************************************************************************

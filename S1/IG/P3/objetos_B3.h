@@ -417,13 +417,13 @@ public:
 
 class _molino : public _triangulos3D
 {
-
 protected:
     _helice_molino helice;
     _cono tejado;
     _cilindro casa;
 
 public:
+    GLfloat angulo_helice = 0.0;
     static constexpr GLfloat altura_casa = 1.0;
     static constexpr GLfloat radio_casa = 0.5;
     static constexpr GLfloat altura_tejado = 0.45*altura_casa;
@@ -560,20 +560,22 @@ class _viento : public _triangulos3D
 private:
     unsigned instante_previo = 0.0;
     const GLfloat velocidad_max = 255;
-    const GLfloat escalado_max_brisas = 2;
+    const GLfloat escalado_max_brisas = 1.5;
     const GLfloat frecuencia_min = 0.2;
     const GLfloat frecuencia_max = 2;
 protected:
     _hoja_girasol brisa_viento;
     Onda onda;
 public:
-    GLfloat velocidad = 50.0;
-    size_t num_brisas_por_lado = 3;
-    Coordenadas area_efecto = {100, 5, 5};
+    bool hay_brisa_en_x_0 = false;
+    GLfloat velocidad = 30.0;
+    GLfloat velocidad_giro_molino = velocidad;
+    size_t num_brisas_por_lado = 5;
+    Coordenadas area_efecto = {100, 7, 30};
     Coordenadas posicion;
     Color color_viento;
-
-    _viento(Coordenadas pos = coordenadas_default) : posicion(pos), color_viento(190u, 231, 237)
+    // color_viento antiguo = 190u, 231, 237
+    _viento(Coordenadas pos = coordenadas_default) : posicion(pos), color_viento(240u, 255, 255, 0.5)
     {
         brisa_viento.largo = 5;
         brisa_viento.ancho = 0.25;
@@ -584,6 +586,7 @@ public:
         //lamina_viento   
     }
     void draw(_modo modo, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, float grosor=5); // , Coordenadas pos = coordenadas_default);
+    GLfloat giro_helice(GLfloat rozamiento = 0.01, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, Coordenadas pos_molino  = coordenadas_default);
 };
 
 class _escena_P3 : public _triangulos3D
@@ -609,5 +612,6 @@ public:
     _escena_P3(Coordenadas pos = coordenadas_default) : posicion(pos), color_cielo(102u, 151, 200){}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
     void actualizar_hora();
+    void printear_info();
 };
 #endif

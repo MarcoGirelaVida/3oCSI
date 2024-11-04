@@ -158,17 +158,17 @@ void draw_axis()
     glLineWidth(2);
     glBegin(GL_LINES);
         // eje X, color rojo
-        glColor3f(1, 0, 0);
+        glColor4f(1, 0, 0, 0.5);
         glVertex3f(-AXIS_SIZE, 0, 0);
         glVertex3f(AXIS_SIZE, 0, 0);
 
         // eje Y, color verde
-        glColor3f(0, 1, 0);
+        glColor4f(0, 1, 0, 0.5);
         glVertex3f(0, -AXIS_SIZE, 0);
         glVertex3f(0, AXIS_SIZE, 0);
 
         // eje Z, color azul
-        glColor3f(0, 0, 1);
+        glColor4f(0, 0, 1, 0.5);
         glVertex3f(0, 0, -AXIS_SIZE);
         glVertex3f(0, 0, AXIS_SIZE);
     glEnd();
@@ -529,11 +529,13 @@ void initialize(void)
 
     // se indica el color para limpiar la ventana	(r,v,a,al)
     // blanco=(1,1,1,1) rojo=(1,0,0,1), ...);
-    //glClearColor(escena_p3.color_cielo.actual.r, escena_p3.color_cielo.actual.g, escena_p3.color_cielo.actual.b, 1);
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(escena_p3.color_cielo.actual.r, escena_p3.color_cielo.actual.g, escena_p3.color_cielo.actual.b, 1);
+    //glClearColor(0.0, 0.0, 0.0, 1.0);
 
     // se habilita el z-bufer
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glEnable(GL_LIGHTING);
     //glEnable(GL_LIGHT0);
     //glEnable(GL_NORMALIZE);
