@@ -498,6 +498,38 @@ void _suelo::draw(_modo modo, float grosor) // , Coordenadas pos)
     glPopMatrix();
 }
 
+void _pradera::draw(_modo modo, float grosor)
+{
+    glPushMatrix();
+        glTranslatef(posicion.x, posicion.y, posicion.z);
+        
+        angulo = (max_angulo_inclinacion * porcentaje_viento)/2.0 * oscilacion;
+        desfase_puntas = (max_desfase * porcentaje_viento)/2.0 + ((max_desfase * porcentaje_viento)/2.0 * oscilacion);
+        desfase_z = (max_desfase_z * porcentaje_viento) * oscilacion;
+
+        size_t num_plantas_x = tam.x * densidad;
+        size_t num_plantas_z = tam.z * densidad;
+        bool capa_oscura = false;
+        GLfloat offset_z = tam.z / num_plantas_z;
+        for (size_t i = 0; i < num_plantas_x; i++)
+        {
+            for (size_t j = 0; j < num_plantas_z; j++)
+            {
+                //GLfloat distancia_foco = sqrt(pow(foco_viento.x - i, 2) + pow(foco_viento.z - j, 2));
+                //GLfloat angulo_con_respecto_foco = atan2(foco_viento.z*tam.z - j, foco_viento.x*tam.x - i);
+                glPushMatrix();
+                    if (capa_oscura) glTranslatef(0, 0, offset_z/2.0);
+                    glTranslatef(-(tam.x/2.0)+(tam.x/num_plantas_x)*i, 0, -(tam.z/2.0)+(tam.z/num_plantas_z)*j);
+                    //glRotatef(angulo_con_respecto_foco*180/M_PI, 0, 1, 0);
+                    //tan(angulo*M_PI/180)
+                    _cono planta(0.05, tam.y, 5, {desfase_puntas, tam.y, desfase_z});
+                    planta.draw(modo, capa_oscura ? color_pradera.actual + 0.05 : color_pradera, grosor);
+                glPopMatrix();
+            }
+            capa_oscura = !capa_oscura;
+        }
+    glPopMatrix();
+}
 //_sol::_sol(GLfloat) {}
 void _sol::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
@@ -707,6 +739,15 @@ GLfloat _viento::giro_helice(GLfloat rozamiento, bool tiempo_ingame, GLfloat hor
     angulo_giro = fmod(angulos_por_segundo*instante_actual/1000.0, 360.0);
     //cerr << "Angulo: " << angulo_giro << endl;
     return angulo_giro;
+}
+
+GLfloat _viento::oscilacion_pradera(bool tiempo_ingame, GLfloat hora_ingame)
+{
+    unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
+
+    GLfloat porcentaje_oscilacion = onda(instante_actual/1000.0f) / onda.amplitud;
+
+    return porcentaje_oscilacion;
 }
 //************************************************************************
 // GIRASOL
@@ -946,6 +987,22 @@ void _girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
     glPopMatrix();
 }
 
+void _girasol::actualizar_angulos_cabeza(Coordenadas pos_sol)
+{
+    // Calculo el ángulo que forman las coordenadas del sol con el eje x
+    //angulo_z = atan2(pos_sol.y, pos_sol.x);
+}
+
+Coordenadas _girasol::lanzar_semilla(GLfloat velocidad)
+{
+    // Creo una semilla
+    //semillas.push_back(_semilla());
+    unsigned instante_actual = glutGet(GLUT_ELAPSED_TIME);
+    GLfloat pos_x = velocidad * instante_actual / 1000.0;
+    GLfloat pos_y = velocidad * instante_actual / 1000.0 - 1/2*9.8*instante_actual/1000.0*instante_actual/1000.0;
+
+
+}
 //************************************************************************
 // MOLINO
 //************************************************************************
@@ -1036,6 +1093,13 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
         glPushMatrix();
             viento.draw(modo);
             molino.angulo_helice = viento.giro_helice();
+            pradera.porcentaje_viento = viento.velocidad / viento.velocidad_max;
+            pradera.oscilacion = viento.oscilacion_pradera();
+        glPopMatrix();
+
+        // Dibujo la pradera
+        glPushMatrix();
+            pradera.draw(modo, grosor);
         glPopMatrix();
 
         // Suelo
@@ -1090,4 +1154,14 @@ float aleatorio(float minimo, float maximo)
     uniform_real_distribution<float> distribucion(minimo, maximo);
 
     return distribucion(gen);
+}
+
+void dibujar_texto(int x, int y, float r, float g, float b, int font, char *string)
+{
+  glColor3f( r, g, b );
+  glRasterPos2f(x, y);
+  int len, i;
+  len = (int)strlen(string);
+  for (i = 0; i < len; i++)
+    glutBitmapCharacter((void*)GLUT_BITMAP_HELVETICA_18, string[i]);
 }

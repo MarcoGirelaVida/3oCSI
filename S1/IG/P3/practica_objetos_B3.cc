@@ -57,11 +57,12 @@ typedef enum
     HOJA_GIRASOL,
     GIRASOL,
     VIENTO_OBJ,
+    TEXTO,
     ESCENA_FINAL
 } _tipo_objeto;
 
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=VIENTO_OBJ;
+_tipo_objeto    t_objeto=TEXTO;
 _modo           modo=SOLID;
 _modo_interfaz  modo_interfaz=_modo_interfaz::ESCENA_P3;
 _variable_seleccionada variable_seleccionada = PASO_TIEMPO_MANUAL;
@@ -254,6 +255,9 @@ void draw_objects()
             break;
         case VIENTO_OBJ:
             viento.draw(modo);
+            break;
+        case TEXTO:
+            dibujar_texto(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "Practica 3");
             break;
         case ESCENA_FINAL:
             escena_p3.draw(modo);

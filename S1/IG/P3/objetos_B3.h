@@ -16,6 +16,8 @@ using namespace std;
 const float AXIS_SIZE=5000;
 typedef enum{POINTS,EDGES,SOLID,SOLID_COLORS} _modo;
 
+void dibujar_texto(int x, int y, float r, float g, float b, int font, char *string);
+
 float aleatorio(float minimo = 0.0, float maximo = 1.0);
 
 //void temporizador(float duracion_total_segundos)
@@ -366,6 +368,27 @@ public:
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 
+class _pradera : public _triangulos3D
+{
+    const GLfloat max_desfase = 0.5;
+    const GLfloat max_angulo_inclinacion = 30.0;
+    GLfloat desfase_puntas = 0.0;
+    GLfloat desfase_z = 0.0;
+    GLfloat angulo = 0.0;
+    GLfloat max_desfase_z = 0.1; // Radio de la planta
+public:
+    GLfloat oscilacion = 0.0;
+    Coordenadas foco_viento = {-0.5, 0.0, 0.0};
+    GLfloat porcentaje_viento = 0.0;
+    size_t densidad = 5; // 10 plantas por unidad de area
+    Coordenadas tam;
+    Coordenadas posicion;
+    Color color_pradera;
+
+    _pradera(Coordenadas dimenisones = {10, 0.25, 10}, Coordenadas pos = coordenadas_default) : tam(dimenisones), posicion(pos), color_pradera(118u, 146, 62, 1.0) {}
+    void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
+};
+
 class _sol : public _triangulos3D
 {
     const size_t resolucion = 50;
@@ -518,6 +541,8 @@ class _girasol : public _triangulos3D
 private:
     vector<GLfloat> variacion_tam_rama;
     vector<GLfloat> angulo_rama;
+    GLfloat angulo_z = 0.0;
+    GLfloat angulo_x = 0.0;
     GLfloat longitud_min_rama;
     GLfloat angulo_min_rama = 15;
     GLfloat angulo_max_rama = 75;
@@ -533,6 +558,8 @@ public:
 
     _girasol(Coordenadas pos = coordenadas_default);
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
+    void actualizar_angulos_cabeza(Coordenadas pos_sol);
+    Coordenadas lanzar_semilla(GLfloat velocidad);
 };
 
 
@@ -559,7 +586,6 @@ class _viento : public _triangulos3D
 
 private:
     unsigned instante_previo = 0.0;
-    const GLfloat velocidad_max = 255;
     const GLfloat escalado_max_brisas = 1.5;
     const GLfloat frecuencia_min = 0.2;
     const GLfloat frecuencia_max = 2;
@@ -567,6 +593,7 @@ protected:
     _hoja_girasol brisa_viento;
     Onda onda;
 public:
+    const GLfloat velocidad_max = 255;
     bool hay_brisa_en_x_0 = false;
     GLfloat velocidad = 30.0;
     GLfloat velocidad_giro_molino = velocidad;
@@ -587,6 +614,7 @@ public:
     }
     void draw(_modo modo, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, float grosor=5); // , Coordenadas pos = coordenadas_default);
     GLfloat giro_helice(GLfloat rozamiento = 0.01, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, Coordenadas pos_molino  = coordenadas_default);
+    GLfloat oscilacion_pradera(bool tiempo_ingame = false, GLfloat hora_ingame = 0.0);
 };
 
 class _escena_P3 : public _triangulos3D
@@ -597,6 +625,7 @@ protected:
     _sol sol;
     _molino molino;
     _girasol girasol;
+    _pradera pradera;
 
 public:
     _viento viento;
