@@ -394,13 +394,13 @@ protected:
     _esfera bola_central;
 
 public:
-    static constexpr GLfloat largo_aspas = 2.0;
-    static constexpr GLfloat grosor_aspas = largo_aspas / 10.0;
-    static constexpr GLfloat ancho_aspas = largo_aspas / 4.0;
+    static constexpr GLfloat largo_aspas = 3.0; // 3 metros
+    static constexpr GLfloat grosor_aspas = largo_aspas / 10.0; // 20 cm
+    static constexpr GLfloat ancho_aspas = largo_aspas / 4.0; // Medio metro
     static constexpr size_t num_aspas = 10;
     static constexpr GLfloat radio_palo_central = grosor_aspas / 2.0;
     static constexpr GLfloat radio_bola_central = radio_palo_central * 3.0;
-    static constexpr GLfloat largo_palo_central = largo_aspas / 2.0;
+    static constexpr GLfloat largo_palo_central = largo_aspas;
     Coordenadas posicion;
     Color color_helice;
 
@@ -424,9 +424,9 @@ protected:
     _cilindro casa;
 
 public:
-    static constexpr GLfloat altura_casa = 1.0;
-    static constexpr GLfloat radio_casa = 0.5;
-    static constexpr GLfloat altura_tejado = 0.45*altura_casa;
+    static constexpr GLfloat altura_casa = 5.0;
+    static constexpr GLfloat radio_casa = altura_casa / 1.618;
+    static constexpr GLfloat altura_tejado = 0.62*altura_casa;
     static constexpr GLfloat radio_tejado = radio_casa + 0.2*radio_casa;
     Coordenadas posicion;
     Color color_molino_casa;
@@ -453,7 +453,7 @@ public:
     Coordenadas posicion;
     Color color_petalo;
 
-    _petalo_girasol(Coordenadas punto_curva_1 = {0.4f*0.7f, 0.1f*1.0f} , Coordenadas punto_curva2 = {0.4f*0.7f, 0.8f*1.0f}, GLfloat ancho = 0.7, GLfloat largo = 1.0, Coordenadas pos = coordenadas_default, size_t resolucion = 30);
+    _petalo_girasol(Coordenadas punto_curva_1 = {0.4f*0.7f, 0.1f*1.0f} , Coordenadas punto_curva2 = {0.4f*0.7f, 0.8f*1.0f}, GLfloat ancho = 0.25*0.5*0.62, GLfloat largo = 0.25*0.5, Coordenadas pos = coordenadas_default, size_t resolucion = 30);
     //void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
 };
 
@@ -463,8 +463,8 @@ class _hoja_girasol : public _triangulos3D
 //    _petalo_girasol hoja;
 
 public:
-    GLfloat ancho = 0.7;
-    GLfloat largo = 1.0;
+    GLfloat ancho = 0.62*0.25;
+    GLfloat largo = 0.25;
     Coordenadas punto_curva_1 = {0.68, 0.1, -0.2};
     Coordenadas punto_curva_2 = {0.28, 0.8, -0.1};
     Coordenadas posicion;
@@ -480,8 +480,8 @@ public:
 class _tallo_girasol : public _triangulos3D
 {
 public:
-    GLfloat radio_tallo = 0.1;
-    GLfloat largo_tallo = 1.0;
+    GLfloat radio_tallo = 0.15; // 15 cm
+    GLfloat largo_tallo = 2.625;
     Coordenadas posicion;
     Color color_tallo;
 
@@ -497,7 +497,7 @@ public:
     _petalo_girasol petalo;
     _tallo_girasol cuello;
     //_esfera semillero;
-    GLfloat radio_semillero = petalo.largo*0.5;
+    GLfloat radio_semillero = petalo.largo;
     size_t num_petalos = 6;
     size_t num_hojitas = 12;
     size_t num_capas_hojas = 3;
@@ -516,9 +516,11 @@ public:
 class _girasol : public _triangulos3D
 {
 private:
-    vector<GLfloat> variacion_tam_rama;
+    //vector<GLfloat> variacion_tam_rama;
+    vector<GLfloat> longitudes_ramas;
     vector<GLfloat> angulo_rama;
-    GLfloat longitud_min_rama;
+    GLfloat longitud_min_rama = 0.15;
+    GLfloat longitud_max_rama = 0.30;
     GLfloat angulo_min_rama = 15;
     GLfloat angulo_max_rama = 75;
 

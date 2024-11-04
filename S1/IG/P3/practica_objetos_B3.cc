@@ -328,19 +328,26 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
     }   
     if (tecla_pulsada == 32) // Espacio = animación
     {
-        if(variable_seleccionada != PASO_TIEMPO_AUTOMATICO)
+        if (modo_interfaz == ESCENA_P3)
         {
-            cerr << "MODO TIEMPO AUTOMATICO" << endl;
-            variable_seleccionada = PASO_TIEMPO_AUTOMATICO;
-        }
-        else // Paro el tiempo
-        {
-            cerr << "MODO TIMPO MANUAL" << endl;
-            variable_seleccionada = PASO_TIEMPO_MANUAL;
-        }
+            if(variable_seleccionada != PASO_TIEMPO_AUTOMATICO)
+            {
+                cerr << "MODO TIEMPO AUTOMATICO" << endl;
+                variable_seleccionada = PASO_TIEMPO_AUTOMATICO;
+            }
+            else // Paro el tiempo
+            {
+                cerr << "MODO TIMPO MANUAL" << endl;
+                variable_seleccionada = PASO_TIEMPO_MANUAL;
+            }
 
-        escena_p3.instante_previo = 0.0;
-        escena_p3.paso_tiempo_automatico = variable_seleccionada == PASO_TIEMPO_AUTOMATICO;
+            escena_p3.instante_previo = 0.0;
+            escena_p3.paso_tiempo_automatico = variable_seleccionada == PASO_TIEMPO_AUTOMATICO;
+        }
+        else if (modo_interfaz == NORMAL)
+        {
+            t_objeto = static_cast<_tipo_objeto>((t_objeto + 1) % 19);
+        }
     }   
 
     switch (toupper(tecla_pulsada))

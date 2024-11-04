@@ -634,49 +634,6 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
             } while (x_i < area_efecto.x and distancia_entre_brisas != 0);
         glPopMatrix();
     }
-
-    /*
-    glPushMatrix();
-    // Dibujo las laminas y capas con un huequito entre capas
-    unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
-    float tiempo_transcurrido = (instante_actual - instante_previo) / 1000.0f; // Diferencia de tiempo en segundos
-    instante_previo = instante_actual;
-
-    // Ajusto los parametros de la honda y el escalado
-    // (Supongo que la longitud del area de efecto en x es un kilómetro)
-    GLfloat distancia_recorrida = (velocidad*tiempo_transcurrido)*area_efecto.x;
-    onda.frecuencia = frecuencia_min;
-    GLfloat escalado_brisa = (30 / velocidad_max) * escalado_max_brisas;
-    //cerr << "Escalado brisa: " << escalado_brisa << endl;
-    brisa_viento.punto_curva_1.z = onda(distancia_recorrida+brisa_viento.punto_curva_1.y, instante_actual/1000.0f);
-    //cerr << "Instante: " << instante_actual/1000.0f << " Valor onda: " << brisa_viento.punto_curva_1.z << endl;
-    //cerr << "Distancia recorrida: " << distancia_recorrida << endl;
-    brisa_viento.punto_curva_2.z = onda(distancia_recorrida+brisa_viento.punto_curva_2.y, instante_actual/1000.0f);
-    bool offset = true;
-    GLfloat offset_z = (area_efecto.z/num_brisas_por_lado)/2.0;
-    //glScalef(escalado_brisa, 0.0, escalado_brisa/2.0);
-    for (size_t y_i = 0; y_i < num_brisas_por_lado; y_i++)
-    {
-        offset = !offset;
-        for (size_t z_i = 0; z_i < num_brisas_por_lado; z_i++)
-        {
-            glPushMatrix();
-                // La traslado a donde toque 
-                glTranslatef(0, 0, (area_efecto.z/num_brisas_por_lado)*(z_i+1)+offset_z*offset);
-                glTranslatef(0, (area_efecto.y/num_brisas_por_lado)*(y_i+1), 0);
-
-                // Dibujo la brisa
-                glRotatef(-90, 0, 1, 0);
-                glRotatef(-90, 1, 0, 0);
-                brisa_viento.draw(modo, grosor);
-            glPopMatrix();
-
-            if (offset and z_i == num_brisas_por_lado - 2)
-                break;
-        }
-    }
-    glPopMatrix();
-    */
 }
 //************************************************************************
 // GIRASOL
@@ -797,7 +754,7 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
     glPushMatrix();
     glTranslatef(posicion.x, posicion.y, posicion.z);
 
-    cuello.largo_tallo = 0.4;
+    //cuello.largo_tallo = 0.4;
         glPushMatrix();
         glTranslatef(0.0, 0.0, cuello.largo_tallo);
         // Dibujo la parte de abajo del semillero
@@ -844,7 +801,9 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
             }
         }
         glPopMatrix();
-            // Dibujo el cuello
+        // Dibujo el cuello
+        cuello.radio_tallo = radio_semillero*0.381;
+        cuello.largo_tallo = 0.04;
         glPushMatrix();
             glRotatef(90, 1, 0, 0);
             cuello.draw(modo);
@@ -854,13 +813,14 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
 
 _girasol::_girasol(Coordenadas pos) : posicion(pos)
 {
-    longitud_min_rama = 0.25 * (cabeza.radio_semillero + cabeza.petalo.largo);
-    tallo.largo_tallo = 10;
-    tallo.radio_tallo = cabeza.radio_semillero*0.3;
+    //longitud_min_rama = 0.25 * (cabeza.radio_semillero + cabeza.petalo.largo);
+    //tallo.largo_tallo = 10;
+    tallo.radio_tallo = cabeza.radio_semillero*0.381;
 
     for (size_t i = 0; i < num_ramas; i++)
     {
-        variacion_tam_rama.push_back(aleatorio(0.0, 1.5)); // La rama más grande será un 150% más grande
+        //variacion_tam_rama.push_back(aleatorio(0.0, 1.5)); // La rama más grande será un 150% más grande
+        longitudes_ramas.push_back(aleatorio(longitud_min_rama, longitud_max_rama)); // La rama más grande será un 50% más grande
         angulo_rama.push_back(aleatorio(angulo_min_rama, angulo_max_rama) * M_PI / 180.0);
     }
     
@@ -884,7 +844,8 @@ void _girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
         {
             GLfloat angulo_rotacion = 360.0f / num_ramas * rama_i;
             GLfloat altura_rama = (tallo.largo_tallo - cabeza.petalo.largo) / (num_ramas+1) * (rama_i+1);
-            GLfloat longitud_rama = longitud_min_rama + longitud_min_rama*variacion_tam_rama[rama_i];
+            //GLfloat longitud_rama = longitud_min_rama + longitud_min_rama*variacion_tam_rama[rama_i];
+            GLfloat longitud_rama = longitudes_ramas[rama_i];
             GLfloat x_rama = sin(angulo_rama[rama_i]) * longitud_rama;
             GLfloat longitud_cateto_superior = sqrt(longitud_rama*longitud_rama - x_rama*x_rama);
 
@@ -908,7 +869,9 @@ void _girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
                     glRotatef(180, 0, 1, 0);
                     glRotatef(-90, 0, 0, 1);
                     glRotatef(90, 0, 1, 0);
-                    glScalef(1+variacion_tam_rama[rama_i], 1+variacion_tam_rama[rama_i], 1+variacion_tam_rama[rama_i]);
+                    //glScalef(1+variacion_tam_rama[rama_i], 1+variacion_tam_rama[rama_i], 1+variacion_tam_rama[rama_i]);
+                    GLfloat escalado = 1.5 + (longitud_rama-longitud_min_rama)/(longitud_max_rama-longitud_min_rama);
+                    glScalef(escalado, escalado, escalado);
                     hoja.draw(modo, grosor);
                 glPopMatrix();
             glPopMatrix();
@@ -977,8 +940,8 @@ void _molino::draw(_modo modo, float grosor) // , Coordenadas pos)
 
         // Dibujo la hélice
         glPushMatrix();
-            glTranslatef(0.0, 0.3*altura_tejado + altura_casa, -(radio_casa*0.8));
-            glScalef(0.2, 0.2, 0.2);
+            glTranslatef(0.0, 0.382*altura_tejado + altura_casa, -((radio_tejado+0.2)-helice.largo_palo_central));
+            //glScalef(0.2, 0.2, 0.2);
             glTranslatef(0.0, 0.0, -(helice.largo_palo_central + helice.radio_bola_central/2.0));
             glRotatef(90, 1, 0, 0);
             helice.draw(modo, grosor);
@@ -1014,15 +977,15 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
 
         // Molino
         glPushMatrix();
-            glScalef(1.5, 1.5, 1.5);
             glRotatef(180, 0, 1, 0);
+            //glScalef(1.5, 1.5, 1.5);
             molino.draw(modo, grosor);
         glPopMatrix();
 
         // Girasol/es
         glPushMatrix();
             glTranslatef(molino.radio_tejado*2, 0.0, molino.radio_tejado*2);
-            glScalef(0.1, 0.1, 0.1);
+            //glScalef(0.1, 0.1, 0.1);
             girasol.draw(modo, grosor);
         glPopMatrix();
 
