@@ -4,72 +4,222 @@
 #include <vector>
 #include <random>
 #include <GL/gl.h>
+#include <GL/glut.h>
 #include "vertex.h"
 #include <stdlib.h>
 #include <iostream>
+#include <chrono>
+#include <thread>
+#include <iomanip>
 using namespace std;
 
 const float AXIS_SIZE=5000;
 typedef enum{POINTS,EDGES,SOLID,SOLID_COLORS} _modo;
 
 float aleatorio(float minimo = 0.0, float maximo = 1.0);
-struct Color {
+
+//void temporizador(float duracion_total_segundos)
+//{
+//    float hora = 0.0;
+//    const float limite_hora = 24.0f;
+//
+//    // Calcula el incremento necesario para que `hora` llegue a 24 en el tiempo especificado
+//    float incremento = limite_hora / (duracion_total_segundos * 1000.0f / 100); // Ajusta 100 ms como paso
+//
+//    while (hora < limite_hora) {
+//        hora += incremento;
+//        if (hora > limite_hora) hora = limite_hora;  // Limitar `hora` a 24
+//
+//        // Muestra el valor de `hora` en cada incremento
+//        cerr << "HORA DEL DIA: " << fixed << setprecision(2) << hora << endl;
+//
+//        // Espera 100 ms antes de incrementar nuevamente
+//        this_thread::sleep_for(chrono::milliseconds(100));
+//    }
+//
+//    cerr << "EL DIA HA TERMINADO" << endl;
+//    exit(0);
+//}
+struct Onda
+{
+    GLfloat amplitud; // altura maxima en y
+    GLfloat frecuencia; // = numero de sube y bajas por unidad de tiempo
+    GLfloat longitud; // distancia entre picos
+    GLfloat offset;
+
+    Onda(GLfloat amplitud = 1.0, GLfloat frecuencia = 1, GLfloat longitud = 1.0, GLfloat offset = 0.0)
+    : amplitud(amplitud), frecuencia(frecuencia), longitud(longitud), offset(offset)
+    {}
+
+    GLfloat operator()(GLfloat hora) const
+    {
+        //GLfloat frecuencia_temporal = (2*M_PI / 8.0) * frecuencia;
+        GLfloat frecuencia_temporal = 2*M_PI * frecuencia;
+        return amplitud * sin(hora*frecuencia_temporal + offset);
+    }
+    GLfloat operator()(GLfloat x, GLfloat hora) const
+    {
+        // REALMENTE LA PARTE DE LA LONGITUD DE ONDA DA IGUAL
+        // PORQUE DIRETAMENTE SE INVIERTE EN LAS CURVAS
+        // Un octavo de ciclo por paso, si fuese ciclo completo sería 2*M_PI / frecuencia
+        // Si solo muestreo una vez por hora doy un octavo de paso por hora.
+        // Si muestreo 50 veces por hora doy 50 octavos de paso por hora.
+        // Y por tanto avanzo (2*M_PI / 8.0 * frecuencia) por cada 50avo de hora
+        // Si pusiese solo 2*M_PI / 8.0 significaría que avanzo un octavo de ciclo por hora aun teniendo 50 de muestreo
+        //GLfloat frecuencia_temporal = (2*M_PI / 8.0) * frecuencia; // ¿Cuántos angulos avanzo por paso (hora)?
+
+        GLfloat frecuencia_temporal = 2*M_PI * frecuencia;
+        GLfloat frecuencia_espacial = 2*M_PI / longitud; // cuantos angulos avanzo por unidad de longitud, cada 2 pasos avanzo medio ciclo
+        return amplitud * sin(hora*frecuencia_temporal + x*frecuencia_espacial + offset);
+    }
+};
+struct _color
+{
     GLfloat r;
     GLfloat g;
     GLfloat b;
-    GLfloat a = 1.0f;
-    GLfloat r2 = 1.0f;
-    GLfloat g2 = 1.0f;
-    GLfloat b2 = 1.0f;
-    GLfloat a2 = 1.0f;
+    GLfloat a;
 
-    Color(int r, int g, int b)
+    _color(unsigned r, unsigned g, unsigned b, float a = 1.0)
+    : r(r/255.0), g(g/255.0), b(b/255.0), a(a)
+    {}
+
+    _color(GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0)
+    : r(r), g(g), b(b), a(a)
+    {}
+
+    void operator=(const _color& c)
     {
-        this->r = r/255.0;
-        this->g = g/255.0;
-        this->b = b/255.0;
+        r = c.r;
+        g = c.g;
+        b = c.b;
+        a = c.a;
     }
-
-    Color(GLfloat r, GLfloat g, GLfloat b)
-    {
-        this->r = r;
-        this->g = g;
-        this->b = b;
-    }
-
-    void operator+=(Color c)
+    void operator+=(const _color& c)
     {
         r += c.r;
         g += c.g;
         b += c.b;
+
     }
-    void operator+=(GLfloat f)
+    void operator+=(const GLfloat f)
     {
         r += f;
         g += f;
         b += f;
     }
-    Color operator+(Color c_2)
+    void operator-=(const _color& c)
     {
-        Color c_1(*this);
-        c_1 += c_2;
-        return c_1;
+        r -= c.r;
+        g -= c.g;
+        b -= c.b;
     }
-    Color operator+(GLfloat f)
+    void operator-= (const GLfloat f)
     {
-        Color c (*this);
-        c += f;
-        return c;
+        r -= f;
+        g -= f;
+        b -= f;
+    }
+    _color operator-() const
+    {
+        return _color(-r, -g, -b);
+    }
+    _color operator+(const _color& c) const
+    {
+        _color result(*this);
+        result += c;
+        return result;
+    }
+    _color operator+(GLfloat f) const
+    {
+        _color result(*this);
+        result += f;
+        return result;
+    }
+    _color operator-(const _color& c) const
+    {
+        _color result(*this);
+        result -= c;
+        return result;
+    }
+    _color operator-(const GLfloat f) const
+    {
+        _color result(*this);
+        result -= f;
+        return result;
+    }
+    _color operator*(const GLfloat f) const
+    {
+        return _color(r*f, g*f, b*f);
     }
 
-    void actualizar(float grado)
-    {
-        r += (r2-r)*grado;
-        g += (g2-g)*grado;
-        b += (b2-b)*grado;
-    }
+    //string to_string() const
+    //{
+    //    return to_string(r) + " " + to_string(g) + " " + to_string(b);
+    //}
 };
-const Color c_default = {0.0f, 0.0f, 0.0f};
+struct Color {
+    
+    public:
+    _color actual;
+    private:
+    _color original;
+    _color final;
+
+    public:
+    static const _color c_default; 
+
+    Color (const _color& c1, const _color& c2) : actual(c1), original(c1), final(c2) {}
+
+    Color (const _color& c1) :  actual(c1), original(c1), final(c1) {}
+
+    Color (unsigned r, unsigned g, unsigned b, float a = 1.0) : actual(r, g, b, a), original(r, g, b, a), final(r, g, b, a) {}
+
+    Color (GLfloat r, GLfloat g, GLfloat b, GLfloat a = 1.0) : actual(r, g, b, a), original(r, g, b, a), final(r, g, b, a) {}
+
+    void cambiar_a_inicial()
+    {
+        actual = original;
+    }
+
+    void cambiar_a_final()
+    {
+        actual = final;
+    }
+
+    void set_final(const _color& c)
+    {
+        final = c;
+    }
+
+    void set_original(const _color& c)
+    {
+        actual = c;
+        original = c;
+    }
+
+    void actualizar(const float grado)
+    {
+        // 0 = r1, 1 = r2
+        actual = original + (final-original)*grado;
+    }
+
+    void actualizar_hora(const GLfloat hora)
+    {
+        if (hora < 12)
+            actualizar(1.0/12.0 * hora);
+        else
+            actualizar(1.0/12.0 * (23.0 - hora));
+    }
+
+    //void operator=(const Color& c)
+    //{
+    //    actual = c.actual;
+    //    original = c.actual;
+    //    final = c.final;
+    //}
+};
+
 struct Coordenadas
 {
     GLfloat x;
@@ -116,7 +266,7 @@ public:
     void draw_aristas(Color color, int grosor);
     void draw_solido(Color color);
     void draw_solido_colores();
-    void draw(_modo modo, Color color = c_default, float grosor = 5, Coordenadas pos = coordenadas_default);
+    void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default);
 
     void colors_random();
     void colors_chess(float r1, float g1, float b1, float r2, float g2, float b2);
@@ -212,49 +362,29 @@ public:
     Coordenadas posicion;
     Color color_suelo;
 
-    _suelo(Coordenadas dimenisones = {100, 0.25, 100}, Coordenadas pos = coordenadas_default) : tam(dimenisones), posicion(pos), color_suelo(108, 136, 52) {}
+    _suelo(Coordenadas dimenisones = {100, 0.25, 100}, Coordenadas pos = coordenadas_default) : tam(dimenisones), posicion(pos), color_suelo(108u, 136, 52) {}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 
 class _sol : public _triangulos3D
 {
-    const size_t resolucion = 100;
+    const size_t resolucion = 50;
 public:
     GLfloat radio;
+    const GLfloat punto_algido_y = 5.0;
+    const GLfloat punto_minimo_x = 10.0;
+    size_t num_fases = 24;
     Coordenadas posicion;
     Color color_sol;
+    _color luz_ambiente_mediodia = {0.6f, 0.6f, 0.6f};
+    _color luz_ambiente_atardecer = {0.4f, 0.2f, 0.1f};
+    Color luz_ambiente;
 
-    _sol(GLfloat radio = 0.25, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol(255, 205, 29) {};
+
+    _sol(GLfloat radio = 1, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol({243u, 159, 25}, {247u, 221, 116}), luz_ambiente(luz_ambiente_atardecer, luz_ambiente_mediodia) {};
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);, Coordenadas pos = coordenadas_default
+    void actualizar_sol_hora(GLfloat hora);     
 };
-
-class _nube : public _triangulos3D
-{
-public:
-    Coordenadas posicion;
-
-    _nube(Coordenadas pos = coordenadas_default) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
-};
-
-class _lluvia : public _triangulos3D
-{
-public:
-    Coordenadas posicion;
-
-    _lluvia(Coordenadas pos = coordenadas_default) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
-};
-
-class _viento : public _triangulos3D
-{
-public:
-    Coordenadas posicion;
-
-    _viento(Coordenadas pos = coordenadas_default) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
-};
-
 
 class _helice_molino : public _triangulos3D
 {
@@ -280,7 +410,7 @@ public:
         palo_central(radio_palo_central, largo_palo_central, 30),
         bola_central(radio_bola_central, 30, true, true, 50, 100),
         posicion(pos),
-        color_helice(86, 43, 5)
+        color_helice(86u, 43, 5)
         {}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
@@ -307,8 +437,8 @@ public:
     tejado(radio_tejado, altura_tejado),
     casa(radio_casa, altura_casa, 30),
     posicion(pos),
-    color_molino_casa(206, 219, 214),
-    color_molino_tejado(86, 5, 5)
+    color_molino_casa(206u, 219, 214),
+    color_molino_tejado(86u, 5, 5)
     {}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
@@ -316,14 +446,14 @@ public:
 class _petalo_girasol : public _triangulos3D
 {
 public:
-    static constexpr GLfloat ancho = 0.7;
-    static constexpr GLfloat largo = 1.0;
     Coordenadas punto_curva_1;
     Coordenadas punto_curva_2;
+    GLfloat ancho;
+    GLfloat largo;
     Coordenadas posicion;
     Color color_petalo;
 
-    _petalo_girasol(Coordenadas punto_curva_1 = {0.4f*ancho, 0.1f*largo} , Coordenadas punto_curva2 = {0.4f*ancho, 0.8f*largo}, Coordenadas pos = coordenadas_default, size_t resolucion = 30);
+    _petalo_girasol(Coordenadas punto_curva_1 = {0.4f*0.7f, 0.1f*1.0f} , Coordenadas punto_curva2 = {0.4f*0.7f, 0.8f*1.0f}, GLfloat ancho = 0.7, GLfloat largo = 1.0, Coordenadas pos = coordenadas_default, size_t resolucion = 30);
     //void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
 };
 
@@ -333,8 +463,8 @@ class _hoja_girasol : public _triangulos3D
 //    _petalo_girasol hoja;
 
 public:
-    const GLfloat ancho = 0.7;
-    const GLfloat largo = 1.0;
+    GLfloat ancho = 0.7;
+    GLfloat largo = 1.0;
     Coordenadas punto_curva_1 = {0.68, 0.1, -0.2};
     Coordenadas punto_curva_2 = {0.28, 0.8, -0.1};
     Coordenadas posicion;
@@ -342,7 +472,7 @@ public:
 
     _hoja_girasol(size_t resolucion = 30, Coordenadas pos = coordenadas_default)
     :
-    posicion(pos), color_hoja(57, 96, 51)
+    posicion(pos), color_hoja(57u, 96, 51)
     {}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
     
@@ -355,7 +485,7 @@ public:
     Coordenadas posicion;
     Color color_tallo;
 
-    _tallo_girasol(Coordenadas pos = coordenadas_default) : posicion(pos), color_tallo(94, 112, 39) {}
+    _tallo_girasol(Coordenadas pos = coordenadas_default) : posicion(pos), color_tallo(94u, 112, 39) {}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 class _cabeza_girasol : public _triangulos3D
@@ -377,7 +507,7 @@ public:
 
     _cabeza_girasol(Coordenadas pos = coordenadas_default)
     :
-    posicion(pos), color_semillero(59, 46, 33)
+    posicion(pos), color_semillero(59u, 46, 33)
     {}
     void draw(_modo modo, GLfloat grosor = 5); // , Coordenadas pos = coordenadas_default);
 
@@ -405,9 +535,60 @@ public:
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 
-class _escena_P3 : public _triangulos3D
+
+class _nube : public _triangulos3D
+{
+public:
+    Coordenadas posicion;
+
+    _nube(Coordenadas pos = coordenadas_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
+};
+
+class _lluvia : public _triangulos3D
+{
+public:
+    Coordenadas posicion;
+
+    _lluvia(Coordenadas pos = coordenadas_default) : posicion(pos) {}
+    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
+};
+
+class _viento : public _triangulos3D
 {
 
+private:
+    unsigned instante_previo = 0.0;
+    const GLfloat velocidad_max = 255;
+    const GLfloat escalado_max_brisas = 2;
+    const GLfloat frecuencia_min = 0.2;
+    const GLfloat frecuencia_max = 2;
+protected:
+    _hoja_girasol brisa_viento;
+    Onda onda;
+public:
+    GLfloat velocidad = 50.0;
+    size_t num_brisas_por_lado = 3;
+    Coordenadas area_efecto = {100, 5, 5};
+    Coordenadas posicion;
+    Color color_viento;
+
+    _viento(Coordenadas pos = coordenadas_default) : posicion(pos), color_viento(190u, 231, 237)
+    {
+        brisa_viento.largo = 5;
+        brisa_viento.ancho = 0.25;
+        brisa_viento.punto_curva_1 = Coordenadas(0.68, 0.5, 0.0);
+        brisa_viento.punto_curva_2 = Coordenadas(0.28, 2.2, 0.0);
+        //onda.longitud = abs(lamina_viento.punto_curva_2.y - lamina_viento.punto_curva_1.y);
+        brisa_viento.color_hoja.set_original(color_viento.actual);
+        //lamina_viento   
+    }
+    void draw(_modo modo, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, float grosor=5); // , Coordenadas pos = coordenadas_default);
+};
+
+class _escena_P3 : public _triangulos3D
+{
+private:
 protected:
     _suelo suelo;
     _sol sol;
@@ -415,9 +596,18 @@ protected:
     _girasol girasol;
 
 public:
+    _viento viento;
+    unsigned instante_previo = 0;
+    const unsigned movimientos_por_hora = 10;
+    const unsigned duracion_dia_real = 60; // EN segundos
+    GLfloat hora = 0.0;
+    bool paso_tiempo_automatico = false;
+    //GLfloat velocidad_viento = 30.0;
     Coordenadas posicion;
+    Color color_cielo;
     
-    _escena_P3(Coordenadas pos = coordenadas_default) : posicion(pos) {}
+    _escena_P3(Coordenadas pos = coordenadas_default) : posicion(pos), color_cielo(102u, 151, 200){}
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
+    void actualizar_hora();
 };
 #endif

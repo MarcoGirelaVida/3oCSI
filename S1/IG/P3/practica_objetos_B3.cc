@@ -9,13 +9,27 @@
 #include "objetos_B3.h"
 using namespace std;
 
+GLfloat hora = 0.0;
+unsigned duracion_real_dia = 60; // Segundos
+unsigned fotogramas_por_segundo = 60;
+unsigned movimientos_por_hora_ingame = (duracion_real_dia/24.0) * fotogramas_por_segundo;
+GLfloat duracion_ingame_movimiento = (duracion_real_dia/24.0) / movimientos_por_hora_ingame;
 // tipos
 typedef enum
 {
+    ESCENA_P3,
     NORMAL,
     CALIBRACION_CURVAS
 } _modo_interfaz;
 
+typedef enum
+{
+    PASO_TIEMPO_MANUAL,
+    PASO_TIEMPO_AUTOMATICO, // Animación
+    VIENTO
+    //INTENSIDAD_VIENTO,
+    //INTENSIDAD_LLUVIA
+} _variable_seleccionada;
 typedef enum
 {
     PUNTO_1,
@@ -42,13 +56,15 @@ typedef enum
     CABEZA_GIRASOL,
     HOJA_GIRASOL,
     GIRASOL,
-    ESCENA_P3
+    VIENTO_OBJ,
+    ESCENA_FINAL
 } _tipo_objeto;
 
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=ESCENA_P3;
-_modo           modo=POINTS;
-_modo_interfaz  modo_interfaz=NORMAL;
+_tipo_objeto    t_objeto=VIENTO_OBJ;
+_modo           modo=SOLID;
+_modo_interfaz  modo_interfaz=_modo_interfaz::ESCENA_P3;
+_variable_seleccionada variable_seleccionada = PASO_TIEMPO_MANUAL;
 
 // objetos
 _cubo       cubo;
@@ -69,6 +85,9 @@ _suelo suelo({100, 0.25, 100});
 Coordenadas pos_inicial_sol ={0, 2, 0};
 GLfloat tamanio_sol = 0.25;
 _sol sol(tamanio_sol, pos_inicial_sol);
+
+// Viento
+_viento viento;
 
 // Molino
 _helice_molino helice_molino;
@@ -195,6 +214,8 @@ void draw_objects()
             suelo.draw(modo);
             break;
         case SOL:
+            sol.color_sol.cambiar_a_final();
+            //sol.radio = 5;
             sol.draw(modo);
             break;
         case HELICE:
@@ -213,12 +234,28 @@ void draw_objects()
             tallo_girasol.draw(modo);
             break;
         case HOJA_GIRASOL:
-            hoja_girasol.draw(modo);
+        {
+            glPushMatrix();
+                glTranslatef(0, 0, 4);
+                glRotatef(-90, 1, 0, 0);
+                hoja_girasol.largo = 10;
+                hoja_girasol.ancho = 0.2;
+                hoja_girasol.color_hoja.set_original(viento.color_viento.actual);
+                Onda onda;
+                onda.amplitud = 0.4;
+                hoja_girasol.punto_curva_1 = Coordenadas(0.68, 0.5, onda(escena_p3.hora));
+                hoja_girasol.punto_curva_2 = Coordenadas(0.28, 2.2, -hoja_girasol.punto_curva_1.z);
+                hoja_girasol.draw(modo);
+            glPopMatrix();   
             break;
+        }
         case GIRASOL:
             girasol.draw(modo);
             break;
-        case ESCENA_P3:
+        case VIENTO_OBJ:
+            viento.draw(modo);
+            break;
+        case ESCENA_FINAL:
             escena_p3.draw(modo);
             break;
 	}
@@ -229,6 +266,21 @@ void draw(void)
 {
     clean_window();
     change_observer();
+
+    //GLfloat color_luz_ambiental[] = {0.1f, 0.1f, 0.1f, 1.0f};
+    //GLfloat color_luz_difusa[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    //GLfloat posicion_luz[] = {0.0f, 10.0f, 10.0f, 1.0f}; // Coloca la luz por encima y al frente de la escena
+    //glLightfv(GL_LIGHT0, GL_AMBIENT, color_luz_ambiental);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, color_luz_difusa);
+    //glLightfv(GL_LIGHT0, GL_POSITION, posicion_luz);
+    //// Configuración del material básico
+    //GLfloat material_difuso[] = {0.8f, 0.5f, 0.3f, 1.0f};
+    //GLfloat material_especular[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    //GLfloat material_brillo[] = {50.0f};
+    //glMaterialfv(GL_FRONT, GL_DIFFUSE, material_difuso);
+    //glMaterialfv(GL_FRONT, GL_SPECULAR, material_especular);
+    //glMaterialfv(GL_FRONT, GL_SHININESS, material_brillo);
+    
     draw_axis();
     draw_objects();
     glutSwapBuffers();
@@ -264,6 +316,33 @@ void change_window_size(int Ancho1, int Alto1)
 
 void normal_key(unsigned char tecla_pulsada, int x, int y)
 {
+    if (tecla_pulsada == 13) // Enter
+    {
+        modo_interfaz = static_cast<_modo_interfaz>((modo_interfaz + 1) % 3);
+        switch (modo_interfaz)
+        {
+            case ESCENA_P3: cerr << "Modo escena P3" << endl; t_objeto = ESCENA_FINAL; break;
+            case NORMAL: cerr << "Modo normal" << endl; t_objeto = CUBO; break;
+            case CALIBRACION_CURVAS: cerr << "Modo calibración curvas" << endl; t_objeto = HOJA_GIRASOL; break;
+        }  
+    }   
+    if (tecla_pulsada == 32) // Espacio = animación
+    {
+        if(variable_seleccionada != PASO_TIEMPO_AUTOMATICO)
+        {
+            cerr << "MODO TIEMPO AUTOMATICO" << endl;
+            variable_seleccionada = PASO_TIEMPO_AUTOMATICO;
+        }
+        else // Paro el tiempo
+        {
+            cerr << "MODO TIMPO MANUAL" << endl;
+            variable_seleccionada = PASO_TIEMPO_MANUAL;
+        }
+
+        escena_p3.instante_previo = 0.0;
+        escena_p3.paso_tiempo_automatico = variable_seleccionada == PASO_TIEMPO_AUTOMATICO;
+    }   
+
     switch (toupper(tecla_pulsada))
     {
 	case 'Q':exit(0);
@@ -290,17 +369,39 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
     case 'E':   t_objeto = ESFERA;      break;
 
     // PRÁCTICA 3
-    case 'M':
-        if (modo_interfaz == NORMAL)
+    case 'V':
+        variable_seleccionada = VIENTO;
+        break; 
+    case 'W':
+        switch (variable_seleccionada)
         {
-            modo_interfaz = CALIBRACION_CURVAS;
-            t_objeto = HOJA_GIRASOL;
-            cout << "Modo calibración curvas activado" << endl;
+            case PASO_TIEMPO_MANUAL:
+                if (escena_p3.hora < 24)
+                    escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
+            break;
+            case PASO_TIEMPO_AUTOMATICO:
+                if (escena_p3.hora < 24)
+                    escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
+            break;
+            case VIENTO:
+                    escena_p3.viento.velocidad += 10.0;
+            break;
         }
-        else
+        break;
+    case 'S':
+        switch (variable_seleccionada)
         {
-            modo_interfaz = NORMAL;
-            cout << "Modo calibración curvas desactivado" << endl;
+            case PASO_TIEMPO_MANUAL:
+                if (escena_p3.hora)
+                    escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
+            break;
+            case PASO_TIEMPO_AUTOMATICO:
+                if (escena_p3.hora)
+                    escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
+            break;
+            case VIENTO:
+                    escena_p3.viento.velocidad -= 10.0;
+            break;
         }
         break;
 	}
@@ -390,6 +491,7 @@ void special_key(int tecla_pulsada, int x, int y)
             break;
     }
 
+    //cerr << "Punto del observador: " << Observer_angle_x << " " << Observer_angle_y << " " << Observer_distance << endl;
     if (modo_interfaz == CALIBRACION_CURVAS)
     {
         cerr << "Punto 1: " << hoja_girasol.punto_curva_1.x << " " << hoja_girasol.punto_curva_1.y << " " << hoja_girasol.punto_curva_1.z << endl;
@@ -421,17 +523,22 @@ void initialize(void)
     Back_plane=1000;
 
     // se incia la posicion del observador, en el eje z
-    Observer_distance=4*Front_plane;
-    Observer_angle_x=0;
-    Observer_angle_y=0;
+    Observer_distance=7*Front_plane;
+    Observer_angle_x=20;
+    Observer_angle_y=22;
 
     // se indica el color para limpiar la ventana	(r,v,a,al)
-    // blanco=(1,1,1,1) rojo=(1,0,0,1), ...
-    Color color_fondo(102, 151, 200);
-    glClearColor(color_fondo.r, color_fondo.g, color_fondo.b, 1);
+    // blanco=(1,1,1,1) rojo=(1,0,0,1), ...);
+    //glClearColor(escena_p3.color_cielo.actual.r, escena_p3.color_cielo.actual.g, escena_p3.color_cielo.actual.b, 1);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
 
     // se habilita el z-bufer
     glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHT0);
+    //glEnable(GL_NORMALIZE);
+    //glShadeModel(GL_SMOOTH);
+
     change_projection();
     glViewport(0,0,Window_width,Window_high);
 }
