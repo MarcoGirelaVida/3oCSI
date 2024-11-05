@@ -69,13 +69,20 @@ void _triangulos3D::draw_aristas(Color color, int grosor)
 void _triangulos3D::draw_solido(Color color)
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //GLfloat material_diffuse[] = { color.actual.r, color.actual.g, color.actual.b, color.actual.a };
+    //glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material_diffuse);
     glColor4f(color.actual.r, color.actual.g, color.actual.b, color.actual.a);
     glBegin(GL_TRIANGLES);
         for (size_t i = 0; i < caras.size(); i++)
         {
-            glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
-            glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
-            glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+            glNormal3fv((GLfloat *)&normales[caras[i]._0]);
+            glVertex3fv((GLfloat *)&vertices[caras[i]._0]);
+
+            glNormal3fv((GLfloat *)&normales[caras[i]._1]);
+            glVertex3fv((GLfloat *)&vertices[caras[i]._1]);
+
+            glNormal3fv((GLfloat *)&normales[caras[i]._2]);
+            glVertex3fv((GLfloat *)&vertices[caras[i]._2]);
         }
     glEnd();
 }
@@ -156,13 +163,15 @@ void _objeto_ply::parametros(char *archivo)
 
     vertices.resize(num_vertices);
     caras.resize(num_caras);
-
+    normales.resize(num_vertices);
     // vértices
     for (size_t i = 0; i < num_vertices; i++)
     {
         vertices[i].x = ver_ply[3 * i];
         vertices[i].y = ver_ply[3 * i + 1];
         vertices[i].z = ver_ply[3 * i + 2];
+
+        normales[i] = _vertex3f(0.0, 0.0, 0.0);
     }
 
     // vértices
@@ -216,7 +225,7 @@ _rotacion::_rotacion() {}
 
 void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_inferior, bool tapa_superior, int tipo, unsigned char porcentaje_revolucion, unsigned char porcentaje_generacion_esfera, Coordenadas cuspide)
 {
-    _vertex3f vertice_aux;
+    _vertex3f vertice_aux, normal_aux;
     _vertex3i cara_aux;
     size_t num_aux;
     float radio;
@@ -227,6 +236,7 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
     num_aux = perfil.size();
     if (tipo == 2) num_aux = 1;
     vertices.resize(num_aux * num);
+    normales.resize(num_aux * num);
 
     size_t num_revoluciones = static_cast<size_t>((porcentaje_revolucion / 100.0) * num);
 
@@ -240,6 +250,19 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
                             perfil[i].z * cos(2.0 * M_PI * j / (1.0 * num));
             vertice_aux.y = perfil[i].y;
             vertices[i + j * num_aux] = vertice_aux;
+
+            // Calculo las normales de cada vertice
+            if (perfil[i].x != 0 || perfil[i].z != 0) {  // Evita el eje de rotación
+                normal_aux.x = vertice_aux.x;   // Las coordenadas del vértice proyectadas
+                normal_aux.z = vertice_aux.z;   // sobre el plano XZ proporcionan
+                normal_aux.y = 0;               // una dirección hacia fuera
+                float length = sqrt(normal_aux.x * normal_aux.x + normal_aux.z * normal_aux.z);
+                normal_aux.x /= length;         // Normaliza el vector
+                normal_aux.z /= length;
+            } else {
+                normal_aux = _vertex3f(0.0, 1.0, 0.0); // Normal en el eje de rotación
+            }
+            normales[i + j * num_aux] = normal_aux; // Almacena la normal del vértice
         }
     }
 
@@ -266,6 +289,7 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
     // tapa inferior
     if (tapa_inferior)
     {
+        normales.push_back({0, -1, 0});
         // punto central de la tapa
         vertice_aux.x = 0.0;
         if (tipo == 1)
@@ -284,12 +308,15 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
             cara_aux._2 = ((i + 1) % num) * num_aux;
             caras.push_back(cara_aux);
         }
+
+        //normales.push_back({0, -1, 0});
     }
     
     // tapa superior
 
     if (tapa_superior)
     {
+        normales.push_back({0, 1, 0});
         // punto central de la tapa
         vertice_aux.x = 0.0;
         vertice_aux.z = 0.0;
@@ -340,12 +367,26 @@ _extrusion::_extrusion(vector<_vertex3f> poligono, float x, float y, float z)
     // tratamiento de los vértice
     size_t num_aux=poligono.size();
     vertices.resize(num_aux * 2);
+    normales.resize(num_aux * 2);
     for (size_t i = 0; i < num_aux; i++)
     {
       vertices[2 * i]       = poligono[i];
       vertices[2 * i + 1].x = poligono[i].x + x;
       vertices[2 * i + 1].y = poligono[i].y + y;
       vertices[2 * i + 1].z = poligono[i].z + z;
+
+        // Calculo las normales de cada vertice
+        if (poligono[i].x != 0 || poligono[i].z != 0) {  // Evita el eje de rotación
+            normales[2 * i].x = poligono[i].x;   // Las coordenadas del vértice proyectadas
+            normales[2 * i].z = poligono[i].z;   // sobre el plano XZ proporcionan
+            normales[2 * i].y = 0;               // una dirección hacia fuera
+            float length = sqrt(normales[2 * i].x * normales[2 * i].x + normales[2 * i].z * normales[2 * i].z);
+            normales[2 * i].x /= length;         // Normaliza el vector
+            normales[2 * i].z /= length;
+        } else {
+            normales[2 * i] = _vertex3f(0.0, 1.0, 0.0); // Normal en el eje de rotación
+        }
+
     }
     
     // tratamiento de las caras 
@@ -375,6 +416,7 @@ _cubo::_cubo(float tam)
 {
     //vertices
     vertices.resize(8);
+    normales.resize(8);
     vertices[0].x = -tam;     vertices[0].y = -tam;     vertices[0].z = tam;
     vertices[1].x = tam;      vertices[1].y = -tam;     vertices[1].z = tam;
     vertices[2].x = tam;      vertices[2].y = tam;      vertices[2].z = tam;
@@ -383,6 +425,15 @@ _cubo::_cubo(float tam)
     vertices[5].x = tam;      vertices[5].y = -tam;     vertices[5].z = -tam;
     vertices[6].x = tam;      vertices[6].y = tam;      vertices[6].z = -tam;
     vertices[7].x = -tam;     vertices[7].y = tam;      vertices[7].z = -tam;
+    normales[0] = _vertex3f(0.0, 0.0, 1.0);
+    normales[1] = _vertex3f(0.0, 0.0, 1.0);
+    normales[2] = _vertex3f(0.0, 0.0, 1.0);
+    normales[3] = _vertex3f(0.0, 0.0, 1.0);
+    normales[4] = _vertex3f(0.0, 0.0, -1.0);
+    normales[5] = _vertex3f(0.0, 0.0, -1.0);
+    normales[6] = _vertex3f(0.0, 0.0, -1.0);
+    normales[7] = _vertex3f(0.0, 0.0, -1.0);
+
 
     // triangulos
     caras.resize(12);
@@ -407,11 +458,18 @@ _piramide::_piramide(Coordenadas tam) : tam(tam)
 {
     //vertices 
     vertices.resize(5); 
+    normales.resize(5);
     vertices[0].x = -tam.x / 2;  vertices[0].y = 0;  vertices[0].z = 0;         // Vértice inferior izquierdo de la base
     vertices[1].x = tam.x / 2;   vertices[1].y = 0;  vertices[1].z = 0;         // Vértice inferior derecho de la base
     vertices[2].x = tam.x / 2;   vertices[2].y = tam.y;   vertices[2].z = 0;         // Vértice superior derecho de la base
     vertices[3].x = -tam.x / 2;  vertices[3].y = tam.y;   vertices[3].z = 0;         // Vértice superior izquierdo de la base
     vertices[4].x = 0;           vertices[4].y = 0;          vertices[4].z = tam.z;     // Vértice de la punta
+    normales[0] = _vertex3f(0.0, 0.0, -1.0);
+    normales[1] = _vertex3f(0.0, 0.0, -1.0);
+    normales[2] = _vertex3f(0.0, 0.0, -1.0);
+    normales[3] = _vertex3f(0.0, 0.0, -1.0);
+    normales[4] = _vertex3f(0.0, 0.0, 1.0);
+
 
     //caras
     caras.resize(6);
@@ -503,16 +561,20 @@ void _pradera::draw(_modo modo, float grosor)
     glPushMatrix();
         glTranslatef(posicion.x, posicion.y, posicion.z);
         
-        angulo = (max_angulo_inclinacion * porcentaje_viento)/2.0 * oscilacion;
-        desfase_puntas = (max_desfase * porcentaje_viento)/2.0 + ((max_desfase * porcentaje_viento)/2.0 * oscilacion);
-        desfase_z = (max_desfase_z * porcentaje_viento) * oscilacion;
 
         size_t num_plantas_x = tam.x * densidad;
         size_t num_plantas_z = tam.z * densidad;
         bool capa_oscura = false;
         GLfloat offset_z = tam.z / num_plantas_z;
+        GLfloat oscilacion = 0.0;
         for (size_t i = 0; i < num_plantas_x; i++)
         {
+            oscilacion = true ? oscilacion_linea[i] : oscilacion_estatica;
+
+            angulo = (max_angulo_inclinacion * porcentaje_viento)*0.5 * oscilacion;
+            desfase_puntas = (max_desfase * porcentaje_viento)* oscilacion;
+            desfase_z = (max_desfase_z * porcentaje_viento) * oscilacion;
+            
             for (size_t j = 0; j < num_plantas_z; j++)
             {
                 //GLfloat distancia_foco = sqrt(pow(foco_viento.x - i, 2) + pow(foco_viento.z - j, 2));
@@ -522,7 +584,11 @@ void _pradera::draw(_modo modo, float grosor)
                     glTranslatef(-(tam.x/2.0)+(tam.x/num_plantas_x)*i, 0, -(tam.z/2.0)+(tam.z/num_plantas_z)*j);
                     //glRotatef(angulo_con_respecto_foco*180/M_PI, 0, 1, 0);
                     //tan(angulo*M_PI/180)
-                    _cono planta(0.05, tam.y, 5, {desfase_puntas, tam.y, desfase_z});
+                    GLfloat radio_planta    = tamanios_plantas[i][j].first;
+                    GLfloat altura_planta   = tamanios_plantas[i][j].second;
+                    Coordenadas pos_punta = Coordenadas(desfase_puntas, altura_planta, desfase_z);
+                    //cerr << "Ticket consulta: " << ticket_consulta << " Respuesta: " << respuesta[ticket_consulta + i] << endl;
+                    _cono planta(radio_planta, altura_planta, 5, pos_punta);
                     planta.draw(modo, capa_oscura ? color_pradera.actual + 0.05 : color_pradera, grosor);
                 glPopMatrix();
             }
@@ -544,6 +610,12 @@ void _sol::actualizar_sol_hora(GLfloat hora)
 {
     // Primero actualizo el color
     color_sol.actualizar_hora(hora);
+    color_cielo.actualizar_hora(hora);
+    color_luz_ambiente.actualizar_hora(hora);
+    color_luz_difusa.actualizar_hora(hora);
+    color_luz_especular.actualizar_hora(hora);
+    brillo_material.actualizar_hora(hora);
+    material_especular.actualizar_hora(hora);
 
     // Ahora actualizo la posición
     // M_PI es la semielipse
@@ -579,7 +651,7 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
     else if (velocidad < 0)
         velocidad = 0.0;
 
-    hay_brisa_en_x_0 = false;
+    viento_en_0 = false;
     // Si el viento no se mueve no hay viento xd
     if (velocidad)
     {
@@ -621,12 +693,35 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
             //cerr << "Distancia recorrida: " << distancia_recorrida << endl;
             //cerr << "Area de efecto: " << area_efecto.x << endl;
             GLfloat x_i = 0.0;
+            respuesta_viento_pradera = vector<GLfloat>(consulta_viento_pradera.size(), 0);
+            instante_ultima_brisa_toco = vector<unsigned>(consulta_viento_pradera.size(), 0);
             do
             {
                 glPushMatrix();
                     GLfloat pos_x = fmod(x_i + distancia_recorrida, area_efecto.x);
-                    if (pos_x < brisa_viento.largo and pos_x > 0.0)
-                        hay_brisa_en_x_0 = true;
+                    if( pos_x < brisa_viento.largo and pos_x > 0.0)
+                        viento_en_0 = true;
+
+                    for (size_t i = 0; i < consulta_viento_pradera.size(); i++)
+                    {
+                        Onda onda_pradera = Onda(1.0, onda.frecuencia, onda.longitud, M_PI*0.25);
+                        if( pos_x < consulta_viento_pradera[i] + brisa_viento.largo and pos_x > consulta_viento_pradera[i])
+                        {
+                            // Vaya fumadon poco más y me vuelvo loco con este if
+                            //if (onda_pradera(instante_actual/1000.0f) < 0.7 and onda_pradera.derivada_onda(instante_actual/1000.0f) < 0)
+                            //{
+                            //    //if (i == (consulta_viento_pradera.size()-1)/2)
+                            //    //    cerr << "Hay viento en " << consulta_viento_pradera[i] << ": " << respuesta_viento_pradera[i] << endl;
+                            //    onda_pradera.offset += M_PI;
+                            //}
+                            //respuesta_viento_pradera[i] = 1.0;
+                        }
+                        else
+                            respuesta_viento_pradera[i] = onda_pradera(instante_actual/1000.0f);
+                        
+                        respuesta_viento_pradera[i] = abs(onda_pradera(instante_actual/1000.0f));
+
+                    }
                     //cerr << "Pos x: " << pos_x << endl;
                     //if ((x_i+distancia_recorrida) < area_efecto.x)
                     //    pos_x = x_i+distancia_recorrida;
@@ -640,19 +735,24 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
                     //brisa_viento.punto_curva_2.z = onda(pos_x+brisa_viento.punto_curva_2.y, instante_actual/1000.f);
                     brisa_viento.punto_curva_1.z = onda(instante_actual/1000.f);
                     brisa_viento.punto_curva_2.z = -brisa_viento.punto_curva_1.z;
+                    //brisa_viento.punto_curva_2.z = onda(instante_actual/1000.f);
                     // Dibujo las laminas y capas con un huequito entre capas
                     bool offset = true;
-                    GLfloat offset_z = (area_efecto.z/num_brisas_por_lado)/2.0;
-                    for (size_t y_i = 0; y_i < num_brisas_por_lado; y_i++)
+                    size_t num_brisas_z = area_efecto.z * densidad_brisas;
+                    size_t num_brisas_y = area_efecto.y * densidad_brisas;
+                    GLfloat distancia_brisas_z = area_efecto.z / num_brisas_z;
+                    GLfloat distancia_brisas_y = area_efecto.y / num_brisas_y;
+                    for (size_t y_i = 0; y_i < num_brisas_y; y_i++)
                     {
                         offset = !offset;
-                        for (size_t z_i = 0; z_i < num_brisas_por_lado; z_i++)
+                        bool offset_y = false;
+                        for (size_t z_i = 0; z_i < num_brisas_z; z_i++)
                         {
                             glPushMatrix();
                                 // La traslado a donde toque 
-                                glTranslatef(0, 0, (area_efecto.z/num_brisas_por_lado)*(z_i+1)+offset_z*offset);
-                                glTranslatef(0, (area_efecto.y/num_brisas_por_lado)*(y_i+1), 0);
-
+                                glTranslatef(0, 0, (distancia_brisas_z)*(z_i+1)+(distancia_brisas_z*0.5)*offset);
+                                glTranslatef(0, (distancia_brisas_y)*(y_i+1) - (distancia_brisas_y*0.5)*offset_y, 0);
+                                offset_y = !offset_y;
                                 // Dibujo la brisa
                                 glRotatef(90, 0, 1, 0);
                                 glRotatef(-90, 1, 0, 0);
@@ -660,7 +760,7 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
                                 brisa_viento.draw(modo, grosor);
                             glPopMatrix();
 
-                            if (offset and z_i == num_brisas_por_lado - 2)
+                            if (offset and z_i == num_brisas_z - 2)
                                 break;
                         }
                     }
@@ -713,11 +813,10 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
     glPopMatrix();
     */
 }
-
 GLfloat _viento::giro_helice(GLfloat rozamiento, bool tiempo_ingame, GLfloat hora_ingame, Coordenadas pos)
 {
     GLfloat angulo_giro = 0.0;
-    if (hay_brisa_en_x_0)
+    if (viento_en_0 == true)
     {
         velocidad_giro_molino = velocidad;
     }
@@ -741,13 +840,22 @@ GLfloat _viento::giro_helice(GLfloat rozamiento, bool tiempo_ingame, GLfloat hor
     return angulo_giro;
 }
 
-GLfloat _viento::oscilacion_pradera(bool tiempo_ingame, GLfloat hora_ingame)
+GLfloat _viento::oscilacion_pradera_estatica(bool tiempo_ingame, GLfloat hora_ingame)
 {
     unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
 
     GLfloat porcentaje_oscilacion = onda(instante_actual/1000.0f) / onda.amplitud;
 
     return porcentaje_oscilacion;
+}
+
+void _viento::consulta_pradera(GLfloat densidad, GLfloat tam_x, Coordenadas pos_pradera)
+{
+    GLfloat distancia_entre_plantas = 1 / densidad;
+    for (size_t i = 0; i < static_cast<size_t>(tam_x*densidad); i++)
+    {
+        consulta_viento_pradera.push_back(pos_pradera.x + distancia_entre_plantas*i-tam_x/2.0);
+    }
 }
 //************************************************************************
 // GIRASOL
@@ -813,7 +921,7 @@ _petalo_girasol::_petalo_girasol(Coordenadas punto_curva_1, Coordenadas punto_cu
                          t * t * t * puntos_control_izquierda[3].z;
 
             vertices.push_back({x_izq, y_izq, z_izq});
-
+            normales.push_back({0.0, 0.0, 0.0});
         }
         // Caluculo los puntos de la curva de Bézier derecha
         for (size_t i = 0; i <= resolucion; ++i)
@@ -833,6 +941,7 @@ _petalo_girasol::_petalo_girasol(Coordenadas punto_curva_1, Coordenadas punto_cu
                          t * t * t * puntos_control_izquierda[3].z;
 
             vertices.push_back({x_der, y_der, z_izq});
+            normales.push_back({0.0, 0.0, 0.0});
         }
         // Creo las caras uniendo los puntos
         for (size_t i = 0; i < resolucion; ++i) {
@@ -910,7 +1019,7 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
                     glRotatef(360.0f / num_petalos * petalo_i + angulo_offset, 0, 0, 1);
                     // La ajusto al centro
                     //glTranslatef(0.0, radio_semillero*0.8, 0.0);
-                    petalo.draw(modo, petalo.color_petalo.actual + 0.05*(capa_i + 1), grosor, {0.0, radio_semillero*0.8f, radio_semillero*0.25f + z_offset});
+                    petalo.draw(modo, petalo.color_petalo.actual + 0.062*(capa_i + 1), grosor, {0.0, radio_semillero*0.8f, radio_semillero*0.25f + z_offset});
                 glPopMatrix();
             }
         }
@@ -946,7 +1055,7 @@ void _girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
 
         // Dibujo la cabeza
         glPushMatrix();
-            glTranslatef(0.0, tallo.largo_tallo, 0.0);
+            cabeza.posicion.y = tallo.largo_tallo;
             cabeza.draw(modo, grosor);
         glPopMatrix();
 
@@ -1094,7 +1203,8 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
             viento.draw(modo);
             molino.angulo_helice = viento.giro_helice();
             pradera.porcentaje_viento = viento.velocidad / viento.velocidad_max;
-            pradera.oscilacion = viento.oscilacion_pradera();
+            pradera.oscilacion_estatica = viento.oscilacion_pradera_estatica();
+            pradera.oscilacion_linea = viento.respuesta_viento_pradera;
         glPopMatrix();
 
         // Dibujo la pradera

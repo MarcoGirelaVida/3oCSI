@@ -27,7 +27,9 @@ typedef enum
 {
     PASO_TIEMPO_MANUAL,
     PASO_TIEMPO_AUTOMATICO, // Animación
-    VIENTO
+    VIENTO,
+    GIRO_MOLINO,
+    OSCILACION_PRADERA
     //INTENSIDAD_VIENTO,
     //INTENSIDAD_LLUVIA
 } _variable_seleccionada;
@@ -62,8 +64,10 @@ typedef enum
     ESCENA_FINAL
 } _tipo_objeto;
 
+bool activar_luz = false;
+bool luz_activada = false;
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=VIENTO_OBJ;
+_tipo_objeto    t_objeto=SOL;
 _modo           modo=SOLID;
 _modo_interfaz  modo_interfaz=_modo_interfaz::ESCENA_P3;
 _variable_seleccionada variable_seleccionada = PASO_TIEMPO_MANUAL;
@@ -156,7 +160,7 @@ void change_observer()
 
 void draw_axis()
 {
-    glDisable(GL_LIGHTING);
+    //glDisable(GL_LIGHTING);
     glLineWidth(2);
     glBegin(GL_LINES);
         // eje X, color rojo
@@ -174,6 +178,7 @@ void draw_axis()
         glVertex3f(0, 0, -AXIS_SIZE);
         glVertex3f(0, 0, AXIS_SIZE);
     glEnd();
+    //glEnable(GL_LIGHTING);
 }
 
 
@@ -216,7 +221,7 @@ void draw_objects()
             suelo.draw(modo);
             break;
         case SOL:
-            sol.color_sol.cambiar_a_final();
+            //sol.color_sol.cambiar_a_final();
             //sol.radio = 5;
             sol.draw(modo);
             break;
@@ -278,50 +283,100 @@ std::string to_string_with_precision(float value, int precision = 2) {
 }
 void printear_info()
 {
+    //glDisable(GL_LIGHTING);
     glPushMatrix();
         char *modo_interfaz_str;
         switch (modo_interfaz)
         {
-            case ESCENA_P3: modo_interfaz_str = "MODO INTERFAZ: [ESCENA P3]"; break;
-            case NORMAL: modo_interfaz_str = "MODO INTERFAZ: [NORMAL]"; break;
-            case CALIBRACION_CURVAS: modo_interfaz_str = "MODO INTERFAZ: [CALIBRACION CURVAS]"; break;
+            case ESCENA_P3: modo_interfaz_str = "INTERFAZ: [ESCENA P3]"; break;
+            case NORMAL: modo_interfaz_str = "INTERFAZ: [DEFAULT]"; break;
+            case CALIBRACION_CURVAS: modo_interfaz_str = "INTERFAZ: [CALIBRACION CURVAS]"; break;
         }
-        float entre_lineas = 0.2;
-        dibujar_texto(modo_interfaz_str, {10, 5+entre_lineas*2}, {211u, 211, 211, 0.8});
+        float entre_lineas = 0.15;
+        unsigned linea = 0;
+        Coordenadas pos_texto = {1.5, 3, entre_lineas};
+        dibujar_texto(modo_interfaz_str, pos_texto.ajustar_texto(linea), {211u, 211, 211, 0.8});
         if (modo_interfaz == ESCENA_P3)
         {
-            dibujar_texto("-----------------", {3, 5}, {211u, 211, 211, 0.8});
-            dibujar_texto("INFORMACION SOBRE ESCENA", {3, 5-entre_lineas}, {211u, 211, 211, 0.8});
-            dibujar_texto(("VARIABLE SELECCIONADA: " + to_string(variable_seleccionada)).c_str(), {3, 5-entre_lineas*2}, {211u, 211, 211, 0.8});
-            dibujar_texto(("HORA: " + to_string_with_precision(escena_p3.hora)).c_str(), {3, 5-entre_lineas*3}, {211u, 211, 211, 0.8});
-            dibujar_texto(("VELOCIDAD VIENTO: " + to_string_with_precision(escena_p3.viento.velocidad)).c_str(), {3, 5-entre_lineas*4}, {211u, 211, 211, 0.8});
-            dibujar_texto("-----------------", {3, 5-entre_lineas*5}, {211u, 211, 211, 0.8});
+            char *variable_seleccionada_str;
+            switch (variable_seleccionada)
+            {
+                case PASO_TIEMPO_MANUAL: variable_seleccionada_str = "SELECCIONADO: [HORA MANUAL]"; break;
+                case PASO_TIEMPO_AUTOMATICO: variable_seleccionada_str = "SELECCIONADO: [HORA AUTOMATICA]"; break;
+                case VIENTO: variable_seleccionada_str = "SELECCIONADO: [VIENTO]"; break;
+            }
+
+            dibujar_texto(variable_seleccionada_str, pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
+            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
+            dibujar_texto("INFORMACION SOBRE ESCENA", pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
+            dibujar_texto(("HORA: " + to_string_with_precision(escena_p3.hora)).c_str(), pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
+            dibujar_texto(("VELOCIDAD VIENTO: " + to_string_with_precision(escena_p3.viento.velocidad)).c_str(), pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
+            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
         }
 
     glPopMatrix();
+    //glEnable(GL_LIGHTING);
 }
+void display_prueba() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    change_observer();
 
+    glPushMatrix();
+    //glColor4f(sol.color_sol.actual.r, sol.color_sol.actual.g, sol.color_sol.actual.b, sol.color_sol.actual.a);
+    sol.draw(modo, 5);
+    glPopMatrix();
+
+    glutSwapBuffers();
+}
+void configuracion_luz()
+{
+    //cerr << "Color cielo: " << escena_p3.sol.color_cielo.actual.r << " " << escena_p3.sol.color_cielo.actual.g << " " << sol.color_cielo.actual.b << endl;
+    glClearColor(escena_p3.sol.color_cielo.actual.r, escena_p3.sol.color_cielo.actual.g, escena_p3.sol.color_cielo.actual.b, 1);
+    // Configuración de la luz
+    GLfloat light_pos[] = { escena_p3.sol.posicion.x, escena_p3.sol.posicion.y, escena_p3.sol.posicion.z, 0.0f };
+    GLfloat light_ambient[] = { escena_p3.sol.color_luz_ambiente.actual.r, escena_p3.sol.color_luz_ambiente.actual.g, escena_p3.sol.color_luz_ambiente.actual.b, 1.0f };
+    GLfloat light_diffuse[] = { escena_p3.sol.color_luz_difusa.actual.r, escena_p3.sol.color_luz_difusa.actual.g, escena_p3.sol.color_luz_difusa.actual.b, 1.0f };
+    GLfloat light_specular[] = { escena_p3.sol.color_luz_especular.actual.r, escena_p3.sol.color_luz_especular.actual.g, escena_p3.sol.color_luz_especular.actual.b, 1.0f };
+    
+    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+
+    // Configuración del material de la esfera
+    //GLfloat mat_ambient[] = { 0.2f, 0.2f, 0.6f, 1.0f };  // Color ambiente del material
+    //GLfloat mat_diffuse[] = { 0.4f, 0.4f, 0.9f, 1.0f };  // Color difuso del material
+    GLfloat mat_specular[] = { escena_p3.sol.material_especular.actual.r, escena_p3.sol.material_especular.actual.g, escena_p3.sol.material_especular.actual.b, 1.0f };
+    GLfloat mat_shininess[] = { escena_p3.sol.brillo_material.actual.r };
+
+    //glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    //glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+}
 void draw(void)
 {
     clean_window();
     change_observer();
 
-    //GLfloat color_luz_ambiental[] = {0.1f, 0.1f, 0.1f, 1.0f};
-    //GLfloat color_luz_difusa[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    //GLfloat posicion_luz[] = {0.0f, 10.0f, 10.0f, 1.0f}; // Coloca la luz por encima y al frente de la escena
-    //glLightfv(GL_LIGHT0, GL_AMBIENT, color_luz_ambiental);
-    //glLightfv(GL_LIGHT0, GL_DIFFUSE, color_luz_difusa);
-    //glLightfv(GL_LIGHT0, GL_POSITION, posicion_luz);
-    //// Configuración del material básico
-    //GLfloat material_difuso[] = {0.8f, 0.5f, 0.3f, 1.0f};
-    //GLfloat material_especular[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    //GLfloat material_brillo[] = {50.0f};
-    //glMaterialfv(GL_FRONT, GL_DIFFUSE, material_difuso);
-    //glMaterialfv(GL_FRONT, GL_SPECULAR, material_especular);
-    //glMaterialfv(GL_FRONT, GL_SHININESS, material_brillo);
-    
-    draw_axis();
+    if (activar_luz = true and luz_activada != true)
+    {
+        //glEnable(GL_LIGHT0);
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT, GL_DIFFUSE);
+        glEnable(GL_LIGHTING);
+        luz_activada = true;
+    }
+    else if (activar_luz = false and luz_activada != true)
+    {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_COLOR_MATERIAL);
+        luz_activada = false;
+    }
     draw_objects();
+    configuracion_luz();
+    glDisable(GL_LIGHTING);
+    draw_axis();
     printear_info();
     glutSwapBuffers();
 }
@@ -432,11 +487,11 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
         switch (variable_seleccionada)
         {
             case PASO_TIEMPO_MANUAL:
-                if (escena_p3.hora)
+                if (escena_p3.hora > 0)
                     escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
             break;
             case PASO_TIEMPO_AUTOMATICO:
-                if (escena_p3.hora)
+                if (escena_p3.hora > 0)
                     escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
             break;
             case VIENTO:
@@ -569,22 +624,20 @@ void initialize(void)
 
     // se indica el color para limpiar la ventana	(r,v,a,al)
     // blanco=(1,1,1,1) rojo=(1,0,0,1), ...);
-    glClearColor(escena_p3.color_cielo.actual.r, escena_p3.color_cielo.actual.g, escena_p3.color_cielo.actual.b, 1);
     //glClearColor(0.0, 0.0, 0.0, 1.0);
 
     // se habilita el z-bufer
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glEnable(GL_LIGHTING);
-    //glEnable(GL_LIGHT0);
-    //glEnable(GL_NORMALIZE);
-    //glShadeModel(GL_SMOOTH);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_NORMALIZE);
+    glShadeModel(GL_SMOOTH);
+    
 
     change_projection();
     glViewport(0,0,Window_width,Window_high);
 }
-
 
 //***************************************************************************
 // Programa principal
@@ -592,7 +645,6 @@ void initialize(void)
 // Se encarga de iniciar la ventana, asignar las funciones e comenzar el
 // bucle de eventos
 //***************************************************************************
-
 
 int main(int argc, char *argv[] )
 {
@@ -621,7 +673,7 @@ int main(int argc, char *argv[] )
     glutCreateWindow("PRACTICA - 3");
 
     // asignación de la funcion llamada "dibujar" al evento de dibujo
-    glutDisplayFunc(draw);
+    //glutDisplayFunc(display_prueba);
     // asignación de la funcion llamada "change_window_size" al evento correspondiente
     glutReshapeFunc(change_window_size);
     // asignación de la funcion llamada "normal_key" al evento correspondiente
@@ -629,13 +681,14 @@ int main(int argc, char *argv[] )
     // asignación de la funcion llamada "tecla_Especial" al evento correspondiente
     glutSpecialFunc(special_key);
 
+    glutDisplayFunc(draw);
     glutIdleFunc(animacion);
-
-    // funcion de inicialización
     initialize();
 
+
+    // funcion de inicialización
     // creación del objeto ply
-    ply.parametros(argv[1]);
+    //ply.parametros(argv[1]);
 
     //ply = new _objeto_ply(argv[1]);
 

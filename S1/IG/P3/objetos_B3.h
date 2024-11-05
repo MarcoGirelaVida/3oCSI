@@ -73,6 +73,11 @@ struct Onda
         GLfloat frecuencia_espacial = 2*M_PI / longitud; // cuantos angulos avanzo por unidad de longitud, cada 2 pasos avanzo medio ciclo
         return amplitud * sin(hora*frecuencia_temporal + x*frecuencia_espacial + offset);
     }
+
+    GLfloat derivada_onda(GLfloat hora)
+    {
+        return amplitud * 2 * M_PI * frecuencia * cos(2 * M_PI * frecuencia * hora + offset);
+    }
 };
 struct _color
 {
@@ -238,6 +243,10 @@ struct Coordenadas
         return !(*this == otra);
     }
 
+    Coordenadas ajustar_texto(unsigned linea)
+    {
+        return Coordenadas(x, y-z*linea, 0);
+    }
 
     Coordenadas espejo_x() const
     {
@@ -257,6 +266,7 @@ public:
     _puntos3D();
     void draw_puntos(Color color, int grosor);
     vector<_vertex3f> vertices;
+    vector<_vertex3f> normales;
     vector<_vertex3f> colores_vertices;
 };
 
@@ -376,16 +386,32 @@ class _pradera : public _triangulos3D
     GLfloat desfase_z = 0.0;
     GLfloat angulo = 0.0;
     GLfloat max_desfase_z = 0.1; // Radio de la planta
+    pair<GLfloat,GLfloat> **tamanios_plantas;
 public:
-    GLfloat oscilacion = 0.0;
+    vector<GLfloat> oscilacion_linea;
+    GLfloat oscilacion_estatica = 0.0;
     Coordenadas foco_viento = {-0.5, 0.0, 0.0};
     GLfloat porcentaje_viento = 0.0;
-    size_t densidad = 5; // 10 plantas por unidad de area
+    size_t densidad = 8; // 10 plantas por unidad de area
+    GLfloat radio_plantas = 0.035;
     Coordenadas tam;
     Coordenadas posicion;
     Color color_pradera;
 
-    _pradera(Coordenadas dimenisones = {10, 0.25, 10}, Coordenadas pos = coordenadas_default) : tam(dimenisones), posicion(pos), color_pradera(118u, 146, 62, 1.0) {}
+    _pradera(Coordenadas dimensiones = {10, 0.25, 10}, Coordenadas pos = coordenadas_default) : tam(dimensiones), posicion(pos), color_pradera(118u, 146, 62, 0.7)
+    {
+        tamanios_plantas = new pair<GLfloat,GLfloat>*[static_cast<size_t>(densidad * dimensiones.x)];
+        for (size_t i = 0; i < densidad*dimensiones.x; i++)
+        {
+            tamanios_plantas[i] = new pair<GLfloat,GLfloat>[static_cast<size_t>(densidad * dimensiones.x)];
+            for (size_t j = 0; j < densidad*dimensiones.z; j++)
+            {
+                tamanios_plantas[i][j].first = aleatorio(radio_plantas*0.5, radio_plantas*1.5);
+                tamanios_plantas[i][j].second = aleatorio(dimensiones.y*0.5, dimensiones.y*1.5);
+            }
+        }
+
+    }
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 
@@ -399,12 +425,18 @@ public:
     size_t num_fases = 24;
     Coordenadas posicion;
     Color color_sol;
-    _color luz_ambiente_mediodia = {0.6f, 0.6f, 0.6f};
-    _color luz_ambiente_atardecer = {0.4f, 0.2f, 0.1f};
-    Color luz_ambiente;
+    //_color luz_ambiente_mediodia = {0.6f, 0.6f, 0.6f};
+    //_color luz_ambiente_atardecer = {0.4f, 0.2f, 0.1f};
+    Color color_cielo = Color({0.6f, 0.3f, 0.2f}, {102u, 151, 200});
+    Color color_luz_ambiente = Color({0.2f, 0.1f, 0.1f, 1.0f}, {0.4f, 0.4f, 0.4f, 1.0f});
+    Color color_luz_difusa = Color({0.6f, 0.3f, 0.2f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
+    Color color_luz_especular = Color({0.9f, 0.6f, 0.3f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
+    Color brillo_material = Color({0.2f, 0.0f, 0.0f}, {0.8f, 0.0f, 0.0f});
+    Color material_especular = Color({0.8f, 0.6f, 0.4f}, { 1.0f, 1.0f, 1.0f});
+    //Color luz_ambiente;
 
 
-    _sol(GLfloat radio = 1, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol({243u, 159, 25}, {247u, 221, 116}), luz_ambiente(luz_ambiente_atardecer, luz_ambiente_mediodia) {};
+    _sol(GLfloat radio = 1, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol({243u, 159, 25}, {247u, 221, 116}) {};
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);, Coordenadas pos = coordenadas_default
     void actualizar_sol_hora(GLfloat hora);     
 };
@@ -589,16 +621,19 @@ private:
     const GLfloat escalado_max_brisas = 1.5;
     const GLfloat frecuencia_min = 0.2;
     const GLfloat frecuencia_max = 2;
+    vector<GLfloat> consulta_viento_pradera = {0.0};
+    vector<unsigned> instante_ultima_brisa_toco = {0};
 protected:
     _hoja_girasol brisa_viento;
     Onda onda;
 public:
+    bool viento_en_0 = false;
+    vector<GLfloat> respuesta_viento_pradera;
     const GLfloat velocidad_max = 255;
-    bool hay_brisa_en_x_0 = false;
     GLfloat velocidad = 30.0;
     GLfloat velocidad_giro_molino = velocidad;
-    size_t num_brisas_por_lado = 5;
-    Coordenadas area_efecto = {100, 7, 30};
+    GLfloat densidad_brisas = 0.5;
+    Coordenadas area_efecto = {20, 7, 20};
     Coordenadas posicion;
     Color color_viento;
     // color_viento antiguo = 190u, 231, 237
@@ -606,29 +641,31 @@ public:
     {
         brisa_viento.largo = 5;
         brisa_viento.ancho = 0.25;
-        brisa_viento.punto_curva_1 = Coordenadas(0.68, 0.5, 0.0);
-        brisa_viento.punto_curva_2 = Coordenadas(0.28, 2.2, 0.0);
+        //brisa_viento.punto_curva_1 = Coordenadas(0.68, 0.5, 0.0);
+        //brisa_viento.punto_curva_2 = Coordenadas(0.28, 2.2, 0.0);
+        brisa_viento.punto_curva_1 = Coordenadas(brisa_viento.ancho, brisa_viento.largo/3.0, 0.0);
+        brisa_viento.punto_curva_2 = Coordenadas(brisa_viento.ancho, brisa_viento.largo/3.0*2, 0.0);
         //onda.longitud = abs(lamina_viento.punto_curva_2.y - lamina_viento.punto_curva_1.y);
         brisa_viento.color_hoja.set_original(color_viento.actual);
         //lamina_viento   
     }
     void draw(_modo modo, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, float grosor=5); // , Coordenadas pos = coordenadas_default);
-    GLfloat giro_helice(GLfloat rozamiento = 0.01, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, Coordenadas pos_molino  = coordenadas_default);
-    GLfloat oscilacion_pradera(bool tiempo_ingame = false, GLfloat hora_ingame = 0.0);
+    GLfloat giro_helice(GLfloat rozamiento = 0.006, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, Coordenadas pos_molino  = coordenadas_default);
+    GLfloat oscilacion_pradera_estatica(bool tiempo_ingame = false, GLfloat hora_ingame = 0.0);
+    void consulta_pradera(GLfloat densidad, GLfloat tam_x, Coordenadas pos_pradera = coordenadas_default);
 };
 
 class _escena_P3 : public _triangulos3D
 {
 private:
-protected:
+    size_t ticket_consulta_viento = 0;
+public:
+    _viento viento;
     _suelo suelo;
     _sol sol;
     _molino molino;
     _girasol girasol;
     _pradera pradera;
-
-public:
-    _viento viento;
     unsigned instante_previo = 0;
     const unsigned movimientos_por_hora = 10;
     const unsigned duracion_dia_real = 60; // EN segundos
@@ -636,9 +673,11 @@ public:
     bool paso_tiempo_automatico = false;
     //GLfloat velocidad_viento = 30.0;
     Coordenadas posicion;
-    Color color_cielo;
     
-    _escena_P3(Coordenadas pos = coordenadas_default) : posicion(pos), color_cielo(102u, 151, 200){}
+    _escena_P3(Coordenadas pos = coordenadas_default) : posicion(pos)
+    {
+        viento.consulta_pradera(pradera.densidad, pradera.tam.x, pradera.posicion);
+    }
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
     void actualizar_hora();
     void printear_info();
