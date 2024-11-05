@@ -64,7 +64,7 @@ typedef enum
     ESCENA_FINAL
 } _tipo_objeto;
 
-bool activar_luz = false;
+bool activar_luz = true;
 bool luz_activada = false;
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
 _tipo_objeto    t_objeto=SOL;
@@ -331,6 +331,7 @@ void display_prueba() {
 void configuracion_luz()
 {
     //cerr << "Color cielo: " << escena_p3.sol.color_cielo.actual.r << " " << escena_p3.sol.color_cielo.actual.g << " " << sol.color_cielo.actual.b << endl;
+    escena_p3.sol.color_cielo.cambiar_a_final();
     glClearColor(escena_p3.sol.color_cielo.actual.r, escena_p3.sol.color_cielo.actual.g, escena_p3.sol.color_cielo.actual.b, 1);
     // Configuración de la luz
     GLfloat light_pos[] = { escena_p3.sol.posicion.x, escena_p3.sol.posicion.y, escena_p3.sol.posicion.z, 0.0f };
@@ -359,20 +360,23 @@ void draw(void)
     clean_window();
     change_observer();
 
-    if (activar_luz = true and luz_activada != true)
-    {
-        //glEnable(GL_LIGHT0);
-        glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT, GL_DIFFUSE);
-        glEnable(GL_LIGHTING);
-        luz_activada = true;
-    }
-    else if (activar_luz = false and luz_activada != true)
-    {
-        glDisable(GL_LIGHTING);
-        glDisable(GL_COLOR_MATERIAL);
-        luz_activada = false;
-    }
+    //if (activar_luz == true and luz_activada != true)
+    //{
+    //    //glEnable(GL_LIGHT0);
+    //    glEnable(GL_LIGHTING);
+    //    glEnable(GL_COLOR_MATERIAL);
+    //    glColorMaterial(GL_FRONT, GL_DIFFUSE);
+    //    luz_activada = true;
+    //    cerr << "Luz Activada" << endl;
+    //}
+    //else if (activar_luz == false and luz_activada == true)
+    //{
+    //    glDisable(GL_LIGHTING);
+    //    glDisable(GL_COLOR_MATERIAL);
+    //    luz_activada = false;
+    //    cerr << "Luz desactivada" << endl;
+    //}
+    //glEnable(GL_LIGHTING);
     draw_objects();
     configuracion_luz();
     glDisable(GL_LIGHTING);
@@ -633,6 +637,21 @@ void initialize(void)
     glEnable(GL_LIGHT0);
     glEnable(GL_NORMALIZE);
     glShadeModel(GL_SMOOTH);
+    if (activar_luz == true and luz_activada != true)
+    {
+        //glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT, GL_DIFFUSE);
+        luz_activada = true;
+    }
+    else if (activar_luz == false and luz_activada == true)
+    {
+        cerr << "Luz desactivada" << endl;
+        glDisable(GL_LIGHTING);
+        glDisable(GL_COLOR_MATERIAL);
+        luz_activada = false;
+    }
     
 
     change_projection();
