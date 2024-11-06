@@ -64,10 +64,18 @@ typedef enum
     ESCENA_FINAL
 } _tipo_objeto;
 
+bool mostrar_controles = false;
+Coordenadas ultima_posicion = {0, 0, 0};
+GLfloat ultimo_angulo_x = 0;
+GLfloat ultimo_angulo_y = 0;
+int ultima_pos_raton_x = 0;
+int ultima_pos_raton_y = 0;
+bool boton_rotacion_pulsado = false;
+bool boton_movimiento_pulsado = false;
 bool activar_luz = true;
 bool luz_activada = false;
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=SOL;
+_tipo_objeto    t_objeto=GIRASOL;
 _modo           modo=SOLID;
 _modo_interfaz  modo_interfaz=_modo_interfaz::ESCENA_P3;
 _variable_seleccionada variable_seleccionada = PASO_TIEMPO_MANUAL;
@@ -111,7 +119,7 @@ _escena_P3 escena_p3;
 
 // **************************************************************************
 // variables que definen la posicion de la camara en coordenadas polares
-GLfloat Observer_distance;
+Coordenadas Observer_position = {0.0, 0.0, 0.0};
 GLfloat Observer_angle_x;
 GLfloat Observer_angle_y;
 
@@ -149,7 +157,7 @@ void change_observer()
     // posicion del observador
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(0,0,-Observer_distance);
+    glTranslatef(Observer_position.x,Observer_position.y,-Observer_position.z);
     glRotatef(Observer_angle_x, 1, 0, 0);
     glRotatef(Observer_angle_y, 0, 1, 0);
 }
@@ -292,10 +300,11 @@ void printear_info()
             case NORMAL: modo_interfaz_str = "INTERFAZ: [DEFAULT]"; break;
             case CALIBRACION_CURVAS: modo_interfaz_str = "INTERFAZ: [CALIBRACION CURVAS]"; break;
         }
-        float entre_lineas = 0.15;
+        float entre_lineas = 0.25;
         unsigned linea = 0;
         Coordenadas pos_texto = {1.5, 3, entre_lineas};
-        dibujar_texto(modo_interfaz_str, pos_texto.ajustar_texto(linea), {211u, 211, 211, 0.8});
+        Color color_texto = {211u, 211, 211, 0.8};
+        dibujar_texto(modo_interfaz_str, pos_texto.ajustar_texto(linea), color_texto);
         if (modo_interfaz == ESCENA_P3)
         {
             char *variable_seleccionada_str;
@@ -306,27 +315,58 @@ void printear_info()
                 case VIENTO: variable_seleccionada_str = "SELECCIONADO: [VIENTO]"; break;
             }
 
-            dibujar_texto(variable_seleccionada_str, pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
-            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
-            dibujar_texto("INFORMACION SOBRE ESCENA", pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
-            dibujar_texto(("HORA: " + to_string_with_precision(escena_p3.hora)).c_str(), pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
-            dibujar_texto(("VELOCIDAD VIENTO: " + to_string_with_precision(escena_p3.viento.velocidad)).c_str(), pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
-            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), {211u, 211, 211, 0.8});
+            dibujar_texto(variable_seleccionada_str, pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto("INFORMACION SOBRE ESCENA", pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("HORA: " + to_string_with_precision(escena_p3.hora)).c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("VELOCIDAD VIENTO: " + to_string_with_precision(escena_p3.viento.velocidad) + " km/h").c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), color_texto);
         }
 
     glPopMatrix();
     //glEnable(GL_LIGHTING);
 }
-void display_prueba() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    change_observer();
-
-    glPushMatrix();
-    //glColor4f(sol.color_sol.actual.r, sol.color_sol.actual.g, sol.color_sol.actual.b, sol.color_sol.actual.a);
-    sol.draw(modo, 5);
-    glPopMatrix();
-
-    glutSwapBuffers();
+void draw_controles()
+{
+    Color color_fondo(34u, 39, 46);
+    glClearColor(color_fondo.actual.r, color_fondo.actual.g, color_fondo.actual.b, 1);
+    float entre_lineas = 0.5;
+    unsigned linea = 0;
+    Coordenadas pos_texto = {-7, 6, entre_lineas};
+    Color color_texto = {173u, 186, 199};
+    Color color_texto_titulos = {150u, 208, 255};
+    Color color_texto_rojo = {244u, 112, 103};
+    unsigned char fuente = 2;
+    unsigned char fuente_titulos = 4;
+    dibujar_texto("----------------- CONTROLES -----------------", pos_texto.ajustar_texto(linea), color_texto_titulos, fuente_titulos);
+    dibujar_texto("---Controles Generales---", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente_titulos);
+    dibujar_texto("[ESC]   --> Mostrar/Ocultar controles", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("[ENTER] --> Alternar interfaz Default/Calibracion_curvas/Escena", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    ++linea;
+    ++linea;
+    dibujar_texto("---Controles de Camara--- (USAR PREFERIBLEMENTE)", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente_titulos);
+    dibujar_texto("CLICK IZQUIERDO + RATON --> Movimiento camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("CLICK DERECHO   + RATON --> Rotar camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("RUEDA RATON             --> Alejar/Acercar camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("---Controles Alternativos de Camara--- (si no tiene raton)", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente);
+    dibujar_texto("[W][S][A][D]    --> Rotar camara arriba/abajo/izquierda/derecha", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("[CTRL] + [W][S] --> Alejar/Acercar camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    ++linea;
+    ++linea;
+    dibujar_texto("---Controles Escena---", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente_titulos);
+    dibujar_texto("[ESPACIO] --> Alternar tiempo manual/automatico", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    ++linea;
+    dibujar_texto("[V]       --> Seleccionar Viento", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA para modificar su velocidad!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    //++linea;
+    dibujar_texto("[M]       --> Seleccionar Molino", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA para modificar su angulo de giro!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    //++linea;
+    dibujar_texto("[P]       --> Seleccionar Pradera", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("¡¡Pulsar CTRL + MUEVE EL RATON por la pantalla para que te siga!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    ++linea;
+    ++linea;
+    dibujar_texto("---------- [PULSE CUALQUIER TECLA PARA SALIR] ----------", pos_texto.ajustar_texto(++linea), color_texto_rojo, fuente_titulos);
 }
 void configuracion_luz()
 {
@@ -377,11 +417,16 @@ void draw(void)
     //    cerr << "Luz desactivada" << endl;
     //}
     //glEnable(GL_LIGHTING);
-    draw_objects();
-    configuracion_luz();
-    glDisable(GL_LIGHTING);
-    draw_axis();
-    printear_info();
+    if (mostrar_controles)
+        draw_controles();
+    else
+    {
+        draw_objects();
+        configuracion_luz();
+        glDisable(GL_LIGHTING);
+        draw_axis();
+        printear_info();
+    }
     glutSwapBuffers();
 }
 
@@ -415,6 +460,25 @@ void change_window_size(int Ancho1, int Alto1)
 
 void normal_key(unsigned char tecla_pulsada, int x, int y)
 {
+    int modificadores = glutGetModifiers();
+    if (mostrar_controles)
+    {
+        mostrar_controles = false;
+        Observer_position = ultima_posicion;
+        Observer_angle_x = ultimo_angulo_x;
+        Observer_angle_y = ultimo_angulo_y;
+    }
+    else if (tecla_pulsada == 27) // Escape
+    {
+        mostrar_controles = true;
+        ultima_posicion = Observer_position;
+        ultimo_angulo_x = Observer_angle_x;
+        ultimo_angulo_y = Observer_angle_y;
+        Observer_position = {0.0, 0.0, 15*Front_plane};
+        Observer_angle_x = 0.0;
+        Observer_angle_y = 0.0;
+    }
+
     if (tecla_pulsada == 13) // Enter
     {
         modo_interfaz = static_cast<_modo_interfaz>((modo_interfaz + 1) % 3);
@@ -438,7 +502,7 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
             variable_seleccionada = PASO_TIEMPO_MANUAL;
         }
 
-        escena_p3.instante_previo = 0.0;
+        escena_p3.instante_previo = glutGet(GLUT_ELAPSED_TIME);
         escena_p3.paso_tiempo_automatico = variable_seleccionada == PASO_TIEMPO_AUTOMATICO;
     }   
 
@@ -472,36 +536,22 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
         variable_seleccionada = VIENTO;
         break; 
     case 'W':
-        switch (variable_seleccionada)
-        {
-            case PASO_TIEMPO_MANUAL:
-                if (escena_p3.hora < 24)
-                    escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
-            break;
-            case PASO_TIEMPO_AUTOMATICO:
-                if (escena_p3.hora < 24)
-                    escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
-            break;
-            case VIENTO:
-                    escena_p3.viento.velocidad += 10.0;
-            break;
-        }
+        if (modificadores == GLUT_ACTIVE_CTRL)
+            Observer_position.z /= 1.1;
+        else
+            Observer_angle_x -= 0.1*Observer_position.z;
         break;
     case 'S':
-        switch (variable_seleccionada)
-        {
-            case PASO_TIEMPO_MANUAL:
-                if (escena_p3.hora > 0)
-                    escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
-            break;
-            case PASO_TIEMPO_AUTOMATICO:
-                if (escena_p3.hora > 0)
-                    escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
-            break;
-            case VIENTO:
-                    escena_p3.viento.velocidad -= 10.0;
-            break;
-        }
+        if (modificadores == GLUT_ACTIVE_CTRL)
+            Observer_position.z *= 1.1;
+        else
+            Observer_angle_x += 0.1*Observer_position.z;
+        break;
+    case 'A':
+        Observer_angle_y -= 0.1*Observer_position.z;
+        break;
+    case 'D':
+        Observer_angle_y += 0.1*Observer_position.z;
         break;
 	}
     glutPostRedisplay();
@@ -512,14 +562,87 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
 //
 // el evento manda a la funcion:
 // codigo de la tecla
-// posicion x del raton
-// posicion y del raton
 
 //***************************************************************************
+void movimiento_raton(int x, int y)
+{
+    if ((boton_movimiento_pulsado or boton_rotacion_pulsado) and !mostrar_controles)
+    {
+        int dx = x - ultima_pos_raton_x;
+        int dy = y - ultima_pos_raton_y;
+        if (boton_rotacion_pulsado)
+        {
+            Observer_angle_y += dx * 0.1f;
+            Observer_angle_x += dy * 0.1f;
+        }
+        else
+        {
+            Observer_position.x += dx * 0.0005*Observer_position.z;
+            Observer_position.y -= dy * 0.0005*Observer_position.z;
+        }
+        ultima_pos_raton_x = x;
+        ultima_pos_raton_y = y;
+        glutPostRedisplay();
+    }
+}
+
+void botones_raton(int button, int state, int x, int y)
+{
+    int modificadores = glutGetModifiers();
+    boton_rotacion_pulsado = (button == GLUT_RIGHT_BUTTON or button == GLUT_MIDDLE_BUTTON) and state == GLUT_DOWN;
+    boton_movimiento_pulsado = button == GLUT_LEFT_BUTTON and state == GLUT_DOWN;
+    if (state == GLUT_DOWN)
+    {
+        if (mostrar_controles)
+        {
+            mostrar_controles = false;
+            Observer_position = ultima_posicion;
+            Observer_angle_x = ultimo_angulo_x;
+            Observer_angle_y = ultimo_angulo_y;
+        }
+        else if (button == GLUT_RIGHT_BUTTON or button == GLUT_LEFT_BUTTON or button == GLUT_MIDDLE_BUTTON)
+        {
+            ultima_pos_raton_x = x;
+            ultima_pos_raton_y = y;
+        }
+        else if (button == 3 or button == 4)
+        {
+            if (modificadores != GLUT_ACTIVE_CTRL)
+                Observer_position.z = button == 4 ? Observer_position.z * 1.1 : Observer_position.z / 1.1;
+            else if (modo_interfaz == ESCENA_P3)
+            {
+                switch (variable_seleccionada)
+                {
+                    case PASO_TIEMPO_MANUAL:
+                            escena_p3.hora = button == 4 ? escena_p3.hora < 24 ? escena_p3.hora + 1.0/escena_p3.movimientos_por_hora : 24 : escena_p3.hora > 0 ? escena_p3.hora - 1.0/escena_p3.movimientos_por_hora : 0;
+                    break;
+                    case PASO_TIEMPO_AUTOMATICO:
+                            escena_p3.hora = button == 4 ? escena_p3.hora < 24 ? escena_p3.hora + 1.0/escena_p3.movimientos_por_hora : 24 : escena_p3.hora > 0 ? escena_p3.hora - 1.0/escena_p3.movimientos_por_hora : 0;
+                    break;
+                    case VIENTO:
+                        escena_p3.viento.velocidad = button == 4 ? escena_p3.viento.velocidad * 1.1 : escena_p3.viento.velocidad < 10 ? 0 : escena_p3.viento.velocidad * 0.9;
+                    break;
+                    case GIRO_MOLINO:
+                        escena_p3.molino.angulo_helice = button == 4 ? escena_p3.molino.angulo_helice + (90/7) : escena_p3.molino.angulo_helice - (90/7);
+                    break;
+                }
+            }
+        }
+
+        glutPostRedisplay();
+    }
+
+}
 
 void special_key(int tecla_pulsada, int x, int y)
 {
-
+    if (mostrar_controles)
+    {
+        mostrar_controles = false;
+        Observer_position = ultima_posicion;
+        Observer_angle_x = ultimo_angulo_x;
+        Observer_angle_y = ultimo_angulo_y;
+    }
     switch (tecla_pulsada)
     {
         case GLUT_KEY_LEFT:
@@ -530,8 +653,6 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.x -= 0.1;
             }
-            else
-                Observer_angle_y--;
             break;
         case GLUT_KEY_RIGHT:
             if (modo_interfaz == CALIBRACION_CURVAS)
@@ -541,10 +662,22 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.x += 0.1;
             }
-            else
-                Observer_angle_y++;
             break;
         case GLUT_KEY_UP:
+            switch (variable_seleccionada)
+            {
+                case PASO_TIEMPO_MANUAL:
+                    if (escena_p3.hora < 24)
+                        escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
+                break;
+                case PASO_TIEMPO_AUTOMATICO:
+                    if (escena_p3.hora < 24)
+                        escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
+                break;
+                case VIENTO:
+                        escena_p3.viento.velocidad += 10.0;
+                break;
+            }
             if (modo_interfaz == CALIBRACION_CURVAS)
             {
                 if (punto_en_calibracion == PUNTO_1)
@@ -552,10 +685,22 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.y += 0.1;
             }
-            else
-                Observer_angle_x--;
             break;
         case GLUT_KEY_DOWN:
+            switch (variable_seleccionada)
+            {
+                case PASO_TIEMPO_MANUAL:
+                    if (escena_p3.hora > 0)
+                        escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
+                break;
+                case PASO_TIEMPO_AUTOMATICO:
+                    if (escena_p3.hora > 0)
+                        escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
+                break;
+                case VIENTO:
+                        escena_p3.viento.velocidad -= 10.0;
+                break;
+            }
             if (modo_interfaz == CALIBRACION_CURVAS)
             {
                 if (punto_en_calibracion == PUNTO_1)
@@ -563,8 +708,6 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.y -= 0.1;
             }
-            else
-                Observer_angle_x++;
             break;
         case GLUT_KEY_PAGE_UP:
             if (modo_interfaz == CALIBRACION_CURVAS)
@@ -574,8 +717,6 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.z += 0.1;
             }
-            else
-                Observer_distance *= 1.2;
             break;
         case GLUT_KEY_PAGE_DOWN:
             if (modo_interfaz == CALIBRACION_CURVAS)
@@ -585,8 +726,6 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.z -= 0.1;
             }
-            else
-                Observer_distance /= 1.2;
             break;
     }
 
@@ -622,7 +761,7 @@ void initialize(void)
     Back_plane=1000;
 
     // se incia la posicion del observador, en el eje z
-    Observer_distance=7*Front_plane;
+    Observer_position.z=7*Front_plane;
     Observer_angle_x=20;
     Observer_angle_y=22;
 
@@ -699,6 +838,10 @@ int main(int argc, char *argv[] )
     glutKeyboardFunc(normal_key);
     // asignación de la funcion llamada "tecla_Especial" al evento correspondiente
     glutSpecialFunc(special_key);
+
+    // Control del ratón
+    glutMouseFunc(botones_raton);
+    glutMotionFunc(movimiento_raton);
 
     glutDisplayFunc(draw);
     glutIdleFunc(animacion);

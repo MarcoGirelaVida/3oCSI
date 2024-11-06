@@ -600,6 +600,7 @@ void _pradera::draw(_modo modo, float grosor)
 void _sol::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
     glPushMatrix();
+        posicion.z = posicion_original.z;
         glTranslatef(posicion.x, posicion.y, posicion.z);
         glColor4f(color_sol.actual.r, color_sol.actual.g, color_sol.actual.b, color_sol.actual.a);
         glutSolidSphere(radio, resolucion, resolucion);
@@ -976,17 +977,22 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
     glPushMatrix();
     glTranslatef(posicion.x, posicion.y, posicion.z);
+    glRotatef(rotacion.y, 0, 1, 0);
+    glRotatef(rotacion.z, 0, 0, 1);
+    glRotatef(90, 0, 1, 0); // Lo ajusto para que mire en dirección al eje x por default
 
-    cuello.largo_tallo = 0.4;
+    cuello.largo_tallo = 0.04;
+    cuello.radio_tallo = radio_semillero*0.3;
+
         glPushMatrix();
         glTranslatef(0.0, 0.0, cuello.largo_tallo);
         // Dibujo la parte de abajo del semillero
-        hoja.punto_curva_1 = {0.68, -0.1, 0.0};
-        hoja.punto_curva_2 = {-0.02, 0.7, -0.2};
+        hoja.punto_curva_1 = {0.068, -0.01, 0.0};
+        hoja.punto_curva_2 = {-0.002, 0.07, -0.02};
         for (size_t capa_i = 0; capa_i < num_capas_hojas; ++capa_i)
         {
             GLfloat angulo_offset = (360.0f / num_hojitas) / num_capas_hojas * capa_i;
-            GLfloat z_offset = 0.02 * capa_i;
+            GLfloat z_offset = 0.1 * radio_semillero * capa_i;
             for (size_t hoja_i = 0; hoja_i < num_hojitas; ++hoja_i)
             {
                 glPushMatrix();
@@ -1010,7 +1016,7 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
         for (size_t capa_i = 0; capa_i < num_capas_petalo; ++capa_i)
         {
             GLfloat angulo_offset = (360.0f / num_petalos) / num_capas_petalo * capa_i;
-            GLfloat z_offset = 0.03 * capa_i;
+            GLfloat z_offset = 0.1 * radio_semillero * capa_i;
             //cerr << "Petalo color: " << petalo.color_petalo.r << " " << petalo.color_petalo.g << " " << petalo.color_petalo.b << endl;
             for (size_t petalo_i = 0; petalo_i < num_petalos; ++petalo_i)
             {
@@ -1035,7 +1041,7 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
 _girasol::_girasol(Coordenadas pos) : posicion(pos)
 {
     longitud_min_rama = 0.25 * (cabeza.radio_semillero + cabeza.petalo.largo);
-    tallo.largo_tallo = 10;
+    tallo.largo_tallo = 1;
     tallo.radio_tallo = cabeza.radio_semillero*0.3;
 
     for (size_t i = 0; i < num_ramas; i++)
@@ -1045,17 +1051,28 @@ _girasol::_girasol(Coordenadas pos) : posicion(pos)
     }
     
 }
-void _girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
+void _girasol::draw(_modo modo, float grosor, Coordenadas posicion_sol) // , Coordenadas pos)
 {
     glPushMatrix();
     glTranslatef(posicion.x, posicion.y, posicion.z);
-    
+    //glScalef(0.1, 0.1, 0.1);
+    GLfloat oscilacion_local = max_angulo_oscilacion * porcentaje_viento * oscilacion;
+    glRotatef(oscilacion_local, 0, 0, 1);
+
+        // Dibujo la caperuza del tallo
+        glPushMatrix();
+            _esfera caperuza_tallo(tallo.radio_tallo, 15, true, true, 50, 100);
+            glTranslatef(0.0, tallo.largo_tallo, 0.0);
+            glRotatef(180, 1, 0, 0);
+            caperuza_tallo.draw(modo, tallo.color_tallo, grosor);
+        glPopMatrix();
         // Dibujo el tallo
-        tallo.draw(modo, grosor);
+            tallo.draw(modo, grosor);
 
         // Dibujo la cabeza
         glPushMatrix();
             cabeza.posicion.y = tallo.largo_tallo;
+            cabeza.rotacion = mirar_al_sol(posicion_sol);
             cabeza.draw(modo, grosor);
         glPopMatrix();
 
@@ -1096,21 +1113,23 @@ void _girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
     glPopMatrix();
 }
 
-void _girasol::actualizar_angulos_cabeza(Coordenadas pos_sol)
+Coordenadas _girasol::mirar_al_sol(Coordenadas pos_sol)
 {
-    // Calculo el ángulo que forman las coordenadas del sol con el eje x
-    //angulo_z = atan2(pos_sol.y, pos_sol.x);
-}
+    Coordenadas sol_centrado_girasol = pos_sol - posicion;
+    Coordenadas rotacion = {0.0, 0.0, 0.0};
+    // Calculo la distancia al sol
+    //GLfloat distancia = sqrt(sol_centrado_girasol.x*sol_centrado_girasol.x + sol_centrado_girasol.y*sol_centrado_girasol.y + sol_centrado_girasol.z*sol_centrado_girasol.z);
 
-Coordenadas _girasol::lanzar_semilla(GLfloat velocidad)
-{
-    // Creo una semilla
-    //semillas.push_back(_semilla());
-    //unsigned instante_actual = glutGet(GLUT_ELAPSED_TIME);
-    //GLfloat pos_x = velocidad * instante_actual / 1000.0;
-    //GLfloat pos_y = velocidad * instante_actual / 1000.0 - 1/2*9.8*instante_actual/1000.0*instante_actual/1000.0;
+    /// Calculo el ángulo de rotación en Z
+    rotacion.z = atan2(sol_centrado_girasol.y, sol_centrado_girasol.x) * (180.0 / M_PI);
+    // Calculo el ángulo de rotación en el eje y
+    // Si el sol está recien saliendo o poniendose me pongo en la posición de descanso (15º hacia abajo)
+    if (rotacion.z < 10)
+        rotacion.z = rotacion.z > -90 ? -15 : -165;
+    else
+        rotacion.y = atan2(sol_centrado_girasol.z, abs(sol_centrado_girasol.x)) * (180.0 / M_PI);
 
-
+    return rotacion;
 }
 //************************************************************************
 // MOLINO
@@ -1202,13 +1221,13 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
         glPushMatrix();
             viento.draw(modo);
             molino.angulo_helice = viento.giro_helice();
-            pradera.porcentaje_viento = viento.velocidad / viento.velocidad_max;
-            pradera.oscilacion_estatica = viento.oscilacion_pradera_estatica();
-            pradera.oscilacion_linea = viento.respuesta_viento_pradera;
         glPopMatrix();
 
         // Dibujo la pradera
         glPushMatrix();
+            pradera.porcentaje_viento = viento.velocidad / viento.velocidad_max;
+            pradera.oscilacion_estatica = viento.oscilacion_pradera_estatica();
+            pradera.oscilacion_linea = viento.respuesta_viento_pradera;
             pradera.draw(modo, grosor);
         glPopMatrix();
 
@@ -1226,9 +1245,9 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
 
         // Girasol/es
         glPushMatrix();
-            glTranslatef(molino.radio_tejado*2, 0.0, molino.radio_tejado*2);
-            glScalef(0.1, 0.1, 0.1);
-            girasol.draw(modo, grosor);
+            girasol.posicion = {molino.radio_tejado*2, 0.0, molino.radio_tejado*2};
+            girasol.oscilacion = viento.oscilacion_pradera_estatica();
+            girasol.draw(modo, grosor, sol.posicion);
         glPopMatrix();
 
     //printear_info();
@@ -1260,12 +1279,21 @@ float aleatorio(float minimo, float maximo)
     return distribucion(gen);
 }
 
-void dibujar_texto(const char *string, Coordenadas pos, Color color)
+void dibujar_texto(const char *string, Coordenadas pos, Color color, unsigned char fuente)
 {
-  glColor4f(color.actual.r, color.actual.g, color.actual.b, color.actual.a);
-  glRasterPos2f(pos.x, pos.y);
-  int len, i;
-  len = (int)strlen(string);
-  for (i = 0; i < len; i++)
-    glutBitmapCharacter((void*)GLUT_BITMAP_HELVETICA_10, string[i]);
+
+    void *fuente_local;
+    switch (fuente)
+    {
+        case 0: fuente_local = GLUT_BITMAP_HELVETICA_10; break;
+        case 1: fuente_local = GLUT_BITMAP_HELVETICA_12; break;
+        case 2: fuente_local = GLUT_BITMAP_HELVETICA_18; break;
+        case 3: fuente_local = GLUT_BITMAP_TIMES_ROMAN_10; break;
+        case 4: fuente_local = GLUT_BITMAP_TIMES_ROMAN_24; break;
+    }
+
+    glColor4f(color.actual.r, color.actual.g, color.actual.b, color.actual.a);
+    glRasterPos2f(pos.x, pos.y);
+    for (int i = 0; i < (int)strlen(string); i++)
+        glutBitmapCharacter(fuente_local, string[i]);
 }

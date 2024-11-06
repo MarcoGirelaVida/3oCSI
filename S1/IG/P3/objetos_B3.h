@@ -234,6 +234,38 @@ struct Coordenadas
 
     Coordenadas(GLfloat x = 0.0f, GLfloat y = 0.0f, GLfloat z = 0.0f) : x(x), y(y), z(z) {}
 
+    void operator-= (const Coordenadas& c)
+    {
+        x -= c.x;
+        y -= c.y;
+        z -= c.z;
+    }
+
+    void operator+= (const Coordenadas& c)
+    {
+        x += c.x;
+        y += c.y;
+        z += c.z;
+    }
+
+    Coordenadas operator-() const
+    {
+        return Coordenadas(-x, -y, -z);
+    }
+
+    Coordenadas operator-(const Coordenadas& c) const
+    {
+        return Coordenadas(x - c.x, y - c.y, z - c.z);
+    }
+
+    Coordenadas operator=(const Coordenadas& c)
+    {
+        x = c.x;
+        y = c.y;
+        z = c.z;
+        return *this;
+    }
+
     bool operator==(const Coordenadas& otra) const {
         return (x == otra.x && y == otra.y && z == otra.z);
     }
@@ -256,7 +288,7 @@ struct Coordenadas
 
 const Coordenadas coordenadas_default = {0.0, 0.0, 0.0};
 
-void dibujar_texto(const char *string, Coordenadas pos = coordenadas_default, Color color = Color::c_default);
+void dibujar_texto(const char *string, Coordenadas pos = coordenadas_default, Color color = Color::c_default, unsigned char fuente = 0);
 //*************************************************************************
 // BASE DE TODO
 //*************************************************************************
@@ -421,9 +453,11 @@ class _sol : public _triangulos3D
 public:
     GLfloat radio;
     const GLfloat punto_algido_y = 5.0;
-    const GLfloat punto_minimo_x = 10.0;
+    const GLfloat punto_minimo_x = 7.0;
+    const GLfloat desplazamiento_z = -5.0;
     size_t num_fases = 24;
     Coordenadas posicion;
+    Coordenadas posicion_original = {punto_minimo_x, 0.0, desplazamiento_z};
     Color color_sol;
     //_color luz_ambiente_mediodia = {0.6f, 0.6f, 0.6f};
     //_color luz_ambiente_atardecer = {0.4f, 0.2f, 0.1f};
@@ -503,12 +537,12 @@ class _petalo_girasol : public _triangulos3D
 public:
     Coordenadas punto_curva_1;
     Coordenadas punto_curva_2;
-    GLfloat ancho;
-    GLfloat largo;
+    GLfloat ancho = 0.07;
+    GLfloat largo = 0.1;
     Coordenadas posicion;
     Color color_petalo;
 
-    _petalo_girasol(Coordenadas punto_curva_1 = {0.4f*0.7f, 0.1f*1.0f} , Coordenadas punto_curva2 = {0.4f*0.7f, 0.8f*1.0f}, GLfloat ancho = 0.7, GLfloat largo = 1.0, Coordenadas pos = coordenadas_default, size_t resolucion = 30);
+    _petalo_girasol(Coordenadas punto_curva_1 = {0.4f*0.07f, 0.1f*0.1f} , Coordenadas punto_curva2 = {0.4f*0.07f, 0.8f*0.1f}, GLfloat ancho = 0.07, GLfloat largo = 0.1, Coordenadas pos = coordenadas_default, size_t resolucion = 30);
     //void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
 };
 
@@ -518,10 +552,10 @@ class _hoja_girasol : public _triangulos3D
 //    _petalo_girasol hoja;
 
 public:
-    GLfloat ancho = 0.7;
-    GLfloat largo = 1.0;
-    Coordenadas punto_curva_1 = {0.68, 0.1, -0.2};
-    Coordenadas punto_curva_2 = {0.28, 0.8, -0.1};
+    GLfloat ancho = 0.07;
+    GLfloat largo = 0.1;
+    Coordenadas punto_curva_1 = {0.068, 0.01, -0.02};
+    Coordenadas punto_curva_2 = {0.028, 0.08, -0.01};
     Coordenadas posicion;
     Color color_hoja;
 
@@ -552,7 +586,8 @@ public:
     _petalo_girasol petalo;
     _tallo_girasol cuello;
     //_esfera semillero;
-    GLfloat radio_semillero = petalo.largo*0.5;
+    Coordenadas rotacion = {0.0, 0.0, 0.0};
+    GLfloat radio_semillero = petalo.largo * 0.62;
     size_t num_petalos = 6;
     size_t num_hojitas = 12;
     size_t num_capas_hojas = 3;
@@ -578,6 +613,9 @@ private:
     GLfloat longitud_min_rama;
     GLfloat angulo_min_rama = 15;
     GLfloat angulo_max_rama = 75;
+    GLfloat max_angulo_oscilacion = 15;
+    GLfloat altura_tallo_min = 0.5;
+    GLfloat altura_tallo_max = 1.5;
 
 protected:
     _tallo_girasol tallo;
@@ -585,13 +623,14 @@ protected:
     _hoja_girasol hoja;
     _petalo_girasol petalo;
 public:
+    GLfloat porcentaje_viento = 0.0;
+    GLfloat oscilacion = 0.0;
     size_t num_ramas = 5;
     Coordenadas posicion;
 
     _girasol(Coordenadas pos = coordenadas_default);
-    void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
-    void actualizar_angulos_cabeza(Coordenadas pos_sol);
-    Coordenadas lanzar_semilla(GLfloat velocidad);
+    void draw(_modo modo, float grosor = 5, Coordenadas pos_sol = coordenadas_default);
+    Coordenadas mirar_al_sol(Coordenadas pos_sol);
 };
 
 
