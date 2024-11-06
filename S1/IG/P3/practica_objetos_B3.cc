@@ -11,7 +11,7 @@
 using namespace std;
 
 GLfloat hora = 0.0;
-unsigned duracion_real_dia = 60; // Segundos
+unsigned duracion_real_dia = 30; // Segundos
 unsigned fotogramas_por_segundo = 60;
 unsigned movimientos_por_hora_ingame = (duracion_real_dia/24.0) * fotogramas_por_segundo;
 GLfloat duracion_ingame_movimiento = (duracion_real_dia/24.0) / movimientos_por_hora_ingame;
@@ -25,8 +25,7 @@ typedef enum
 
 typedef enum
 {
-    PASO_TIEMPO_MANUAL,
-    PASO_TIEMPO_AUTOMATICO, // Animación
+    HORA,
     VIENTO,
     GIRO_MOLINO,
     OSCILACION_PRADERA
@@ -64,6 +63,7 @@ typedef enum
     ESCENA_FINAL
 } _tipo_objeto;
 
+bool paso_tiempo_automatico = false;
 bool mostrar_controles = false;
 Coordenadas ultima_posicion = {0, 0, 0};
 GLfloat ultimo_angulo_x = 0;
@@ -78,7 +78,7 @@ _punto_en_calibracion punto_en_calibracion=PUNTO_1;
 _tipo_objeto    t_objeto=GIRASOL;
 _modo           modo=SOLID;
 _modo_interfaz  modo_interfaz=_modo_interfaz::ESCENA_P3;
-_variable_seleccionada variable_seleccionada = PASO_TIEMPO_MANUAL;
+_variable_seleccionada variable_seleccionada = HORA;
 
 // objetos
 _cubo       cubo;
@@ -268,7 +268,7 @@ void draw_objects()
             girasol.draw(modo);
             break;
         case VIENTO_OBJ:
-            viento.draw(modo);
+            viento.draw(modo, escena_p3.hora);
             break;
         case TEXTO:
             {
@@ -308,11 +308,13 @@ void printear_info()
         if (modo_interfaz == ESCENA_P3)
         {
             char *variable_seleccionada_str;
+            //char *modo_tiempo_str;
             switch (variable_seleccionada)
             {
-                case PASO_TIEMPO_MANUAL: variable_seleccionada_str = "SELECCIONADO: [HORA MANUAL]"; break;
-                case PASO_TIEMPO_AUTOMATICO: variable_seleccionada_str = "SELECCIONADO: [HORA AUTOMATICA]"; break;
+                case HORA: variable_seleccionada_str = "SELECCIONADO: [HORA]"; break;
                 case VIENTO: variable_seleccionada_str = "SELECCIONADO: [VIENTO]"; break;
+                case GIRO_MOLINO: variable_seleccionada_str = "SELECCIONADO: [MOLINO]"; break;
+                case OSCILACION_PRADERA: variable_seleccionada_str = "SELECCIONADO: [PRADERA]"; break;
             }
 
             dibujar_texto(variable_seleccionada_str, pos_texto.ajustar_texto(++linea), color_texto);
@@ -354,16 +356,19 @@ void draw_controles()
     ++linea;
     ++linea;
     dibujar_texto("---Controles Escena---", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente_titulos);
-    dibujar_texto("[ESPACIO] --> Alternar tiempo manual/automatico", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("[ESPACIO] --> Pausar/Reanudar Tiempo", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     ++linea;
     dibujar_texto("[V]       --> Seleccionar Viento", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA para modificar su velocidad!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("(O usa las flechas de arriba/abajo si no tienes raton)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     //++linea;
     dibujar_texto("[M]       --> Seleccionar Molino", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA para modificar su angulo de giro!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("(O usa las flechas de arriba/abajo si no tienes raton)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     //++linea;
     dibujar_texto("[P]       --> Seleccionar Pradera", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("¡¡Pulsar CTRL + MUEVE EL RATON por la pantalla para que te siga!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("Sin ratón no podras usar esta función :(", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     ++linea;
     ++linea;
     dibujar_texto("---------- [PULSE CUALQUIER TECLA PARA SALIR] ----------", pos_texto.ajustar_texto(++linea), color_texto_rojo, fuente_titulos);
@@ -491,19 +496,9 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
     }   
     if (tecla_pulsada == 32) // Espacio = animación
     {
-        if(variable_seleccionada != PASO_TIEMPO_AUTOMATICO)
-        {
-            cerr << "MODO TIEMPO AUTOMATICO" << endl;
-            variable_seleccionada = PASO_TIEMPO_AUTOMATICO;
-        }
-        else // Paro el tiempo
-        {
-            cerr << "MODO TIMPO MANUAL" << endl;
-            variable_seleccionada = PASO_TIEMPO_MANUAL;
-        }
-
+        paso_tiempo_automatico = !paso_tiempo_automatico;
         escena_p3.instante_previo = glutGet(GLUT_ELAPSED_TIME);
-        escena_p3.paso_tiempo_automatico = variable_seleccionada == PASO_TIEMPO_AUTOMATICO;
+        escena_p3.paso_tiempo_automatico = paso_tiempo_automatico;
     }   
 
     switch (toupper(tecla_pulsada))
@@ -516,25 +511,26 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
 
     case 'O':   t_objeto = OBJETO_PLY;  break;	
     case 'R':   t_objeto = ROTACION;    break;
-    case 'P':   if(modo_interfaz==CALIBRACION_CURVAS)
-                {
-                    if (punto_en_calibracion == PUNTO_1)
-                        punto_en_calibracion = PUNTO_2;
-                    else
-                        punto_en_calibracion = PUNTO_1;
-                }
-                else
-                    t_objeto = PIRAMIDE;
-                break;
+    //case 'P':   if(modo_interfaz==CALIBRACION_CURVAS)
+    //            {
+    //                if (punto_en_calibracion == PUNTO_1)
+    //                    punto_en_calibracion = PUNTO_2;
+    //                else
+    //                    punto_en_calibracion = PUNTO_1;
+    //            }
+    //            else
+    //                t_objeto = PIRAMIDE;
+    //            break;
     case 'C':   t_objeto = CUBO;        break;
     case 'L':   t_objeto = CILINDRO;    break;
     case 'N':   t_objeto = CONO;        break;
     case 'E':   t_objeto = ESFERA;      break;
 
     // PRÁCTICA 3
-    case 'V':
-        variable_seleccionada = VIENTO;
-        break; 
+    case 'H': variable_seleccionada = HORA; break;
+    case 'P': variable_seleccionada = OSCILACION_PRADERA; break;
+    case 'M': variable_seleccionada = GIRO_MOLINO; break;
+    case 'V': variable_seleccionada = VIENTO; break; 
     case 'W':
         if (modificadores == GLUT_ACTIVE_CTRL)
             Observer_position.z /= 1.1;
@@ -613,10 +609,7 @@ void botones_raton(int button, int state, int x, int y)
             {
                 switch (variable_seleccionada)
                 {
-                    case PASO_TIEMPO_MANUAL:
-                            escena_p3.hora = button == 4 ? escena_p3.hora < 24 ? escena_p3.hora + 1.0/escena_p3.movimientos_por_hora : 24 : escena_p3.hora > 0 ? escena_p3.hora - 1.0/escena_p3.movimientos_por_hora : 0;
-                    break;
-                    case PASO_TIEMPO_AUTOMATICO:
+                    case HORA:
                             escena_p3.hora = button == 4 ? escena_p3.hora < 24 ? escena_p3.hora + 1.0/escena_p3.movimientos_por_hora : 24 : escena_p3.hora > 0 ? escena_p3.hora - 1.0/escena_p3.movimientos_por_hora : 0;
                     break;
                     case VIENTO:
@@ -666,11 +659,7 @@ void special_key(int tecla_pulsada, int x, int y)
         case GLUT_KEY_UP:
             switch (variable_seleccionada)
             {
-                case PASO_TIEMPO_MANUAL:
-                    if (escena_p3.hora < 24)
-                        escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
-                break;
-                case PASO_TIEMPO_AUTOMATICO:
+                case HORA:
                     if (escena_p3.hora < 24)
                         escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
                 break;
@@ -689,11 +678,7 @@ void special_key(int tecla_pulsada, int x, int y)
         case GLUT_KEY_DOWN:
             switch (variable_seleccionada)
             {
-                case PASO_TIEMPO_MANUAL:
-                    if (escena_p3.hora > 0)
-                        escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
-                break;
-                case PASO_TIEMPO_AUTOMATICO:
+                case HORA:
                     if (escena_p3.hora > 0)
                         escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
                 break;
@@ -768,7 +753,7 @@ void initialize(void)
     // se indica el color para limpiar la ventana	(r,v,a,al)
     // blanco=(1,1,1,1) rojo=(1,0,0,1), ...);
     //glClearColor(0.0, 0.0, 0.0, 1.0);
-
+    escena_p3.duracion_dia_real = duracion_real_dia;
     // se habilita el z-bufer
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);

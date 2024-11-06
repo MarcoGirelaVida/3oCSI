@@ -416,14 +416,13 @@ class _pradera : public _triangulos3D
     const GLfloat max_angulo_inclinacion = 30.0;
     GLfloat desfase_puntas = 0.0;
     GLfloat desfase_z = 0.0;
-    GLfloat angulo = 0.0;
+    //GLfloat angulo = 0.0;
     GLfloat max_desfase_z = 0.1; // Radio de la planta
     pair<GLfloat,GLfloat> **tamanios_plantas;
 public:
     vector<GLfloat> oscilacion_linea;
     GLfloat oscilacion_estatica = 0.0;
     Coordenadas foco_viento = {-0.5, 0.0, 0.0};
-    GLfloat porcentaje_viento = 0.0;
     size_t densidad = 8; // 10 plantas por unidad de area
     GLfloat radio_plantas = 0.035;
     Coordenadas tam;
@@ -623,7 +622,6 @@ protected:
     _hoja_girasol hoja;
     _petalo_girasol petalo;
 public:
-    GLfloat porcentaje_viento = 0.0;
     GLfloat oscilacion = 0.0;
     size_t num_ramas = 5;
     Coordenadas posicion;
@@ -657,6 +655,7 @@ class _viento : public _triangulos3D
 
 private:
     unsigned instante_previo = 0.0;
+    GLfloat instante_actual = 0.0;
     const GLfloat escalado_max_brisas = 1.5;
     const GLfloat frecuencia_min = 0.2;
     const GLfloat frecuencia_max = 2;
@@ -666,6 +665,7 @@ protected:
     _hoja_girasol brisa_viento;
     Onda onda;
 public:
+    bool pausar = false;
     bool viento_en_0 = false;
     vector<GLfloat> respuesta_viento_pradera;
     const GLfloat velocidad_max = 255;
@@ -688,9 +688,9 @@ public:
         brisa_viento.color_hoja.set_original(color_viento.actual);
         //lamina_viento   
     }
-    void draw(_modo modo, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, float grosor=5); // , Coordenadas pos = coordenadas_default);
-    GLfloat giro_helice(GLfloat rozamiento = 0.006, bool tiempo_ingame = false, GLfloat hora_ingame = 0.0, Coordenadas pos_molino  = coordenadas_default);
-    GLfloat oscilacion_pradera_estatica(bool tiempo_ingame = false, GLfloat hora_ingame = 0.0);
+    void draw(_modo modo, float grosor=5); // , Coordenadas pos = coordenadas_default);
+    GLfloat giro_helice(GLfloat rozamiento = 0.006, Coordenadas pos_molino  = coordenadas_default);
+    GLfloat oscilacion_pradera_estatica();
     void consulta_pradera(GLfloat densidad, GLfloat tam_x, Coordenadas pos_pradera = coordenadas_default);
 };
 
@@ -707,7 +707,7 @@ public:
     _pradera pradera;
     unsigned instante_previo = 0;
     const unsigned movimientos_por_hora = 10;
-    const unsigned duracion_dia_real = 60; // EN segundos
+    unsigned duracion_dia_real = 60; // EN segundos
     GLfloat hora = 0.0;
     bool paso_tiempo_automatico = false;
     //GLfloat velocidad_viento = 30.0;

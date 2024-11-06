@@ -569,11 +569,11 @@ void _pradera::draw(_modo modo, float grosor)
         GLfloat oscilacion = 0.0;
         for (size_t i = 0; i < num_plantas_x; i++)
         {
-            oscilacion = true ? oscilacion_linea[i] : oscilacion_estatica;
+            oscilacion = false ? oscilacion_linea[i] : oscilacion_estatica;
 
-            angulo = (max_angulo_inclinacion * porcentaje_viento)*0.5 * oscilacion;
-            desfase_puntas = (max_desfase * porcentaje_viento)* oscilacion;
-            desfase_z = (max_desfase_z * porcentaje_viento) * oscilacion;
+            //angulo = (max_angulo_inclinacion)*0.5 * oscilacion;
+            desfase_puntas = (max_desfase)* oscilacion;
+            desfase_z = (max_desfase_z) * oscilacion;
             
             for (size_t j = 0; j < num_plantas_z; j++)
             {
@@ -645,7 +645,7 @@ void _lluvia::draw(_modo modo, Color color, float grosor) // , Coordenadas pos)
 {}
 
 //_viento::_viento(Coordenadas pos) : posicion(pos) {}
-void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float grosor) // , Coordenadas pos)
+void _viento::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
     if (velocidad > velocidad_max)
         velocidad = velocidad_max;
@@ -660,14 +660,14 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
             glTranslatef(posicion.x, posicion.y, posicion.z);
             glTranslatef(-area_efecto.x/2.0, -area_efecto.y/2.0, -area_efecto.z/2.0);
             // Actualizo la hora actual y la distancia transcurrida
-            unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
-            //float tiempo_transcurrido = (instante_actual - instante_previo) / 1000.0f; // Diferencia de tiempo en segundos
-            instante_previo = instante_actual;
+            unsigned instante_actual_real = glutGet(GLUT_ELAPSED_TIME);
+            instante_actual += pausar ? 0 : (instante_actual_real - instante_previo) / 1000.0f; // Diferencia de tiempo en segundos
+            instante_previo = instante_actual_real;
 
             // Ajusto los parametros de la honda y el escalado
             // (Supongo que la velocidad está en kilometros por hora)
             GLfloat distancia_recorrida_en_un_segundo = (velocidad/3600)*1000;
-            GLfloat distancia_recorrida = distancia_recorrida_en_un_segundo*instante_actual/1000.0f; // (en "metros")
+            GLfloat distancia_recorrida = distancia_recorrida_en_un_segundo*instante_actual; // (en "metros")
             GLfloat escalado_brisa = (velocidad / velocidad_max) * escalado_max_brisas;
             onda.frecuencia = frecuencia_min + (((velocidad / velocidad_max) * (frecuencia_max-frecuencia_min)*10)/10);
             onda.longitud = distancia_recorrida_en_un_segundo / onda.frecuencia;
@@ -708,19 +708,17 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
                         Onda onda_pradera = Onda(1.0, onda.frecuencia, onda.longitud, M_PI*0.25);
                         if( pos_x < consulta_viento_pradera[i] + brisa_viento.largo and pos_x > consulta_viento_pradera[i])
                         {
-                            // Vaya fumadon poco más y me vuelvo loco con este if
-                            //if (onda_pradera(instante_actual/1000.0f) < 0.7 and onda_pradera.derivada_onda(instante_actual/1000.0f) < 0)
-                            //{
-                            //    //if (i == (consulta_viento_pradera.size()-1)/2)
-                            //    //    cerr << "Hay viento en " << consulta_viento_pradera[i] << ": " << respuesta_viento_pradera[i] << endl;
-                            //    onda_pradera.offset += M_PI;
-                            //}
-                            //respuesta_viento_pradera[i] = 1.0;
+                            // Poco más y me vuelvo loco con este if
+                            if (onda_pradera(instante_actual) < 0.7 and onda_pradera.derivada_onda(instante_actual) < 0)
+                            {
+                                //if (i == (consulta_viento_pradera.size()-1)/2)
+                                //    cerr << "Hay viento en " << consulta_viento_pradera[i] << ": " << respuesta_viento_pradera[i] << endl;
+                                onda_pradera.offset += M_PI;
+                            }
                         }
                         else
-                            respuesta_viento_pradera[i] = onda_pradera(instante_actual/1000.0f);
+                            respuesta_viento_pradera[i] = onda_pradera(instante_actual);
                         
-                        respuesta_viento_pradera[i] = abs(onda_pradera(instante_actual/1000.0f));
 
                     }
                     //cerr << "Pos x: " << pos_x << endl;
@@ -732,9 +730,9 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
                     //    break;
                     // Traslado la lámina a su posición correspondiente
                     glTranslatef(pos_x, 0.0, 0.0);
-                    //brisa_viento.punto_curva_1.z = onda(pos_x+brisa_viento.punto_curva_1.y, instante_actual/1000.f);
-                    //brisa_viento.punto_curva_2.z = onda(pos_x+brisa_viento.punto_curva_2.y, instante_actual/1000.f);
-                    brisa_viento.punto_curva_1.z = onda(instante_actual/1000.f);
+                    //brisa_viento.punto_curva_1.z = onda(pos_x+brisa_viento.punto_curva_1.y, instante_actual);
+                    //brisa_viento.punto_curva_2.z = onda(pos_x+brisa_viento.punto_curva_2.y, instante_actual);
+                    brisa_viento.punto_curva_1.z = onda(instante_actual);
                     brisa_viento.punto_curva_2.z = -brisa_viento.punto_curva_1.z;
                     //brisa_viento.punto_curva_2.z = onda(instante_actual/1000.f);
                     // Dibujo las laminas y capas con un huequito entre capas
@@ -771,50 +769,8 @@ void _viento::draw(_modo modo, bool tiempo_ingame, GLfloat hora_ingame, float gr
         glPopMatrix();
     }
 
-    /*
-    glPushMatrix();
-    // Dibujo las laminas y capas con un huequito entre capas
-    unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
-    float tiempo_transcurrido = (instante_actual - instante_previo) / 1000.0f; // Diferencia de tiempo en segundos
-    instante_previo = instante_actual;
-
-    // Ajusto los parametros de la honda y el escalado
-    // (Supongo que la longitud del area de efecto en x es un kilómetro)
-    GLfloat distancia_recorrida = (velocidad*tiempo_transcurrido)*area_efecto.x;
-    onda.frecuencia = frecuencia_min;
-    GLfloat escalado_brisa = (30 / velocidad_max) * escalado_max_brisas;
-    //cerr << "Escalado brisa: " << escalado_brisa << endl;
-    brisa_viento.punto_curva_1.z = onda(distancia_recorrida+brisa_viento.punto_curva_1.y, instante_actual/1000.0f);
-    //cerr << "Instante: " << instante_actual/1000.0f << " Valor onda: " << brisa_viento.punto_curva_1.z << endl;
-    //cerr << "Distancia recorrida: " << distancia_recorrida << endl;
-    brisa_viento.punto_curva_2.z = onda(distancia_recorrida+brisa_viento.punto_curva_2.y, instante_actual/1000.0f);
-    bool offset = true;
-    GLfloat offset_z = (area_efecto.z/num_brisas_por_lado)/2.0;
-    //glScalef(escalado_brisa, 0.0, escalado_brisa/2.0);
-    for (size_t y_i = 0; y_i < num_brisas_por_lado; y_i++)
-    {
-        offset = !offset;
-        for (size_t z_i = 0; z_i < num_brisas_por_lado; z_i++)
-        {
-            glPushMatrix();
-                // La traslado a donde toque 
-                glTranslatef(0, 0, (area_efecto.z/num_brisas_por_lado)*(z_i+1)+offset_z*offset);
-                glTranslatef(0, (area_efecto.y/num_brisas_por_lado)*(y_i+1), 0);
-
-                // Dibujo la brisa
-                glRotatef(-90, 0, 1, 0);
-                glRotatef(-90, 1, 0, 0);
-                brisa_viento.draw(modo, grosor);
-            glPopMatrix();
-
-            if (offset and z_i == num_brisas_por_lado - 2)
-                break;
-        }
-    }
-    glPopMatrix();
-    */
 }
-GLfloat _viento::giro_helice(GLfloat rozamiento, bool tiempo_ingame, GLfloat hora_ingame, Coordenadas pos)
+GLfloat _viento::giro_helice(GLfloat rozamiento, Coordenadas pos)
 {
     GLfloat angulo_giro = 0.0;
     if (viento_en_0 == true)
@@ -826,7 +782,6 @@ GLfloat _viento::giro_helice(GLfloat rozamiento, bool tiempo_ingame, GLfloat hor
 
 
     // Muevo la hélice a la velocidad
-    unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
     //float tiempo_transcurrido = (instante_actual - instante_previo) / 1000.0f; // Diferencia de tiempo en segundos
     //instante_previo = instante_actual;
 
@@ -836,16 +791,18 @@ GLfloat _viento::giro_helice(GLfloat rozamiento, bool tiempo_ingame, GLfloat hor
     GLfloat angulos_por_segundo = 90.0 * porcion_radio_recorrida;
 
     //cerr << "Velocidad giro molino: " << velocidad_giro_molino << endl;
-    angulo_giro = fmod(angulos_por_segundo*instante_actual/1000.0, 360.0);
+    angulo_giro = fmod(angulos_por_segundo*instante_actual, 360.0);
     //cerr << "Angulo: " << angulo_giro << endl;
     return angulo_giro;
 }
 
-GLfloat _viento::oscilacion_pradera_estatica(bool tiempo_ingame, GLfloat hora_ingame)
+GLfloat _viento::oscilacion_pradera_estatica()
 {
-    unsigned instante_actual = tiempo_ingame ? hora_ingame*3600*1000 : glutGet(GLUT_ELAPSED_TIME);
-
-    GLfloat porcentaje_oscilacion = onda(instante_actual/1000.0f) / onda.amplitud;
+    GLfloat porcentaje_oscilacion = onda(instante_actual) / onda.amplitud;
+    if (velocidad != 0)
+        porcentaje_oscilacion = abs(porcentaje_oscilacion*(velocidad/velocidad_max));
+    else
+        porcentaje_oscilacion *= 0.1;
 
     return porcentaje_oscilacion;
 }
@@ -977,8 +934,8 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
     glPushMatrix();
     glTranslatef(posicion.x, posicion.y, posicion.z);
-    glRotatef(rotacion.y, 0, 1, 0);
     glRotatef(rotacion.z, 0, 0, 1);
+    glRotatef(rotacion.y, 0, 1, 0);
     glRotatef(90, 0, 1, 0); // Lo ajusto para que mire en dirección al eje x por default
 
     cuello.largo_tallo = 0.04;
@@ -1056,8 +1013,8 @@ void _girasol::draw(_modo modo, float grosor, Coordenadas posicion_sol) // , Coo
     glPushMatrix();
     glTranslatef(posicion.x, posicion.y, posicion.z);
     //glScalef(0.1, 0.1, 0.1);
-    GLfloat oscilacion_local = max_angulo_oscilacion * porcentaje_viento * oscilacion;
-    glRotatef(oscilacion_local, 0, 0, 1);
+    GLfloat oscilacion_local = max_angulo_oscilacion * oscilacion;
+    glRotatef(-oscilacion_local, 0, 0, 1);
 
         // Dibujo la caperuza del tallo
         glPushMatrix();
@@ -1127,8 +1084,9 @@ Coordenadas _girasol::mirar_al_sol(Coordenadas pos_sol)
     if (rotacion.z < 10)
         rotacion.z = rotacion.z > -90 ? -15 : -165;
     else
-        rotacion.y = atan2(sol_centrado_girasol.z, abs(sol_centrado_girasol.x)) * (180.0 / M_PI);
+        rotacion.y = -(atan2(sol_centrado_girasol.z, abs(sol_centrado_girasol.x)) * (180.0 / M_PI));
 
+    //cerr << "Rotacion en y: " << rotacion.y << endl;
     return rotacion;
 }
 //************************************************************************
@@ -1207,6 +1165,7 @@ void _molino::draw(_modo modo, float grosor) // , Coordenadas pos)
 //_escena_P3::_escena_P3(Coordenadas pos) : posicion(pos) {}
 void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
+    viento.pausar = !paso_tiempo_automatico;
     if (paso_tiempo_automatico)
         actualizar_hora();
 
@@ -1225,7 +1184,6 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
 
         // Dibujo la pradera
         glPushMatrix();
-            pradera.porcentaje_viento = viento.velocidad / viento.velocidad_max;
             pradera.oscilacion_estatica = viento.oscilacion_pradera_estatica();
             pradera.oscilacion_linea = viento.respuesta_viento_pradera;
             pradera.draw(modo, grosor);
