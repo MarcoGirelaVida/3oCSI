@@ -19,7 +19,7 @@ GLfloat duracion_ingame_movimiento = (duracion_real_dia/24.0) / movimientos_por_
 typedef enum
 {
     ESCENA_P3,
-    NORMAL,
+    DEFAULT,
     CALIBRACION_CURVAS
 } _modo_interfaz;
 
@@ -28,7 +28,9 @@ typedef enum
     HORA,
     VIENTO,
     GIRO_MOLINO,
-    OSCILACION_PRADERA
+    GIRASOL,
+    TAMANIO_NUBE
+    //OSCILACION_PRADERA
     //INTENSIDAD_VIENTO,
     //INTENSIDAD_LLUVIA
 } _variable_seleccionada;
@@ -57,8 +59,9 @@ typedef enum
     PETALO,
     CABEZA_GIRASOL,
     HOJA_GIRASOL,
-    GIRASOL,
+    GIRASOL_OBJ,
     VIENTO_OBJ,
+    NUBE,
     TEXTO,
     ESCENA_FINAL
 } _tipo_objeto;
@@ -75,9 +78,9 @@ bool boton_movimiento_pulsado = false;
 bool activar_luz = true;
 bool luz_activada = false;
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=GIRASOL;
+_tipo_objeto    t_objeto=NUBE;
 _modo           modo=SOLID;
-_modo_interfaz  modo_interfaz=_modo_interfaz::ESCENA_P3;
+_modo_interfaz  modo_interfaz=_modo_interfaz::DEFAULT;
 _variable_seleccionada variable_seleccionada = HORA;
 
 // objetos
@@ -102,6 +105,9 @@ _sol sol(tamanio_sol, pos_inicial_sol);
 
 // Viento
 _viento viento;
+
+// Nube
+_nube nube;
 
 // Molino
 _helice_molino helice_molino;
@@ -264,11 +270,14 @@ void draw_objects()
             glPopMatrix();   
             break;
         }
-        case GIRASOL:
+        case GIRASOL_OBJ:
             girasol.draw(modo);
             break;
         case VIENTO_OBJ:
-            viento.draw(modo, escena_p3.hora);
+            viento.draw(modo);
+            break;
+        case NUBE:
+            nube.draw(modo);
             break;
         case TEXTO:
             {
@@ -296,33 +305,38 @@ void printear_info()
         char *modo_interfaz_str;
         switch (modo_interfaz)
         {
-            case ESCENA_P3: modo_interfaz_str = "INTERFAZ: [ESCENA P3]"; break;
-            case NORMAL: modo_interfaz_str = "INTERFAZ: [DEFAULT]"; break;
-            case CALIBRACION_CURVAS: modo_interfaz_str = "INTERFAZ: [CALIBRACION CURVAS]"; break;
+            case ESCENA_P3: modo_interfaz_str = "[ESCENA P3]"; break;
+            case DEFAULT: modo_interfaz_str = "[DEFAULT]"; break;
+            case CALIBRACION_CURVAS: modo_interfaz_str = "[CALIBRACION CURVAS]"; break;
         }
-        float entre_lineas = 0.25;
+        float entre_lineas = 0.2;
         unsigned linea = 0;
-        Coordenadas pos_texto = {1.5, 3, entre_lineas};
+        Coordenadas pos_texto = {1.5, 2.5, entre_lineas};
         Color color_texto = {211u, 211, 211, 0.8};
-        dibujar_texto(modo_interfaz_str, pos_texto.ajustar_texto(linea), color_texto);
+        dibujar_texto(modo_interfaz_str, pos_texto.ajustar_texto(linea), color_texto, 2);
         if (modo_interfaz == ESCENA_P3)
         {
             char *variable_seleccionada_str;
             //char *modo_tiempo_str;
             switch (variable_seleccionada)
             {
-                case HORA: variable_seleccionada_str = "SELECCIONADO: [HORA]"; break;
-                case VIENTO: variable_seleccionada_str = "SELECCIONADO: [VIENTO]"; break;
-                case GIRO_MOLINO: variable_seleccionada_str = "SELECCIONADO: [MOLINO]"; break;
-                case OSCILACION_PRADERA: variable_seleccionada_str = "SELECCIONADO: [PRADERA]"; break;
+                case HORA: variable_seleccionada_str = "    SELECCIONADO: [HORA]"; break;
+                case VIENTO: variable_seleccionada_str = "    SELECCIONADO: [VIENTO]"; break;
+                case GIRO_MOLINO: variable_seleccionada_str = "    SELECCIONADO: [MOLINO]"; break;
+                //case OSCILACION_PRADERA: variable_seleccionada_str = "    SELECCIONADO: [PRADERA]"; break;
+                case TAMANIO_NUBE: variable_seleccionada_str = "    SELECCIONADO: [NUBE]"; break;
+                case GIRASOL: variable_seleccionada_str = "    SELECCIONADO: [GIRASOL]"; break;
             }
-
+            linea++;
+            dibujar_texto("-----ESCENA------", pos_texto.ajustar_texto(++linea), color_texto, 2);
             dibujar_texto(variable_seleccionada_str, pos_texto.ajustar_texto(++linea), color_texto);
-            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), color_texto);
-            dibujar_texto("INFORMACION SOBRE ESCENA", pos_texto.ajustar_texto(++linea), color_texto);
-            dibujar_texto(("HORA: " + to_string_with_precision(escena_p3.hora)).c_str(), pos_texto.ajustar_texto(++linea), color_texto);
-            dibujar_texto(("VELOCIDAD VIENTO: " + to_string_with_precision(escena_p3.viento.velocidad) + " km/h").c_str(), pos_texto.ajustar_texto(++linea), color_texto);
-            dibujar_texto("-----------------", pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("    HORA: " + to_string_with_precision(escena_p3.hora)).c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("    VELOCIDAD VIENTO: " + to_string_with_precision(escena_p3.viento.velocidad) + " km/h").c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("    FRECUENCIA OSCILACIONES: " + to_string_with_precision(escena_p3.viento.onda.frecuencia, 3) + " Hz").c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("    ANGULO MOLINO: " + to_string_with_precision(escena_p3.molino.angulo_helice) + " grados").c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("    TAMANIO NUBE: x-" + to_string_with_precision(escena_p3.nube.tam.x, 1) + " y-" + to_string_with_precision(escena_p3.nube.tam.y, 1) + " z-" + to_string_with_precision(escena_p3.nube.tam.x, 1)).c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto(("    DENSIDAD NUBE: " + to_string_with_precision(escena_p3.nube.densidad*escena_p3.nube.densidad*escena_p3.nube.densidad*0.1, 0) + " p/m3").c_str(), pos_texto.ajustar_texto(++linea), color_texto);
+            dibujar_texto("------------------", pos_texto.ajustar_texto(++linea), color_texto, 2);
         }
 
     glPopMatrix();
@@ -334,7 +348,7 @@ void draw_controles()
     glClearColor(color_fondo.actual.r, color_fondo.actual.g, color_fondo.actual.b, 1);
     float entre_lineas = 0.5;
     unsigned linea = 0;
-    Coordenadas pos_texto = {-7, 6, entre_lineas};
+    Coordenadas pos_texto = {-7, 7, entre_lineas};
     Color color_texto = {173u, 186, 199};
     Color color_texto_titulos = {150u, 208, 255};
     Color color_texto_rojo = {244u, 112, 103};
@@ -345,7 +359,6 @@ void draw_controles()
     dibujar_texto("[ESC]   --> Mostrar/Ocultar controles", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("[ENTER] --> Alternar interfaz Default/Calibracion_curvas/Escena", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     ++linea;
-    ++linea;
     dibujar_texto("---Controles de Camara--- (USAR PREFERIBLEMENTE)", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente_titulos);
     dibujar_texto("CLICK IZQUIERDO + RATON --> Movimiento camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("CLICK DERECHO   + RATON --> Rotar camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
@@ -354,22 +367,24 @@ void draw_controles()
     dibujar_texto("[W][S][A][D]    --> Rotar camara arriba/abajo/izquierda/derecha", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("[CTRL] + [W][S] --> Alejar/Acercar camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     ++linea;
-    ++linea;
     dibujar_texto("---Controles Escena---", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente_titulos);
     dibujar_texto("[ESPACIO] --> Pausar/Reanudar Tiempo", pos_texto.ajustar_texto(++linea), color_texto, fuente);
-    ++linea;
+    //++linea;
     dibujar_texto("[V]       --> Seleccionar Viento", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA para modificar su velocidad!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
-    dibujar_texto("(O usa las flechas de arriba/abajo si no tienes raton)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("(O use las flechas de arriba/abajo si no tienes raton)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     //++linea;
     dibujar_texto("[M]       --> Seleccionar Molino", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA para modificar su angulo de giro!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
-    dibujar_texto("(O usa las flechas de arriba/abajo si no tienes raton)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("(O use las flechas de arriba/abajo si no tienes raton)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     //++linea;
-    dibujar_texto("[P]       --> Seleccionar Pradera", pos_texto.ajustar_texto(++linea), color_texto, fuente);
-    dibujar_texto("¡¡Pulsar CTRL + MUEVE EL RATON por la pantalla para que te siga!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
-    dibujar_texto("Sin ratón no podras usar esta función :(", pos_texto.ajustar_texto(++linea), color_texto, fuente);
-    ++linea;
+    dibujar_texto("[N]       --> Seleccionar Nube", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA para modificar su densidad!! (No existe alternativa sin ratón)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("¡¡Use las flechas de arriba/abajo,izq/der,RePag/AvPag para modificar su tamanio en (+y-y,+x-x,+z-z)!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    //++linea;
+    //dibujar_texto("[G]       --> Seleccionar Girasol", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    //dibujar_texto("¡¡Pulsar CTRL + MUEVE EL RATON por la pantalla para que te siga!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    //dibujar_texto("Sin raton no podras usar esta funcion :(", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     ++linea;
     dibujar_texto("---------- [PULSE CUALQUIER TECLA PARA SALIR] ----------", pos_texto.ajustar_texto(++linea), color_texto_rojo, fuente_titulos);
 }
@@ -490,7 +505,7 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
         switch (modo_interfaz)
         {
             case ESCENA_P3: cerr << "Modo escena P3" << endl; t_objeto = ESCENA_FINAL; break;
-            case NORMAL: cerr << "Modo normal" << endl; t_objeto = CUBO; break;
+            case DEFAULT: cerr << "Modo normal" << endl; t_objeto = NUBE; break;
             case CALIBRACION_CURVAS: cerr << "Modo calibración curvas" << endl; t_objeto = HOJA_GIRASOL; break;
         }  
     }   
@@ -500,7 +515,8 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
         escena_p3.instante_previo = glutGet(GLUT_ELAPSED_TIME);
         escena_p3.paso_tiempo_automatico = paso_tiempo_automatico;
     }   
-
+    escena_p3.liberar_sol = escena_p3.liberar_sol and (tecla_pulsada == 32 or tecla_pulsada == 13 or tecla_pulsada == 27);
+    escena_p3.viento.frecuencia_manual = escena_p3.viento.frecuencia_manual and (tecla_pulsada == 32 or tecla_pulsada == 13 or tecla_pulsada == 27);
     switch (toupper(tecla_pulsada))
     {
 	case 'Q':exit(0);
@@ -523,14 +539,16 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
     //            break;
     case 'C':   t_objeto = CUBO;        break;
     case 'L':   t_objeto = CILINDRO;    break;
-    case 'N':   t_objeto = CONO;        break;
+    //case 'N':   t_objeto = CONO;        break;
     case 'E':   t_objeto = ESFERA;      break;
 
     // PRÁCTICA 3
     case 'H': variable_seleccionada = HORA; break;
-    case 'P': variable_seleccionada = OSCILACION_PRADERA; break;
+    //case 'P': variable_seleccionada = OSCILACION_PRADERA; break;
     case 'M': variable_seleccionada = GIRO_MOLINO; break;
-    case 'V': variable_seleccionada = VIENTO; break; 
+    case 'N': variable_seleccionada = TAMANIO_NUBE; break;
+    case 'G': variable_seleccionada = GIRASOL; break;
+    case 'V': variable_seleccionada = VIENTO; escena_p3.viento.frecuencia_manual = true; break; 
     case 'W':
         if (modificadores == GLUT_ACTIVE_CTRL)
             Observer_position.z /= 1.1;
@@ -562,6 +580,8 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
 //***************************************************************************
 void movimiento_raton(int x, int y)
 {
+    int modificadores = glutGetModifiers();
+    
     if ((boton_movimiento_pulsado or boton_rotacion_pulsado) and !mostrar_controles)
     {
         int dx = x - ultima_pos_raton_x;
@@ -571,10 +591,29 @@ void movimiento_raton(int x, int y)
             Observer_angle_y += dx * 0.1f;
             Observer_angle_x += dy * 0.1f;
         }
-        else
+        else if (boton_movimiento_pulsado)
         {
-            Observer_position.x += dx * 0.0005*Observer_position.z;
-            Observer_position.y -= dy * 0.0005*Observer_position.z;
+            if (variable_seleccionada == GIRASOL)
+            {
+                //escena_p3.liberar_sol = true;
+                //cerr << "Pos sol al entrar: " << escena_p3.sol.posicion.x << " " << escena_p3.sol.posicion.z << endl;
+                //GLfloat porcentaje_x = ((float)x/glutGet(GLUT_WINDOW_WIDTH));
+                //GLfloat valor_x = Observer_position.x*0.75 + porcentaje_x*Observer_position.x*0.75;
+                //GLfloat pendiente_recta  = (-Observer_position.z*0.75)/(Observer_position.x*0.75);
+                //cerr << "Observer position: " << Observer_position.x << " " << Observer_position.z << endl;
+                //escena_p3.sol.posicion.x = valor_x;
+                //escena_p3.sol.posicion.z = pendiente_recta*valor_x;
+                //cerr << "Pendiente recta: " << pendiente_recta << endl;
+                //cerr << "Valor x: " << valor_x << endl;
+                //cerr << "Porcentaje x: " << porcentaje_x << endl;
+                //escena_p3.sol.posicion.x = porcentaje_x*escena_p3.sol.punto_minimo_x
+                //cerr << "Pos sol al salir: " << escena_p3.sol.posicion.x << " " << escena_p3.sol.posicion.z << endl;
+            }
+            else
+            {
+                Observer_position.x += dx * 0.0005*Observer_position.z;
+                Observer_position.y -= dy * 0.0005*Observer_position.z;
+            }
         }
         ultima_pos_raton_x = x;
         ultima_pos_raton_y = y;
@@ -603,7 +642,7 @@ void botones_raton(int button, int state, int x, int y)
         }
         else if (button == 3 or button == 4)
         {
-            if (modificadores != GLUT_ACTIVE_CTRL)
+            if (modificadores != GLUT_ACTIVE_CTRL and modificadores != GLUT_ACTIVE_SHIFT)
                 Observer_position.z = button == 4 ? Observer_position.z * 1.1 : Observer_position.z / 1.1;
             else if (modo_interfaz == ESCENA_P3)
             {
@@ -613,10 +652,19 @@ void botones_raton(int button, int state, int x, int y)
                             escena_p3.hora = button == 4 ? escena_p3.hora < 24 ? escena_p3.hora + 1.0/escena_p3.movimientos_por_hora : 24 : escena_p3.hora > 0 ? escena_p3.hora - 1.0/escena_p3.movimientos_por_hora : 0;
                     break;
                     case VIENTO:
-                        escena_p3.viento.velocidad = button == 4 ? escena_p3.viento.velocidad * 1.1 : escena_p3.viento.velocidad < 10 ? 0 : escena_p3.viento.velocidad * 0.9;
+                    {
+                        if (modificadores == GLUT_ACTIVE_CTRL)
+                            escena_p3.viento.velocidad = button == 4 ? escena_p3.viento.velocidad * 1.1 : escena_p3.viento.velocidad < 10 ? 0 : escena_p3.viento.velocidad * 0.9;
+                        else if (modificadores == GLUT_ACTIVE_SHIFT)
+                            escena_p3.viento.onda.frecuencia = button == 4 ? escena_p3.viento.onda.frecuencia * 1.1 : escena_p3.viento.onda.frecuencia * 0.9;
+                    }
                     break;
                     case GIRO_MOLINO:
-                        escena_p3.molino.angulo_helice = button == 4 ? escena_p3.molino.angulo_helice + (90/7) : escena_p3.molino.angulo_helice - (90/7);
+                        escena_p3.molino.angulo_helice += button == 4 ? (90/7) : -(90/7);
+                        //cerr << "Angulo helice: " << escena_p3.molino.angulo_helice << endl;
+                    break;
+                    case TAMANIO_NUBE:
+                        escena_p3.nube.densidad += button == 4 ? 5 : -5;
                     break;
                 }
             }
@@ -629,6 +677,7 @@ void botones_raton(int button, int state, int x, int y)
 
 void special_key(int tecla_pulsada, int x, int y)
 {
+    int modificadores = glutGetModifiers();
     if (mostrar_controles)
     {
         mostrar_controles = false;
@@ -646,6 +695,13 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.x -= 0.1;
             }
+            else if (modo_interfaz == ESCENA_P3)
+            {
+                switch (variable_seleccionada)
+                {
+                    case TAMANIO_NUBE: escena_p3.nube.tam.x -= 0.1; break;
+                }
+            }
             break;
         case GLUT_KEY_RIGHT:
             if (modo_interfaz == CALIBRACION_CURVAS)
@@ -655,18 +711,15 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.x += 0.1;
             }
+            else if (modo_interfaz == ESCENA_P3)
+            {
+                switch (variable_seleccionada)
+                {
+                    case TAMANIO_NUBE: escena_p3.nube.tam.x += 0.1; break;
+                }
+            }
             break;
         case GLUT_KEY_UP:
-            switch (variable_seleccionada)
-            {
-                case HORA:
-                    if (escena_p3.hora < 24)
-                        escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
-                break;
-                case VIENTO:
-                        escena_p3.viento.velocidad += 10.0;
-                break;
-            }
             if (modo_interfaz == CALIBRACION_CURVAS)
             {
                 if (punto_en_calibracion == PUNTO_1)
@@ -674,24 +727,52 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.y += 0.1;
             }
+            else  if (modo_interfaz == ESCENA_P3)
+            {
+                switch (variable_seleccionada)
+                {
+                    case HORA:
+                        if (escena_p3.hora < 24)
+                            escena_p3.hora += 1.0/escena_p3.movimientos_por_hora;
+                    break;
+                    case VIENTO:
+                        modificadores == GLUT_ACTIVE_SHIFT ? escena_p3.viento.velocidad += 10.0 : escena_p3.viento.onda.frecuencia *= 1.1;
+                    break;
+                    case GIRO_MOLINO:
+                        escena_p3.molino.angulo_helice += 90/7;
+                    break;
+                    case TAMANIO_NUBE:
+                        escena_p3.nube.tam.z += 0.1;
+                    break;
+                }
+            }
             break;
         case GLUT_KEY_DOWN:
-            switch (variable_seleccionada)
-            {
-                case HORA:
-                    if (escena_p3.hora > 0)
-                        escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
-                break;
-                case VIENTO:
-                        escena_p3.viento.velocidad -= 10.0;
-                break;
-            }
             if (modo_interfaz == CALIBRACION_CURVAS)
             {
                 if (punto_en_calibracion == PUNTO_1)
                     hoja_girasol.punto_curva_1.y -= 0.1;
                 else
                     hoja_girasol.punto_curva_2.y -= 0.1;
+            }
+            else if (modo_interfaz == ESCENA_P3)
+            {
+                switch (variable_seleccionada)
+                {
+                    case HORA:
+                        if (escena_p3.hora > 0)
+                            escena_p3.hora -= 1.0/escena_p3.movimientos_por_hora;
+                    break;
+                    case VIENTO:
+                        modificadores == GLUT_ACTIVE_SHIFT ? escena_p3.viento.velocidad -= 10.0 : escena_p3.viento.onda.frecuencia *= 0.9;
+                    break;
+                    case GIRO_MOLINO:
+                        escena_p3.molino.angulo_helice -= 90/7;
+                    break;
+                    case TAMANIO_NUBE:
+                        escena_p3.nube.tam.z -= 0.1;
+                    break;
+                }
             }
             break;
         case GLUT_KEY_PAGE_UP:
@@ -702,6 +783,13 @@ void special_key(int tecla_pulsada, int x, int y)
                 else
                     hoja_girasol.punto_curva_2.z += 0.1;
             }
+            else if (modo_interfaz == ESCENA_P3)
+            {
+                switch (variable_seleccionada)
+                {
+                    case TAMANIO_NUBE: escena_p3.nube.tam.y += 0.1; break;
+                }
+            }
             break;
         case GLUT_KEY_PAGE_DOWN:
             if (modo_interfaz == CALIBRACION_CURVAS)
@@ -710,6 +798,13 @@ void special_key(int tecla_pulsada, int x, int y)
                     hoja_girasol.punto_curva_1.z -= 0.1;
                 else
                     hoja_girasol.punto_curva_2.z -= 0.1;
+            }
+            else if (modo_interfaz == ESCENA_P3)
+            {
+                switch (variable_seleccionada)
+                {
+                    case TAMANIO_NUBE: escena_p3.nube.tam.y -= 0.1; break;
+                }
             }
             break;
     }

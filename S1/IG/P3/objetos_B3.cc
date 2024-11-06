@@ -636,9 +636,29 @@ void _sol::actualizar_sol_hora(GLfloat hora)
     //glLightfv(GL_LIGHT0, GL_POSITION, posicion_luz);
 }
 
-//_nube::_nube(Coordenadas pos) : posicion(pos) {}
-void _nube::draw(_modo modo, Color color, float grosor) // , Coordenadas pos)
-{}
+void _nube::draw(_modo modo, float grosor)
+{
+    glPushMatrix();
+        glTranslatef(posicion.x, posicion.y, posicion.z);
+        unsigned instante_real = glutGet(GLUT_ELAPSED_TIME);
+        instante_actual += pausar ? 0 : (instante_real - instante_previo) / 1000.0f;
+        instante_previo = instante_real;
+        size_t num_particulas = densidad * tam.x * tam.y * tam.z;
+        if (num_particulas > max_particulas)
+            num_particulas = max_particulas;
+        for (size_t i = 0; i < num_particulas; i++)
+        {
+            glPushMatrix();
+                glTranslatef(particulas[i].posicion.x*tam.x-tam.x*0.5, particulas[i].posicion.y*tam.y, particulas[i].posicion.z*tam.z-tam.z*0.5);
+                onda.offset = particulas[i].fase_onda;
+                GLfloat radio = particulas[i].radio*radio_medio*2;
+                GLfloat transparencia = particulas[i].transparencia*color_nube.actual.a*2;
+                glColor4f(color_nube.actual.r, color_nube.actual.g, color_nube.actual.b, transparencia + transparencia*onda(instante_actual));
+                glutSolidSphere(radio + radio*onda(instante_actual), 10, 10);
+            glPopMatrix();
+        }
+    glPopMatrix();
+}
 
 //_lluvia::_lluvia(Coordenadas pos) : posicion(pos) {}
 void _lluvia::draw(_modo modo, Color color, float grosor) // , Coordenadas pos)
@@ -669,8 +689,11 @@ void _viento::draw(_modo modo, float grosor) // , Coordenadas pos)
             GLfloat distancia_recorrida_en_un_segundo = (velocidad/3600)*1000;
             GLfloat distancia_recorrida = distancia_recorrida_en_un_segundo*instante_actual; // (en "metros")
             GLfloat escalado_brisa = (velocidad / velocidad_max) * escalado_max_brisas;
-            onda.frecuencia = frecuencia_min + (((velocidad / velocidad_max) * (frecuencia_max-frecuencia_min)*10)/10);
+            if (!frecuencia_manual)
+                onda.frecuencia = frecuencia_min + (((velocidad / velocidad_max) * (frecuencia_max-frecuencia_min)*10)/10);
             onda.longitud = distancia_recorrida_en_un_segundo / onda.frecuencia;
+            cerr << "Frecuencia: " << onda.frecuencia << endl;
+            cerr << "MANUAL: " << boolalpha << frecuencia_manual << endl;
             //cerr << "Frecuencia: " << onda.frecuencia << endl;
             // (Lo de 10 es para que no perjudique a los decimales)
 
@@ -1151,7 +1174,6 @@ void _molino::draw(_modo modo, float grosor) // , Coordenadas pos)
         // Dibujo la hélice
         glPushMatrix();
             glTranslatef(0.0, 0.3*altura_tejado + altura_casa, -(radio_casa*0.8));
-            glScalef(0.2, 0.2, 0.2);
             glTranslatef(0.0, 0.0, -(helice.largo_palo_central + helice.radio_bola_central/2.0));
             glRotatef(90, 1, 0, 0);
             glRotatef(angulo_helice, 0, 1, 0);
@@ -1166,20 +1188,27 @@ void _molino::draw(_modo modo, float grosor) // , Coordenadas pos)
 void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
     viento.pausar = !paso_tiempo_automatico;
+    nube.pausar = !paso_tiempo_automatico;
     if (paso_tiempo_automatico)
         actualizar_hora();
 
     glPushMatrix();
         // Sol
-        sol.actualizar_sol_hora(hora);
+        if (!liberar_sol)
+            sol.actualizar_sol_hora(hora);
         glPushMatrix();
             sol.draw(modo, grosor);
         glPopMatrix();
 
-        // Dibulo el viento
+        // Dibujo el viento
         glPushMatrix();
             viento.draw(modo);
-            molino.angulo_helice = viento.giro_helice();
+        glPopMatrix();
+
+        // Dibujo la nube
+        glPushMatrix();
+            nube.posicion = {0.0, molino.altura_casa + molino.altura_tejado*2, 0.0};
+            nube.draw(modo);
         glPopMatrix();
 
         // Dibujo la pradera
@@ -1196,7 +1225,9 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
 
         // Molino
         glPushMatrix();
-            glScalef(1.5, 1.5, 1.5);
+            if (paso_tiempo_automatico)
+                molino.angulo_helice = viento.giro_helice();
+            //glScalef(1.5, 1.5, 1.5);
             glRotatef(180, 0, 1, 0);
             molino.draw(modo, grosor);
         glPopMatrix();
@@ -1209,7 +1240,6 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
         glPopMatrix();
 
     //printear_info();
-
     glPopMatrix();
 };
 

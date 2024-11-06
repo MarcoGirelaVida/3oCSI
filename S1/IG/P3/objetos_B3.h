@@ -258,6 +258,10 @@ struct Coordenadas
         return Coordenadas(x - c.x, y - c.y, z - c.z);
     }
 
+    Coordenadas operator/(const GLfloat f) const
+    {
+        return Coordenadas(x/f, y/f, z/f);
+    }
     Coordenadas operator=(const Coordenadas& c)
     {
         x = c.x;
@@ -283,6 +287,13 @@ struct Coordenadas
     Coordenadas espejo_x() const
     {
         return Coordenadas(-x, y, z);
+    }
+
+    char *to_string() const
+    {
+        char *str = new char[100];
+        sprintf(str, "(%fx%fx%f)", x, y, z);
+        return str;
     }
 };
 
@@ -482,7 +493,7 @@ protected:
     _esfera bola_central;
 
 public:
-    static constexpr GLfloat largo_aspas = 2.0;
+    static constexpr GLfloat largo_aspas = 0.6;
     static constexpr GLfloat grosor_aspas = largo_aspas / 10.0;
     static constexpr GLfloat ancho_aspas = largo_aspas / 4.0;
     static constexpr size_t num_aspas = 10;
@@ -512,8 +523,8 @@ protected:
 
 public:
     GLfloat angulo_helice = 0.0;
-    static constexpr GLfloat altura_casa = 1.0;
-    static constexpr GLfloat radio_casa = 0.5;
+    static constexpr GLfloat altura_casa = 1.5;
+    static constexpr GLfloat radio_casa = 0.75;
     static constexpr GLfloat altura_tejado = 0.45*altura_casa;
     static constexpr GLfloat radio_tejado = radio_casa + 0.2*radio_casa;
     Coordenadas posicion;
@@ -631,14 +642,48 @@ public:
     Coordenadas mirar_al_sol(Coordenadas pos_sol);
 };
 
+struct Particula
+{
+    Coordenadas posicion;
+    GLfloat radio;
+    GLfloat transparencia;
+    GLfloat fase_onda;
+};
 
 class _nube : public _triangulos3D
 {
+private:
+    vector<Particula> particulas;
+    unsigned instante_previo = 0;
+    GLfloat instante_actual = 0.0;
+    unsigned max_particulas = 10000;
 public:
-    Coordenadas posicion;
+    GLfloat radio_medio = 0.2;
+    bool pausar = false;
+    Onda onda;
+    unsigned densidad;
+    Coordenadas tam;
+    Coordenadas posicion = {0, 0, 0};
+    Color color_nube = {255u, 255, 255, 0.33};
 
-    _nube(Coordenadas pos = coordenadas_default) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
+
+    _nube(unsigned densidad = 10, Coordenadas tam = {10, 1.5, 5}) : densidad(densidad), tam(tam)
+    {
+        onda.frecuencia = 0.1;
+        onda.amplitud = 0.5;
+        for (size_t i = 0; i < max_particulas; i++)
+        {
+            GLfloat x = aleatorio();
+            GLfloat y = aleatorio();
+            GLfloat z = aleatorio();
+            GLfloat transparencia = aleatorio();
+            GLfloat radio = aleatorio();
+            GLfloat fase_onda = aleatorio(0, 2*M_PI);
+            //GLfloat transparencia = aleatorio(0.5, 1.0);
+            particulas.push_back({{x, y, z}, radio, transparencia, fase_onda});
+        }
+    }
+    void draw(_modo modo, float grosor = 5);
 };
 
 class _lluvia : public _triangulos3D
@@ -663,12 +708,13 @@ private:
     vector<unsigned> instante_ultima_brisa_toco = {0};
 protected:
     _hoja_girasol brisa_viento;
-    Onda onda;
 public:
+    Onda onda;
     bool pausar = false;
     bool viento_en_0 = false;
     vector<GLfloat> respuesta_viento_pradera;
     const GLfloat velocidad_max = 255;
+    bool frecuencia_manual = false;
     GLfloat velocidad = 30.0;
     GLfloat velocidad_giro_molino = velocidad;
     GLfloat densidad_brisas = 0.5;
@@ -687,6 +733,11 @@ public:
         //onda.longitud = abs(lamina_viento.punto_curva_2.y - lamina_viento.punto_curva_1.y);
         brisa_viento.color_hoja.set_original(color_viento.actual);
         //lamina_viento   
+
+        GLfloat distancia_recorrida_en_un_segundo = (velocidad/3600)*1000;
+        onda.frecuencia = frecuencia_min + (((velocidad / velocidad_max) * (frecuencia_max-frecuencia_min)*10)/10);
+        //onda.longitud = distancia_recorrida_en_un_segundo / onda.frecuencia;
+        onda.offset = M_PI*0.5;
     }
     void draw(_modo modo, float grosor=5); // , Coordenadas pos = coordenadas_default);
     GLfloat giro_helice(GLfloat rozamiento = 0.006, Coordenadas pos_molino  = coordenadas_default);
@@ -700,6 +751,7 @@ private:
     size_t ticket_consulta_viento = 0;
 public:
     _viento viento;
+    _nube nube;
     _suelo suelo;
     _sol sol;
     _molino molino;
@@ -710,6 +762,7 @@ public:
     unsigned duracion_dia_real = 60; // EN segundos
     GLfloat hora = 0.0;
     bool paso_tiempo_automatico = false;
+    bool liberar_sol = false;
     //GLfloat velocidad_viento = 30.0;
     Coordenadas posicion;
     
