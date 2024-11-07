@@ -696,7 +696,7 @@ void _nube::draw(_modo modo, float grosor)
 }
 
 //_lluvia::_lluvia(Coordenadas pos) : posicion(pos) {}
-void _lluvia::draw(_modo modo, float grosor) // , Coordenadas pos)
+void _lluvia::draw(_modo modo, float grosor) // , Coordenadas posdis)
 {}
 
 //_viento::_viento(Coordenadas pos) : posicion(pos) {}
