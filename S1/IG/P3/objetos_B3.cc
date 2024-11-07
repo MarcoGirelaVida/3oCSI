@@ -643,6 +643,40 @@ void _nube::draw(_modo modo, float grosor)
         unsigned instante_real = glutGet(GLUT_ELAPSED_TIME);
         instante_actual += pausar ? 0 : (instante_real - instante_previo) / 1000.0f;
         instante_previo = instante_real;
+
+        if (lluvia_activa or intensidad_lluvia < 0.1)
+        {
+            color_nube.actualizar(intensidad_lluvia);
+            GLfloat frecuencia_caida = max_frecuencia-(max_frecuencia-min_frecuencia)*intensidad_lluvia;
+            GLfloat distancia_entre_gotas = frecuencia_caida; // Suponemos que caen a un metro por segundo
+            unsigned capas_generadas = instante_actual * frecuencia_caida;
+            unsigned densidad_lluvia = min_densidad_lluvia+(max_densidad_lluvia-min_densidad_lluvia)*intensidad_lluvia;
+            size_t num_particulas_lluvia = densidad_lluvia * tam.x * tam.z;
+            if (num_particulas_lluvia*capas_generadas > max_particulas)
+                num_particulas_lluvia = max_particulas;
+            size_t p = 0;
+            glPushMatrix();
+                GLfloat offset_capa_i = 0.0;
+                while (offset_capa_i < posicion.y*2 + tam.y + distancia_entre_gotas)
+                {
+                        for (size_t i = 0; i < num_particulas_lluvia; i++)
+                        {
+                            if (p >= max_particulas)
+                                break;
+                            glPushMatrix();
+                                GLfloat desplazamiento = fmod(instante_actual, frecuencia_caida) * velocidad_caida_max*intensidad_lluvia*particulas[p].posicion.y;
+                                glTranslatef(particulas[p].posicion.x*tam.x-tam.x*0.5, -(offset_capa_i+desplazamiento), particulas[p].posicion.z*tam.z-tam.z*0.5);
+                                GLfloat radio = particulas[p].radio*radio_medio_lluvia*2 + radio_medio_lluvia*intensidad_lluvia;
+                                glColor4f(color_lluvia.actual.r, color_lluvia.actual.g, color_lluvia.actual.b, color_lluvia.actual.a);
+                                glutSolidSphere(radio + radio*onda(instante_actual), 10, 10);
+                            glPopMatrix();
+                            p++;
+                        }
+                    offset_capa_i += distancia_entre_gotas;
+                }
+            glPopMatrix();
+        }
+        onda.frecuencia = frecuencia_min_nubes + (frecuencia_max_nubes - frecuencia_min_nubes) * intensidad_lluvia;
         size_t num_particulas = densidad * tam.x * tam.y * tam.z;
         if (num_particulas > max_particulas)
             num_particulas = max_particulas;
@@ -652,16 +686,17 @@ void _nube::draw(_modo modo, float grosor)
                 glTranslatef(particulas[i].posicion.x*tam.x-tam.x*0.5, particulas[i].posicion.y*tam.y, particulas[i].posicion.z*tam.z-tam.z*0.5);
                 onda.offset = particulas[i].fase_onda;
                 GLfloat radio = particulas[i].radio*radio_medio*2;
-                GLfloat transparencia = particulas[i].transparencia*color_nube.actual.a*2;
+                GLfloat transparencia = particulas[i].transparencia*(lluvia_activa or intensidad_lluvia < 0.1 ? color_nube.actual.a*2 : transparencia_sin_lluvia*2);
                 glColor4f(color_nube.actual.r, color_nube.actual.g, color_nube.actual.b, transparencia + transparencia*onda(instante_actual));
                 glutSolidSphere(radio + radio*onda(instante_actual), 10, 10);
             glPopMatrix();
         }
+
     glPopMatrix();
 }
 
 //_lluvia::_lluvia(Coordenadas pos) : posicion(pos) {}
-void _lluvia::draw(_modo modo, Color color, float grosor) // , Coordenadas pos)
+void _lluvia::draw(_modo modo, float grosor) // , Coordenadas pos)
 {}
 
 //_viento::_viento(Coordenadas pos) : posicion(pos) {}
@@ -692,8 +727,8 @@ void _viento::draw(_modo modo, float grosor) // , Coordenadas pos)
             if (!frecuencia_manual)
                 onda.frecuencia = frecuencia_min + (((velocidad / velocidad_max) * (frecuencia_max-frecuencia_min)*10)/10);
             onda.longitud = distancia_recorrida_en_un_segundo / onda.frecuencia;
-            cerr << "Frecuencia: " << onda.frecuencia << endl;
-            cerr << "MANUAL: " << boolalpha << frecuencia_manual << endl;
+            //cerr << "Frecuencia: " << onda.frecuencia << endl;
+            //cerr << "MANUAL: " << boolalpha << frecuencia_manual << endl;
             //cerr << "Frecuencia: " << onda.frecuencia << endl;
             // (Lo de 10 es para que no perjudique a los decimales)
 
@@ -952,6 +987,88 @@ void _hoja_girasol::draw(_modo modo, float grosor)
     glPopMatrix();
 }
 
+void _cabeza_girasol::mirar_al_sol(Coordenadas pos_sol)
+{
+    Coordenadas sol_centrado_girasol = pos_sol - posicion;
+    // Calculo la distancia al sol
+    //GLfloat distancia = sqrt(sol_centrado_girasol.x*sol_centrado_girasol.x + sol_centrado_girasol.y*sol_centrado_girasol.y + sol_centrado_girasol.z*sol_centrado_girasol.z);
+
+    /// Calculo el ángulo de rotación en Z
+
+    rotacion.z = atan2(sol_centrado_girasol.y, sol_centrado_girasol.x) * (180.0 / M_PI);
+    // Calculo el ángulo de rotación en el eje y
+    // Si el sol está recien saliendo o poniendose me pongo en la posición de descanso (15º hacia abajo)
+    if (rotacion.z < 10)
+    {
+        angulo_petalos = angulo_petalos < max_angulo_petalos ? angulo_petalos + 0.1 : max_angulo_petalos;
+        rotacion.z = rotacion.z > -90 ? -15 : -165;
+    }
+    else
+    {
+        angulo_petalos = angulo_petalos > 0.0 ? angulo_petalos - 0.1 : 0.0;
+        rotacion.y = -(atan2(sol_centrado_girasol.z, abs(sol_centrado_girasol.x)) * (180.0 / M_PI));
+    }
+
+    //GLfloat target_z = atan2(sol_centrado_girasol.y, sol_centrado_girasol.x) * (180.0 / M_PI);
+    //GLfloat target_y = -(atan2(sol_centrado_girasol.z, abs(sol_centrado_girasol.x)) * (180.0 / M_PI));
+    //GLfloat target_descanso_y = 0.0;
+    //GLfloat target_descanso_z = rotacion.z >  -90 ? -15 : -165;
+    //GLfloat target_despertar_y = target_y;
+    //GLfloat target_despertar_z = 20;
+//
+    //// Calculo el ángulo de rotación en el eje y
+    //// Si el sol está recien saliendo o poniendose me pongo en la posición de descanso (15º hacia abajo)
+    ////cerr << "Target y: " << target_y << " Target z: " << target_z << endl;
+    //if (target_z < 10 and !animacion_descanso)
+    //{
+    //    GLfloat instante_actual = glutGet(GLUT_ELAPSED_TIME)/1000.f;
+    //    instante_inicio_descanso = instante_inicio_descanso == 0.0 ? instante_actual : instante_inicio_descanso;
+    //    GLfloat tiempo_transcurrido = instante_actual - instante_inicio_descanso;
+    //    GLfloat angulos_a_recorrer_y = rotacion.y - target_descanso_y;
+    //    GLfloat angulos_a_recorrer_z = rotacion.z - target_descanso_z;
+    //    GLfloat angulos_a_recorrer_petalos = angulo_petalos - max_angulo_petalos;
+    //    GLfloat angulos_por_segundo_y = angulos_a_recorrer_y / duracion_cinematica;
+    //    GLfloat angulos_por_segundo_z = angulos_a_recorrer_z / duracion_cinematica;
+    //    GLfloat angulos_por_segundo_petalos = angulos_a_recorrer_petalos / duracion_cinematica;
+    //    rotacion.z = -angulos_por_segundo_z * tiempo_transcurrido;
+    //    rotacion.y = angulos_por_segundo_y * tiempo_transcurrido;
+    //    angulo_petalos = angulos_por_segundo_petalos * tiempo_transcurrido;
+    //    if (angulo_petalos >= max_angulo_petalos)
+    //    {
+    //        animacion_descanso = false;
+    //        instante_inicio_descanso = 0.0;
+    //    }
+    //}
+    ////Animación de despertar
+    //else if (target_z > 10 and target_z < 20)
+    //{
+    //    GLfloat instante_actual = glutGet(GLUT_ELAPSED_TIME)/1000.f;
+    //    instante_inicio_despertar = instante_inicio_despertar == 0.0 ? instante_actual : instante_inicio_despertar;
+    //    GLfloat tiempo_transcurrido = instante_actual - instante_inicio_despertar;
+    //    GLfloat angulos_a_recorrer_y = rotacion.y - target_despertar_y;
+    //    GLfloat angulos_a_recorrer_z = 20 - target_despertar_z;
+    //    GLfloat angulos_a_recorrer_petalos = angulo_petalos - 0.0;
+    //    GLfloat angulos_por_segundo_y = angulos_a_recorrer_y / duracion_cinematica;
+    //    GLfloat angulos_por_segundo_z = angulos_a_recorrer_z / duracion_cinematica;
+    //    GLfloat angulos_por_segundo_petalos = angulos_a_recorrer_petalos / duracion_cinematica;
+    //    rotacion.z = -angulos_por_segundo_z * instante_inicio_despertar;
+    //    rotacion.y = angulos_por_segundo_y * instante_inicio_despertar;
+    //    angulo_petalos = -angulos_por_segundo_petalos * instante_inicio_despertar;
+    //    if (angulo_petalos <= 0.0)
+    //    {
+    //        animacion_despertar = false;
+    //        instante_inicio_despertar = 0.0;
+    //    }
+    //}
+    //else
+    //{
+    //    rotacion.y = target_y;
+    //    rotacion.z = target_z;
+    //}
+//
+    //cerr << "Rotacion y: " << rotacion.y << " Rotacion z: " << rotacion.z << endl;
+    //cerr << "Rotacion_petalo: " << angulo_petalos << endl;
+}
 //_cabeza_girasol::_cabeza_girasol(Coordenadas pos) : posicion(pos) {}
 void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
 {
@@ -1004,8 +1121,9 @@ void _cabeza_girasol::draw(_modo modo, float grosor) // , Coordenadas pos)
                     // Voy rotando cada pétalo
                     glRotatef(360.0f / num_petalos * petalo_i + angulo_offset, 0, 0, 1);
                     // La ajusto al centro
-                    //glTranslatef(0.0, radio_semillero*0.8, 0.0);
-                    petalo.draw(modo, petalo.color_petalo.actual + 0.062*(capa_i + 1), grosor, {0.0, radio_semillero*0.8f, radio_semillero*0.25f + z_offset});
+                    glTranslatef(0.0, radio_semillero*0.8f, radio_semillero*0.25f + z_offset);
+                    glRotatef(angulo_petalos, 1, 0, 0);
+                    petalo.draw(modo, petalo.color_petalo.actual + 0.062*(capa_i + 1), grosor);
                 glPopMatrix();
             }
         }
@@ -1052,7 +1170,7 @@ void _girasol::draw(_modo modo, float grosor, Coordenadas posicion_sol) // , Coo
         // Dibujo la cabeza
         glPushMatrix();
             cabeza.posicion.y = tallo.largo_tallo;
-            cabeza.rotacion = mirar_al_sol(posicion_sol);
+            cabeza.mirar_al_sol(posicion_sol);
             cabeza.draw(modo, grosor);
         glPopMatrix();
 
@@ -1093,25 +1211,6 @@ void _girasol::draw(_modo modo, float grosor, Coordenadas posicion_sol) // , Coo
     glPopMatrix();
 }
 
-Coordenadas _girasol::mirar_al_sol(Coordenadas pos_sol)
-{
-    Coordenadas sol_centrado_girasol = pos_sol - posicion;
-    Coordenadas rotacion = {0.0, 0.0, 0.0};
-    // Calculo la distancia al sol
-    //GLfloat distancia = sqrt(sol_centrado_girasol.x*sol_centrado_girasol.x + sol_centrado_girasol.y*sol_centrado_girasol.y + sol_centrado_girasol.z*sol_centrado_girasol.z);
-
-    /// Calculo el ángulo de rotación en Z
-    rotacion.z = atan2(sol_centrado_girasol.y, sol_centrado_girasol.x) * (180.0 / M_PI);
-    // Calculo el ángulo de rotación en el eje y
-    // Si el sol está recien saliendo o poniendose me pongo en la posición de descanso (15º hacia abajo)
-    if (rotacion.z < 10)
-        rotacion.z = rotacion.z > -90 ? -15 : -165;
-    else
-        rotacion.y = -(atan2(sol_centrado_girasol.z, abs(sol_centrado_girasol.x)) * (180.0 / M_PI));
-
-    //cerr << "Rotacion en y: " << rotacion.y << endl;
-    return rotacion;
-}
 //************************************************************************
 // MOLINO
 //************************************************************************

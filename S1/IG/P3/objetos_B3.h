@@ -589,14 +589,21 @@ public:
 };
 class _cabeza_girasol : public _triangulos3D
 {
-protected:
+private:
+    GLfloat instante_inicio_despertar = 0.0;
+    GLfloat instante_inicio_descanso = 0.0;
+    bool animacion_despertar = false;
+    bool animacion_descanso = false;
 
 public:
     _hoja_girasol hoja;
     _petalo_girasol petalo;
     _tallo_girasol cuello;
     //_esfera semillero;
+    GLfloat duracion_cinematica = 2.0; // Segundos
     Coordenadas rotacion = {0.0, 0.0, 0.0};
+    const GLfloat max_angulo_petalos = 45.0;
+    GLfloat angulo_petalos = 0.0;
     GLfloat radio_semillero = petalo.largo * 0.62;
     size_t num_petalos = 6;
     size_t num_hojitas = 12;
@@ -610,16 +617,15 @@ public:
     posicion(pos), color_semillero(59u, 46, 33)
     {}
     void draw(_modo modo, GLfloat grosor = 5); // , Coordenadas pos = coordenadas_default);
-
+    void mirar_al_sol(Coordenadas pos_sol);
 };
 
 class _girasol : public _triangulos3D
 {
 private:
+    bool recibiendo_agua = false;
     vector<GLfloat> variacion_tam_rama;
     vector<GLfloat> angulo_rama;
-    GLfloat angulo_z = 0.0;
-    GLfloat angulo_x = 0.0;
     GLfloat longitud_min_rama;
     GLfloat angulo_min_rama = 15;
     GLfloat angulo_max_rama = 75;
@@ -639,7 +645,7 @@ public:
 
     _girasol(Coordenadas pos = coordenadas_default);
     void draw(_modo modo, float grosor = 5, Coordenadas pos_sol = coordenadas_default);
-    Coordenadas mirar_al_sol(Coordenadas pos_sol);
+
 };
 
 struct Particula
@@ -657,14 +663,27 @@ private:
     unsigned instante_previo = 0;
     GLfloat instante_actual = 0.0;
     unsigned max_particulas = 10000;
+    GLfloat max_frecuencia = 10;
+    GLfloat min_frecuencia = 0.3;
+    
+    GLfloat velocidad_caida_max = 10.0; //m/s
+    unsigned min_densidad_lluvia = 10;
+    unsigned max_densidad_lluvia = 500;
+    GLfloat frecuencia_min_nubes = 0.1;
+    GLfloat frecuencia_max_nubes = 0.5;
 public:
     GLfloat radio_medio = 0.2;
+    GLfloat radio_medio_lluvia = 0.01;
     bool pausar = false;
+    bool lluvia_activa = true;
+    GLfloat intensidad_lluvia = 0.2; // Número de 0 a 1
     Onda onda;
     unsigned densidad;
     Coordenadas tam;
     Coordenadas posicion = {0, 0, 0};
-    Color color_nube = {255u, 255, 255, 0.33};
+    GLfloat transparencia_sin_lluvia = 0.33;
+    Color color_nube = {{255u, 255, 255, 0.3}, {55u, 61, 75, 0.8}};
+    Color color_lluvia = {0.5f, 0.5f, 0.6f, 0.3};
 
 
     _nube(unsigned densidad = 10, Coordenadas tam = {10, 1.5, 5}) : densidad(densidad), tam(tam)
@@ -688,11 +707,19 @@ public:
 
 class _lluvia : public _triangulos3D
 {
+private:
+    vector<Particula> particulas;
+    unsigned instante_previo = 0;
+    GLfloat instante_actual = 0.0;
+    unsigned max_particulas = 10000;
 public:
+    _nube nube;
+    Coordenadas tam;
     Coordenadas posicion;
+    Color color_lluvia = {0u, 0, 255, 0.2};
 
-    _lluvia(Coordenadas pos = coordenadas_default) : posicion(pos) {}
-    void draw(_modo modo, Color color, float grosor); // , Coordenadas pos = coordenadas_default);
+    _lluvia(Coordenadas tam = {10, 1.5, 5}) : tam(tam) {}
+    void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);
 };
 
 class _viento : public _triangulos3D
@@ -734,7 +761,7 @@ public:
         brisa_viento.color_hoja.set_original(color_viento.actual);
         //lamina_viento   
 
-        GLfloat distancia_recorrida_en_un_segundo = (velocidad/3600)*1000;
+        //GLfloat distancia_recorrida_en_un_segundo = (velocidad/3600)*1000;
         onda.frecuencia = frecuencia_min + (((velocidad / velocidad_max) * (frecuencia_max-frecuencia_min)*10)/10);
         //onda.longitud = distancia_recorrida_en_un_segundo / onda.frecuencia;
         onda.offset = M_PI*0.5;
