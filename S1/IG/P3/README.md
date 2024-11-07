@@ -7,11 +7,9 @@ Muy aconsejable usar el ratón. Mucho más cómodo (y me costó implementarlo), 
 
 ## Cosas a destacar
 
-### Molino
+### Sobre la animación
 
-Si bien tiene un diseño sencillo, el movimiento de las aspas no lo es en absoluto.
-Se aconseja poner el viento a velocidad mínima (10km/h) y apreciar el movimiento de las hélices, si se observa detenidamente tiene rozamiento por lo que solo se acelera cuando le llega una brisa. Esto funciona a cualquier velocidad, pero a mayores velocidades es más complicado apreciarlo.
-Toma como velocidad angular 90 grados por los segundos que tarde la brisa en recorrer su radio a la velocidad que vaya.
+La animación es el "activar paso del tiempo automático" (tocar la tecla espacio) no es una animación por pasos como se proporcionaban en los ejemplos, esto se debe a que se usa una equivalencia con el tiempo real y es cada clase la que calcula si le "toca" hacer algo o en todo caso otra case se lo ordena hacer.
 
 ### Girasol
 
@@ -43,6 +41,12 @@ Algunos detalles destacables:
 - Se compone de una serie de "particulas" que no son más que esferas de tamaños, radios, fases y transparencias aleatorias y que crecen y decrecen de acuerdo a una onda normalizada.
 - En el caso de la lluvia, además tienen una velocidad aleatoria, de ahí que hagan el efecto de "espray" tan bonito.
 - Por el resto la lluvia es identica al viento, la velocidad, la "tasa de generación" de nuevas láminas... Todos los problemas que solucioné al hacer el viento los apliqué aquí.
+
+### Molino
+
+Si bien tiene un diseño sencillo, el movimiento de las aspas no lo es en absoluto.
+Se aconseja poner el viento a velocidad mínima (10km/h) y apreciar el movimiento de las hélices, si se observa detenidamente tiene rozamiento por lo que solo se acelera cuando le llega una brisa. Esto funciona a cualquier velocidad, pero a mayores velocidades es más complicado apreciarlo.
+Toma como velocidad angular 90 grados por los segundos que tarde la brisa en recorrer su radio a la velocidad que vaya.
 
 ### Controles y miscelanía
 

@@ -371,7 +371,7 @@ void draw_controles()
     dibujar_texto("[CTRL] + [W][S] --> Alejar/Acercar camara", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     ++linea;
     dibujar_texto("---Controles Escena---", pos_texto.ajustar_texto(++linea), color_texto_titulos, fuente_titulos);
-    dibujar_texto("[ESPACIO] --> Pausar/Reanudar Tiempo", pos_texto.ajustar_texto(++linea), color_texto, fuente);
+    dibujar_texto("[ESPACIO] --> Pausar/Reanudar Tiempo (Animación si se le quiere llamar así)", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     //++linea;
     dibujar_texto("[V]       --> Seleccionar Viento", pos_texto.ajustar_texto(++linea), color_texto, fuente);
     dibujar_texto("¡¡Pulsar CTRL + RUEDECILLA (o flechas arriba/abajo si no tiene raton) para modificar su velocidad!!", pos_texto.ajustar_texto(++linea), color_texto, fuente);
@@ -844,6 +844,10 @@ void special_key(int tecla_pulsada, int x, int y)
 
 void animacion()
 {
+    // La animación es "activar o desactivar" el paso del tiempo
+    // Lo hago de esta manera porque se usa una equivalencia del tiempo real
+    // Y los objetos necesitan sincronizarse, por eso lo hago "integrado" en el código en lugar de por pasos
+    // Cada clase le manda la orden a la siguiente de que tiene que hacer algo
     glutPostRedisplay();
 }
 
