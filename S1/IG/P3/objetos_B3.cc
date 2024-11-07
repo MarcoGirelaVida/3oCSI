@@ -1333,9 +1333,20 @@ void _escena_P3::draw(_modo modo, float grosor) // , Coordenadas pos)
 
         // Girasol/es
         glPushMatrix();
-            girasol.posicion = {molino.radio_tejado*2, 0.0, molino.radio_tejado*2};
-            girasol.oscilacion = viento.oscilacion_pradera_estatica();
-            girasol.draw(modo, grosor, sol.posicion);
+            //GLfloat angulo = num_girasoles * 137.5;
+            GLfloat constante_radio = (pradera.tam.x*0.5) / sqrt(num_girasoles);
+            unsigned i = 0;
+            while (i < num_girasoles)
+            {   
+                if (constante_radio*sqrt(i) > molino.radio_tejado*1.5)
+                {
+                    girasol.posicion = {constante_radio*sqrt(i)*cos(i*137.5*M_PI/180.0), 0.0, constante_radio*sqrt(i)*sin(i*137.5*M_PI/180.0)};
+                    girasol.oscilacion = viento.oscilacion_pradera_estatica();
+                    girasol.draw(modo, grosor, sol.posicion);
+                }
+                i++;
+            }
+            
         glPopMatrix();
 
     //printear_info();

@@ -308,11 +308,12 @@ void printear_info()
             case DEFAULT: modo_interfaz_str = "[DEFAULT]"; break;
             case CALIBRACION_CURVAS: modo_interfaz_str = "[CALIBRACION CURVAS]"; break;
         }
-        float entre_lineas = 0.2;
+        float entre_lineas = 0.25;
         unsigned linea = 0;
-        Coordenadas pos_texto = {1.5, 2.5, entre_lineas};
+        Coordenadas pos_texto = {1.5, 8, entre_lineas};
         Color color_texto = {211u, 211, 211, 0.8};
-        dibujar_texto(modo_interfaz_str, pos_texto.ajustar_texto(linea), color_texto, 2);
+        if (modo_interfaz != ESCENA_P3)
+            dibujar_texto(modo_interfaz_str, pos_texto.ajustar_texto(linea), color_texto, 2);
         if (modo_interfaz == ESCENA_P3)
         {
             char *variable_seleccionada_str;
@@ -587,7 +588,8 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
 void movimiento_raton(int x, int y)
 {
     int modificadores = glutGetModifiers();
-    
+    //cerr << "Punto del observador: " << Observer_angle_x << " " << Observer_angle_y << endl;
+    //cerr << "Posicion del observador: " << Observer_position.x << " " << Observer_position.y << " " << Observer_position.z << endl;
     if ((boton_movimiento_pulsado or boton_rotacion_pulsado) and !mostrar_controles)
     {
         int dx = x - ultima_pos_raton_x;
@@ -660,7 +662,7 @@ void botones_raton(int button, int state, int x, int y)
                     case VIENTO:
                     {
                         if (modificadores == GLUT_ACTIVE_CTRL)
-                            escena_p3.viento.velocidad = button == 4 ? escena_p3.viento.velocidad * 1.1 : escena_p3.viento.velocidad < 10 ? 0 : escena_p3.viento.velocidad * 0.9;
+                            escena_p3.viento.velocidad = button == 4 ? escena_p3.viento.velocidad * 1.1 : (escena_p3.viento.velocidad < 10 ? 10 : escena_p3.viento.velocidad * 0.9);
                         else if (modificadores == GLUT_ACTIVE_SHIFT)
                             escena_p3.viento.onda.frecuencia = button == 4 ? escena_p3.viento.onda.frecuencia * 1.1 : escena_p3.viento.onda.frecuencia * 0.9;
                         else if (modificadores == GLUT_ACTIVE_ALT)
@@ -755,6 +757,9 @@ void special_key(int tecla_pulsada, int x, int y)
                     case TAMANIO_NUBE:
                         escena_p3.nube.tam.z += 0.1;
                     break;
+                    case LLUVIA:
+                        escena_p3.nube.intensidad_lluvia += escena_p3.nube.intensidad_lluvia < 1.0 ? 0.025 : 0;
+                    break;
                 }
             }
             break;
@@ -782,6 +787,9 @@ void special_key(int tecla_pulsada, int x, int y)
                     break;
                     case TAMANIO_NUBE:
                         escena_p3.nube.tam.z -= 0.1;
+                    break;
+                    case LLUVIA:
+                        escena_p3.nube.intensidad_lluvia -= escena_p3.nube.intensidad_lluvia > 0.0 ? 0.025 : 0;
                     break;
                 }
             }
@@ -820,7 +828,7 @@ void special_key(int tecla_pulsada, int x, int y)
             break;
     }
 
-    //cerr << "Punto del observador: " << Observer_angle_x << " " << Observer_angle_y << " " << Observer_distance << endl;
+
     if (modo_interfaz == CALIBRACION_CURVAS)
     {
         cerr << "Punto 1: " << hoja_girasol.punto_curva_1.x << " " << hoja_girasol.punto_curva_1.y << " " << hoja_girasol.punto_curva_1.z << endl;
@@ -853,8 +861,9 @@ void initialize(void)
 
     // se incia la posicion del observador, en el eje z
     Observer_position.z=7*Front_plane;
-    Observer_angle_x=20;
-    Observer_angle_y=22;
+    Observer_angle_x=18.7;
+    Observer_angle_y=25.1;
+    Observer_position = {0.1, -0.7, 9.317};
 
     // se indica el color para limpiar la ventana	(r,v,a,al)
     // blanco=(1,1,1,1) rojo=(1,0,0,1), ...);

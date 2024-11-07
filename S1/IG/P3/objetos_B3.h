@@ -665,7 +665,7 @@ private:
     unsigned max_particulas = 10000;
     GLfloat max_frecuencia = 10;
     GLfloat min_frecuencia = 0.3;
-    
+
     GLfloat velocidad_caida_max = 10.0; //m/s
     unsigned min_densidad_lluvia = 10;
     unsigned max_densidad_lluvia = 500;
@@ -784,6 +784,7 @@ public:
     _molino molino;
     _girasol girasol;
     _pradera pradera;
+    unsigned num_girasoles = 20;
     unsigned instante_previo = 0;
     const unsigned movimientos_por_hora = 10;
     unsigned duracion_dia_real = 60; // EN segundos
