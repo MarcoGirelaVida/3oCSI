@@ -413,7 +413,14 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
 
     //colores de las caras
     colors_random();
-    calcular_normales_vertices();
+    if (tipo == 1)
+    {
+        calcular_normales_caras();
+        for (size_t i = 0; i < vertices.size(); i++)
+            vertices[i].normalize();
+    }
+    else
+        calcular_normales_vertices();
 }
 
 
