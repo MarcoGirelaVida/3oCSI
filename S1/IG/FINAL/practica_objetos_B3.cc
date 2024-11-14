@@ -10,6 +10,11 @@
 #include "objetos_B3.h"
 using namespace std;
 
+// Para las texturas
+//#include "CImg.h"
+//using namespace cimg_library;
+
+
 GLfloat hora = 0.0;
 unsigned duracion_real_dia = 30; // Segundos
 unsigned fotogramas_por_segundo = 60;
@@ -74,13 +79,12 @@ int ultima_pos_raton_x = 0;
 int ultima_pos_raton_y = 0;
 bool boton_rotacion_pulsado = false;
 bool boton_movimiento_pulsado = false;
-bool activar_luz = true;
-bool luz_activada = false;
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
 _tipo_objeto    t_objeto=NUBE;
 _modo           modo=SOLID;
 _modo_interfaz  modo_interfaz=_modo_interfaz::DEFAULT;
 _variable_seleccionada variable_seleccionada = HORA;
+int id_tex;
 
 // objetos
 _cubo       cubo;
@@ -191,7 +195,6 @@ void draw_axis()
         glVertex3f(0, 0, -AXIS_SIZE);
         glVertex3f(0, 0, AXIS_SIZE);
     glEnd();
-    //glEnable(GL_LIGHTING);
 }
 
 
@@ -343,7 +346,6 @@ void printear_info()
         }
 
     glPopMatrix();
-    //glEnable(GL_LIGHTING);
 }
 void draw_controles()
 {
@@ -400,59 +402,30 @@ void configuracion_luz()
     escena_p3.sol.color_cielo.cambiar_a_final();
     glClearColor(escena_p3.sol.color_cielo.actual.r, escena_p3.sol.color_cielo.actual.g, escena_p3.sol.color_cielo.actual.b, 1);
     // Configuración de la luz
-    GLfloat light_pos[] = { escena_p3.sol.posicion.x, escena_p3.sol.posicion.y, escena_p3.sol.posicion.z, 0.0f };
-    GLfloat light_ambient[] = { escena_p3.sol.color_luz_ambiente.actual.r, escena_p3.sol.color_luz_ambiente.actual.g, escena_p3.sol.color_luz_ambiente.actual.b, 1.0f };
-    GLfloat light_diffuse[] = { escena_p3.sol.color_luz_difusa.actual.r, escena_p3.sol.color_luz_difusa.actual.g, escena_p3.sol.color_luz_difusa.actual.b, 1.0f };
-    GLfloat light_specular[] = { escena_p3.sol.color_luz_especular.actual.r, escena_p3.sol.color_luz_especular.actual.g, escena_p3.sol.color_luz_especular.actual.b, 1.0f };
-    
-    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    GLfloat luz_ambiental[]={0.05,0.05,0.05,1.0},
+            luz_difusa[]={1.0,1.0,1.0,1.0},
+            luz_especular[]={1.0,1.0,1.0,1.0},
+            luz_posicion[]={0.0,0.0,20.0,1.0};
+                
+            
+    glLightfv(GL_LIGHT1, GL_AMBIENT, luz_ambiental);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, luz_difusa);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, luz_especular);
+    glLightfv(GL_LIGHT1, GL_POSITION, luz_posicion);
 
-    // Configuración del material de la esfera
-    //GLfloat mat_ambient[] = { 0.2f, 0.2f, 0.6f, 1.0f };  // Color ambiente del material
-    //GLfloat mat_diffuse[] = { 0.4f, 0.4f, 0.9f, 1.0f };  // Color difuso del material
-    GLfloat mat_specular[] = { escena_p3.sol.material_especular.actual.r, escena_p3.sol.material_especular.actual.g, escena_p3.sol.material_especular.actual.b, 1.0f };
-    GLfloat mat_shininess[] = { escena_p3.sol.brillo_material.actual.r };
-
-    //glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-    //glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+    glDisable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);  
 }
+
 void draw(void)
 {
     clean_window();
     change_observer();
-
-    //if (activar_luz == true and luz_activada != true)
-    //{
-    //    //glEnable(GL_LIGHT0);
-    //    glEnable(GL_LIGHTING);
-    //    glEnable(GL_COLOR_MATERIAL);
-    //    glColorMaterial(GL_FRONT, GL_DIFFUSE);
-    //    luz_activada = true;
-    //    cerr << "Luz Activada" << endl;
-    //}
-    //else if (activar_luz == false and luz_activada == true)
-    //{
-    //    glDisable(GL_LIGHTING);
-    //    glDisable(GL_COLOR_MATERIAL);
-    //    luz_activada = false;
-    //    cerr << "Luz desactivada" << endl;
-    //}
-    //glEnable(GL_LIGHTING);
-    if (mostrar_controles)
-        draw_controles();
-    else
-    {
-        draw_objects();
-        configuracion_luz();
-        glDisable(GL_LIGHTING);
-        draw_axis();
-        printear_info();
-    }
+    draw_controles();
+    configuracion_luz();
+    draw_objects();
+    draw_axis();
+    printear_info();
     glutSwapBuffers();
 }
 
@@ -483,6 +456,32 @@ void change_window_size(int Ancho1, int Alto1)
 // posicion x del raton
 // posicion y del raton
 //***************************************************************************
+void menu(int key)
+{
+    //glutAddMenuEntry("HORA", 0);
+    //glutAddMenuEntry("GIRO_MOLINO", 1);
+    //glutAddMenuEntry("GIRASOL", 2);
+    //glutAddMenuEntry("TAMANIO_NUBE", 3);
+    //glutAddMenuEntry("LLUVIA", 4);
+    switch (key)
+    {
+    case 0:
+        variable_seleccionada = HORA;
+        break;
+    case 1:
+        variable_seleccionada = GIRO_MOLINO;
+        break;
+    case 2:
+        variable_seleccionada = GIRASOL;
+        break;
+    case 3:
+        variable_seleccionada = TAMANIO_NUBE;
+        break;
+    case 4:
+        variable_seleccionada = LLUVIA;
+        break;
+    }
+}
 
 void normal_key(unsigned char tecla_pulsada, int x, int y)
 {
@@ -877,28 +876,48 @@ void initialize(void)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_LIGHT0);
     glEnable(GL_NORMALIZE);
     glShadeModel(GL_SMOOTH);
-    if (activar_luz == true and luz_activada != true)
-    {
-        //glEnable(GL_LIGHT0);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_COLOR_MATERIAL);
-        glColorMaterial(GL_FRONT, GL_DIFFUSE);
-        luz_activada = true;
-    }
-    else if (activar_luz == false and luz_activada == true)
-    {
-        cerr << "Luz desactivada" << endl;
-        glDisable(GL_LIGHTING);
-        glDisable(GL_COLOR_MATERIAL);
-        luz_activada = false;
-    }
-    
 
     change_projection();
     glViewport(0,0,Window_width,Window_high);
+}
+
+//***************************************************************************
+
+int prepara_textura (char *file)
+{
+    int tex_id;
+    /*
+    //Dejar comentado hasta no incorporar texturas
+    vector<unsigned char> data; 
+    CImg<unsigned char> image;
+
+    image.load(file);
+
+    // empaquetamos bien los datos
+    for (long y = 0; y < image.height(); y ++)
+        for (long x = 0; x < image.width(); x ++)
+        {
+        unsigned char *r = image.data(x, y, 0, 0);
+        unsigned char *g = image.data(x, y, 0, 1);
+        unsigned char *b = image.data(x, y, 0, 2);
+        data.push_back(*r);
+        data.push_back(*g);
+        data.push_back(*b);
+        }
+
+    glGenTextures(1,(GLuint *) &tex_id);
+    glBindTexture(GL_TEXTURE_2D, tex_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //TRASFIERE LOS DATOS A GPU
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(),
+        0, GL_RGB, GL_UNSIGNED_BYTE, &data[0]);
+    */
+    return tex_id;
 }
 
 //***************************************************************************
@@ -943,6 +962,15 @@ int main(int argc, char *argv[] )
     // asignación de la funcion llamada "tecla_Especial" al evento correspondiente
     glutSpecialFunc(special_key);
 
+
+    // Creamos menú
+    glutCreateMenu(menu);
+    glutAddMenuEntry("HORA", 0);
+    glutAddMenuEntry("MOLINO", 1);
+    glutAddMenuEntry("GIRASOL", 2);
+    glutAddMenuEntry("NUBE", 3);
+    glutAddMenuEntry("LLUVIA", 4);
+    glutAttachMenu(GLUT_LEFT_BUTTON);
     // Control del ratón
     glutMouseFunc(botones_raton);
     glutMotionFunc(movimiento_raton);
@@ -950,6 +978,7 @@ int main(int argc, char *argv[] )
     glutDisplayFunc(draw);
     glutIdleFunc(animacion);
     initialize();
+    id_tex=prepara_textura("./skybox.jpg");
 
 
     // funcion de inicialización

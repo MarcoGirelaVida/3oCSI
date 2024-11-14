@@ -14,7 +14,7 @@
 using namespace std;
 
 const float AXIS_SIZE=5000;
-typedef enum{POINTS,EDGES,SOLID,SOLID_COLORS} _modo;
+typedef enum{POINTS,EDGES,SOLID,SOLID_COLORS,SOLID_PHONG_FLAT,SOLID_PHONG_GOURAUD,SOLID_TEXTURE} _modo;
 
 
 float aleatorio(float minimo = 0.0, float maximo = 1.0);
@@ -309,26 +309,50 @@ public:
     _puntos3D();
     void draw_puntos(Color color, int grosor);
     vector<_vertex3f> vertices;
-    vector<_vertex3f> normales;
-    vector<_vertex3f> colores_vertices;
+    //vector<_vertex3f> normales;
+    //vector<_vertex3f> colores_vertices;
 };
 
 class _triangulos3D: public _puntos3D
 {
+public:
+    // atributos
+    vector<_vertex3i> caras;
+    vector<_vertex3f> colores_caras;
+
+    vector<_vertex3f> normales_caras;
+    vector<_vertex3f> normales_vertices;
+
+    vector<_vertex2f> texturas_vertices;
+
+    bool calculadas_normales_caras = false;
+
+    // material
+    _vertex4f ambiente;            //coeficientes ambiente 
+    _vertex4f difuso;              //coeficientes difuso
+    _vertex4f especular;           //coeficiente especular
+    float brillo;                  //exponente del brillo 
+
+    bool invertir_n = false;             // 1 en caso de invertir direcciones normales
 public:
 
     _triangulos3D();
     void draw_aristas(Color color, int grosor);
     void draw_solido(Color color);
     void draw_solido_colores();
+    void    draw_solido_phong_flat();
+    void    draw_solido_phong_gouraud();
+    void    draw_solido_textura(int etiqueta);
     void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default);
 
     void colors_random();
     void colors_chess(float r1, float g1, float b1, float r2, float g2, float b2);
 
+    /* calcular normales */
 
-    vector<_vertex3i> caras;
-    vector<_vertex3f> colores_caras;
+    void    calcular_normales_caras();
+    void    calcular_normales_vertices();
+
 };
 
 //*************************************************************************

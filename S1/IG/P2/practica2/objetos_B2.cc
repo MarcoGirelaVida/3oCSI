@@ -119,6 +119,26 @@ void _triangulos3D::asignar_colores_aleatorios()
 	
 }
 
+void _triangulos3D::asignar_colores_triangulos()
+{
+    // Si la componente y del primer vértice de la cara es negativa se ponen en magenta y sion en color oro
+    c_caras.resize(caras.size());
+    for (size_t i = 0; i < caras.size(); i++)  
+    {
+        if (vertices[caras[i]._0].y < 0)
+        {
+            c_caras[i].r = 139.0 / 255.0;
+            c_caras[i].g = 0.0;
+            c_caras[i].b = 139.0 / 255.0;
+        }
+        else
+        {
+            c_caras[i].r = 255.0 / 255.0;
+            c_caras[i].g = 215.0 / 255.0;
+            c_caras[i].b = 0.0;
+        }
+    }
+}
 //*************************************************************************
 // dibujar con distintos modos
 //*************************************************************************
@@ -298,7 +318,7 @@ for (int i = 0; i < n_car; i++)
   caras[i].y=car_ply[i*3+1];
   caras[i].z=car_ply[i*3+2];
 }
-asignar_colores_aleatorios();
+asignar_colores_triangulos();
 }
 
 //************************************************************************
@@ -484,4 +504,60 @@ for (i=0;i<num_aux;i++)
 asignar_colores_aleatorios(); 
 }
 
+// OBJETOS EXAMEN
+_copa::_copa(size_t resolucion)
+{
+    GLfloat radio = 1.0;
+    GLfloat desplazamiento_x = 0.5;
+    GLfloat desplazamiento_y = 1.0; // Ajustado para que haya 1 de desplazamiento en y
+    vector<_vertex3f> perfil;
+    _vertex3f aux;
+    GLfloat angulo = (M_PI / 2.0) / (float) resolucion;  // Dividimos el cuarto de círculo
+    // Semi esfera inferior (cuarto de esfera mirando hacia abajo)
+    for (int i = 0; i <= resolucion; i++) {
+        aux.x = desplazamiento_x + radio * cos(-M_PI / 2.0 + angulo * i); // Angulo desde el ecuador hacia el polo sur
+        aux.y = desplazamiento_y + radio*2 + radio * sin(-M_PI / 2.0 + angulo * i); // Empezando en y=-1 (abajo)
+        aux.z = 0;
+        perfil.push_back(aux);
+    }
 
+    // Semi esfera superior (cuarto de esfera mirando hacia arriba)
+    for (int i = 0; i <= resolucion; i++) {
+        aux.x = desplazamiento_x + radio * cos(M_PI / 2.0 - angulo * i); // Angulo desde el polo sur hacia el ecuador
+        aux.y =  radio * sin(M_PI / 2.0 - angulo * i); // Empezando en y=1 (arriba)
+        aux.z = 0;
+        perfil.push_back(aux);
+    }
+
+
+    parametros(perfil, resolucion, true, true, 0);
+}
+
+
+void _martillo::draw(_modo modo, float grosor)
+{
+	glPushMatrix();
+		// Pongo el cubo pequeño centrado en su esquina
+		cubo_base.draw(modo, color_r, color_g, color_b, grosor);
+		glPushMatrix();
+			glTranslatef(tam_cubo_base-tam_cubo_esquina*0.5, tam_cubo_base, tam_cubo_base-tam_cubo_esquina*0.5);
+			glRotatef(ANGULO_CUBO, 0, 1, 0);
+			cubo_esquina.draw(modo, color_r, color_g, color_b, grosor);
+			glPushMatrix();
+				glTranslatef(tam_cubo_esquina-radio_cilindro_y, tam_cubo_esquina, tam_cubo_esquina-radio_cilindro_y);
+				glRotatef(-ANGULO_MARTILLO, 1, 0, 0);
+				// Cilindro vertical
+				glPushMatrix();
+					glTranslatef (0, longitud_cilindro_y*0.5, 0);
+					cilindro_y.draw(modo, color_r, color_g, color_b, grosor);
+				glPopMatrix();
+				// Cilindro tumbado
+				glPushMatrix();
+					glTranslatef(0, longitud_cilindro_y+radio_cilindro_z, 0);
+					glRotatef(90, 0, 0, 1);
+					cilindro_z.draw(modo, color_r, color_g, color_b, grosor);
+				glPopMatrix();
+			glPopMatrix();
+		glPopMatrix();
+	glPopMatrix();
+}

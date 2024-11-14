@@ -41,6 +41,7 @@ void 	draw_solido_colores();
 void 	draw(_modo modo, float r, float g, float b, float grosor);
 void 	asignar_gama_verdes();
 void	asignar_colores_aleatorios();
+void 	asignar_colores_triangulos();
 
 vector<_vertex3i> caras;
 vector<_vertex3f> c_caras;
@@ -131,3 +132,36 @@ public:
        _extrusion(vector<_vertex3f> poligono, float x, float y, float z);
 };
 
+//*************************************************************************
+// OBJETOS EXAMEN
+//*************************************************************************
+class _copa: public _rotacion
+{
+public:
+    _copa(size_t resolucion = 30);
+};
+
+class _martillo: public _triangulos3D
+{
+private:
+	GLfloat tam_cubo_base = 1.0;
+	GLfloat tam_cubo_esquina = tam_cubo_base*0.5;
+	GLfloat longitud_cilindro_y = tam_cubo_esquina*1.5;
+	GLfloat longitud_cilindro_z = tam_cubo_esquina;
+	GLfloat radio_cilindro_z = tam_cubo_esquina*0.2;
+	GLfloat radio_cilindro_y = radio_cilindro_z*0.5;
+	float color_r = 255*0.5;
+	float color_g = color_r;
+	float color_b = color_r;
+protected:
+	_cubo cubo_base = _cubo(tam_cubo_base);
+	_cubo cubo_esquina = _cubo(tam_cubo_esquina);
+	_cilindro cilindro_z = _cilindro(radio_cilindro_z, longitud_cilindro_z);
+	_cilindro cilindro_y = _cilindro(radio_cilindro_y, longitud_cilindro_y);
+public:
+	GLfloat ANGULO_MARTILLO = 0.0;
+	GLfloat ANGULO_CUBO = 0.0;
+	_martillo(){};
+
+	void draw(_modo modo, float grosor = 5);
+};

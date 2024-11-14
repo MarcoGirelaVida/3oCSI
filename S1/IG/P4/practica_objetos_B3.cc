@@ -1,19 +1,27 @@
 //**************************************************************************
-// Práctica 2 
+// Práctica 3 
 //**************************************************************************
 
 #include <GL/glut.h>
 #include <ctype.h>
 #include <math.h>
 #include <vector>
-#include "objetos_B2.h"
+#include "objetos_B3.h"
 
+// ----------------------------------------------------------------------
+// NECESARIO PARA CARGAR LAS IMÁGENES DE DISCO
+
+//Dejar comentado hasta no incorporar texturas
+//#include "CImg.h"
+//using namespace cimg_library;
+// ----------------------------------------------------------------------
 
 using namespace std;
 
 // tipos
-typedef enum{CUBO, PIRAMIDE, OBJETO_PLY, ESFERA, CILINDRO, CONO, ROTACION, EXTRUSION, ROTACION_PLY, COPA, MARTILLO} _tipo_objeto;
-_tipo_objeto t_objeto=MARTILLO;
+typedef enum{CUBO, PIRAMIDE, OBJETO_PLY, ROTACION, CILINDRO, CONO, ESFERA, EXTRUSION, MONTANA, EXCAVADORA} _tipo_objeto;
+
+_tipo_objeto t_objeto=CUBO;
 _modo   modo=POINTS;
 
 // variables que definen la posicion de la camara en coordenadas polares
@@ -30,17 +38,24 @@ int Window_x=50,Window_y=50,Window_width=650,Window_high=650;
 
 // objetos
 _cubo cubo;
-_esfera esfera;
-_cilindro cilindro;
-_cono cono;
 _piramide piramide(0.85,1.3);
 _objeto_ply  ply; 
-_rotacion rotacion; 
-_rotacion_PLY rotacion_ply;
+_rotacion rotacion;
+_cilindro cilindro(1,2,12); 
+_cono cono(1,2,12);
+_esfera esfera(1,12,12);
+_excavadora excavadora;
 _extrusion *extrusion;
-_copa copa;
-_martillo martillo;
-// _objeto_ply *ply;
+_montana montana(6,0.9, 0.8);
+_cubo_tex cubo_tex;
+
+//_objeto_ply *ply;
+
+float giro1=0.0, giro2=0.0, giro3=0.0;
+int pulsar=0.0;
+int paso=0;
+
+int id_tex;
 
 
 //**************************************************************************
@@ -112,26 +127,51 @@ glEnd();
 
 //**************************************************************************
 // Funcion que dibuja los objetos
-//****************************2***********************************************
+//***************************************************************************
 
 void draw_objects()
 {
 
 switch (t_objeto){
-		case CUBO: cubo.draw(modo,1.0,0.0,0.0,5);break;
-		case PIRAMIDE: piramide.draw(modo,1.0,0.0,0.0,5);break;
-        case OBJETO_PLY: ply.draw(modo,1.0,0.6,0.0,5);break;
+	case CUBO:cubo.draw(modo,1.0,0.0,0.0,5);break;
+	case PIRAMIDE: piramide.draw(modo,1.0,0.0,0.0,5);break;
+        case OBJETO_PLY: ply.draw(modo,1.0,0.6,0.0,3);break;
         case ROTACION: rotacion.draw(modo,1.0,0.0,0.0,5);break;
+        case CILINDRO: cilindro.draw(modo,1.0,0.0,0.0,5);break;
+        case CONO: cono.draw(modo,1.0,0.0,0.0,5);break;
+        case ESFERA: esfera.draw(modo,1.0,0.0,0.0,5);break;
+        case EXCAVADORA:glPushMatrix();
+                          glScalef(15,8,15);
+                          glTranslatef(0,0.45,0);
+                          cubo_tex.draw_solido_textura(id_tex);
+                        glPopMatrix(); 
+                        excavadora.draw(modo,1.0,0.0,0.0,5);break;
         case EXTRUSION: extrusion->draw(modo,1.0,0.0,0.0,5);break;
-		case ESFERA: esfera.draw(modo,1.0,0.0,0.0,5); break;
-		case CILINDRO: cilindro.draw(modo,1.0,0.0,0.0,5); break;
-		case CONO: cono.draw(modo,1.0,0.0,0.0,5); break;
-		case ROTACION_PLY: rotacion_ply.draw(modo,1.0,0.0,0.0,5); break;
-		case COPA: copa.draw(modo,1.0,0.0,0.0,5); break;
-		case MARTILLO: martillo.draw(modo); break;
+        case MONTANA: montana.draw(modo,0.2,0.7,0.0,1);break;
 	}
 
 }
+
+//**************************************************************************
+//  luces
+//***************************************************************************
+
+void luces()
+{
+GLfloat luz_ambiental[]={0.05,0.05,0.05,1.0},
+        luz_difusa[]={1.0,1.0,1.0,1.0},
+        luz_especular[]={1.0,1.0,1.0,1.0},
+        luz_posicion[]={0.0,0.0,20.0,1.0};
+            
+        
+glLightfv(GL_LIGHT1, GL_AMBIENT, luz_ambiental);
+glLightfv(GL_LIGHT1, GL_DIFFUSE, luz_difusa);
+glLightfv(GL_LIGHT1, GL_SPECULAR, luz_especular);
+glLightfv(GL_LIGHT1, GL_POSITION, luz_posicion);
+
+glDisable(GL_LIGHT0);
+glEnable(GL_LIGHT1);  
+ }
 
 
 //**************************************************************************
@@ -142,6 +182,7 @@ void draw(void)
 {
 clean_window();
 change_observer();
+luces();
 draw_axis();
 draw_objects();
 glutSwapBuffers();
@@ -168,7 +209,6 @@ glViewport(0,0,Ancho1,Alto1);
 glutPostRedisplay();
 }
 
-
 //***************************************************************************
 // Funcion llamada cuando se aprieta una tecla normal
 //
@@ -186,23 +226,37 @@ switch (toupper(Tecla1)){
 	case '2':modo=EDGES;break;
 	case '3':modo=SOLID;break;
 	case '4':modo=SOLID_COLORS;break;
+	case '5':modo=SOLID_PHONG_FLAT;break;
+	case '6':modo=SOLID_PHONG_GOURAUD;break;
         case 'P':t_objeto=PIRAMIDE;break;
         case 'C':t_objeto=CUBO;break;
         case 'O':t_objeto=OBJETO_PLY;break;	
         case 'R':t_objeto=ROTACION;break;
+        case 'L':t_objeto=CILINDRO;break;
+        case 'N':t_objeto=CONO;break;
+        case 'E':t_objeto=ESFERA;break;
+        case 'A':t_objeto=EXCAVADORA;break;
         case 'X':t_objeto=EXTRUSION;break;
-		case 'E':t_objeto=ESFERA;break;
-		case 'I':t_objeto=CILINDRO;break;
-		case 'Y':t_objeto=CONO;break;
-		case 'F':t_objeto=ROTACION_PLY;break;
-		case 'Z':t_objeto=COPA;break;
-		case 'M':t_objeto=MARTILLO;break;
+        case 'M':t_objeto=MONTANA;break;
+        case 'S':if (pulsar==0)
+                    {giro1=1.0;
+                     giro2=1.0;
+                     giro3=0.25;
+                     pulsar=1;
+                     }
+                 else
+                    {giro1=0.0;
+                     giro2=0.0;
+                     giro3=0.0;
+                     pulsar=0;
+                     }    
+                 break;
 	}
 glutPostRedisplay();
 }
 
 //***************************************************************************
-// Funcion l-olamada cuando se aprieta una tecla especial
+// Funcion llamada cuando se aprieta una tecla especial
 //
 // el evento manda a la funcion:
 // codigo de la tecla
@@ -213,56 +267,97 @@ glutPostRedisplay();
 
 void special_key(int Tecla1,int x,int y)
 {
-int modificadores = glutGetModifiers();
+
 switch (Tecla1){
-	case GLUT_KEY_LEFT:
-	{
-		if (modificadores == GLUT_ACTIVE_SHIFT)
-		{
-			martillo.ANGULO_CUBO -= 3;
-		}
-		else
-			Observer_angle_y--;
-	}
-	break;
-	case GLUT_KEY_RIGHT:
-	{
-		if (modificadores == GLUT_ACTIVE_SHIFT)
-		{
-			martillo.ANGULO_CUBO += 3;
-		}
-		else
-			Observer_angle_y++;
-	}
-	break;
-	case GLUT_KEY_UP:
-	{
-		if (modificadores == GLUT_ACTIVE_SHIFT)
-		{
-			martillo.ANGULO_MARTILLO += 3;
-		}
-		else
-			Observer_angle_x--;
-	}
-	break;
-	case GLUT_KEY_DOWN:
-	{
-		if (modificadores == GLUT_ACTIVE_SHIFT)
-			martillo.ANGULO_MARTILLO -= 3;
-		else
-			Observer_angle_x++;
-	}
-	break;
-	case GLUT_KEY_PAGE_UP:
-	{
-		Observer_distance*=1.2;
-	}
-	break;
-	case GLUT_KEY_PAGE_DOWN:Observer_distance/=1.2;break;
+   case GLUT_KEY_LEFT:Observer_angle_y--;break;
+   case GLUT_KEY_RIGHT:Observer_angle_y++;break;
+   case GLUT_KEY_UP:Observer_angle_x--;break;
+   case GLUT_KEY_DOWN:Observer_angle_x++;break;
+   case GLUT_KEY_PAGE_UP:Observer_distance*=1.2;break;
+   case GLUT_KEY_PAGE_DOWN:Observer_distance/=1.2;break;
+	
+   case GLUT_KEY_F1:excavadora.giro_cabina+=5;break;
+   case GLUT_KEY_F2:excavadora.giro_cabina-=5;break;
+   case GLUT_KEY_F3:excavadora.giro_primer_brazo+=1;
+        if (excavadora.giro_primer_brazo > excavadora.giro_primer_brazo_max)
+            excavadora.giro_primer_brazo = excavadora.giro_primer_brazo_max;break;
+   case GLUT_KEY_F4:excavadora.giro_primer_brazo-=1;
+        if (excavadora.giro_primer_brazo < excavadora.giro_primer_brazo_min)
+            excavadora.giro_primer_brazo = excavadora.giro_primer_brazo_min;break;
+   case GLUT_KEY_F5:excavadora.giro_segundo_brazo+=1;
+        if (excavadora.giro_segundo_brazo > excavadora.giro_segundo_brazo_max)
+            excavadora.giro_segundo_brazo = excavadora.giro_segundo_brazo_max;break;
+   case GLUT_KEY_F6:excavadora.giro_segundo_brazo-=1;
+        if (excavadora.giro_segundo_brazo < excavadora.giro_segundo_brazo_min) 
+            excavadora.giro_segundo_brazo = excavadora.giro_segundo_brazo_min;break;
+   case GLUT_KEY_F7:excavadora.giro_pala+=1;
+        if (excavadora.giro_pala > excavadora.giro_pala_max)
+            excavadora.giro_pala = excavadora.giro_pala_max;break;
+   case GLUT_KEY_F8:excavadora.giro_pala-=1;
+        if (excavadora.giro_pala < excavadora.giro_pala_min)
+            excavadora.giro_pala = excavadora.giro_pala_min;break;
 	}
 glutPostRedisplay();
 }
 
+//***************************************************************************
+// Funcion llamada cuando se selecciona una opción del menú
+//
+// el evento manda a la funcion:
+// entero que representa una entrada del menú 
+//***************************************************************************
+
+void menu(int key)
+{
+
+   if (key==0)
+        {excavadora.giro_pala+=4;
+        if (excavadora.giro_pala > excavadora.giro_pala_max)
+            excavadora.giro_pala = excavadora.giro_pala_max;
+        }
+   if (key==1)
+        {excavadora.giro_pala-=4;
+        if (excavadora.giro_pala < excavadora.giro_pala_min)
+            excavadora.giro_pala = excavadora.giro_pala_min;
+        }
+   if (key==2)
+          {giro1=1.0;
+           giro2=1.0;
+           giro3=0.25;
+           }
+   if (key==3)
+          {giro1=0.0;
+          giro2=0.0;
+          giro3=0.0;
+          }
+}
+
+
+
+
+//***************************************************************************
+// Funcion de animación automática
+//***************************************************************************
+
+void animacion()
+{
+switch (paso){
+  case 0:excavadora.giro_cabina-=giro1;
+         if (excavadora.giro_cabina<-45) paso=1; break;
+  case 1:excavadora.giro_primer_brazo-=giro3;
+         if (excavadora.giro_primer_brazo<-80) paso=2; break;
+  case 2: excavadora.giro_pala-=giro2;
+        if (excavadora.giro_pala < excavadora.giro_pala_min)
+           {excavadora.giro_pala = excavadora.giro_pala_min;
+            paso=0;
+            excavadora.giro_cabina=0.0;
+            excavadora.giro_primer_brazo=0.0;
+            excavadora.giro_pala=0.0;} 
+        break;
+   } 
+  
+glutPostRedisplay();
+}
 
 
 //***************************************************************************
@@ -284,7 +379,7 @@ Observer_angle_y=0;
 
 // se indica el color para limpiar la ventana	(r,v,a,al)
 // blanco=(1,1,1,1) rojo=(1,0,0,1), ...
-glClearColor(1,1,1,1);
+glClearColor(0.7,0.7,1,1);
 
 // se habilita el z-bufer
 glEnable(GL_DEPTH_TEST);
@@ -292,6 +387,42 @@ change_projection();
 glViewport(0,0,Window_width,Window_high);
 }
 
+//***************************************************************************
+
+int prepara_textura (char *file)
+{
+   int tex_id;
+
+//Dejar comentado hasta no incorporar texturas
+/* vector<unsigned char> data; 
+   CImg<unsigned char> image;
+ 
+   image.load(file);
+
+   // empaquetamos bien los datos
+   for (long y = 0; y < image.height(); y ++)
+      for (long x = 0; x < image.width(); x ++)
+      {
+	 unsigned char *r = image.data(x, y, 0, 0);
+	 unsigned char *g = image.data(x, y, 0, 1);
+	 unsigned char *b = image.data(x, y, 0, 2);
+	 data.push_back(*r);
+	 data.push_back(*g);
+	 data.push_back(*b);
+      }
+
+   glGenTextures(1,(GLuint *) &tex_id);
+   glBindTexture(GL_TEXTURE_2D, tex_id);
+
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+   //TRASFIERE LOS DATOS A GPU
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(),
+		0, GL_RGB, GL_UNSIGNED_BYTE, &data[0]);
+   */
+   return tex_id;
+}
 
 //***************************************************************************
 // Programa principal
@@ -305,7 +436,6 @@ int main(int argc, char *argv[] )
 {
  
 // perfil 
-
 vector<_vertex3f> perfil, poligono;
 _vertex3f aux;
 
@@ -315,8 +445,11 @@ aux.x=1.5; aux.y=0.0; aux.z=0.0;
 perfil.push_back(aux);
 aux.x=1.0; aux.y=1.0; aux.z=0.0;
 perfil.push_back(aux);
+aux.x=1.5; aux.y=1.2; aux.z=0.0;
+perfil.push_back(aux);
 
-rotacion.parametros(perfil,6, true, true, 0);
+
+rotacion.parametros(perfil,6,1,1,0);
 
 aux.x=1.0; aux.y=0.0; aux.z=1.0;
 poligono.push_back(aux);
@@ -353,7 +486,7 @@ glutInitWindowSize(Window_width,Window_high);
 
 // llamada para crear la ventana, indicando el titulo (no se visualiza hasta que se llama
 // al bucle de eventos)
-glutCreateWindow("PRACTICA - 2");
+glutCreateWindow("PRACTICA - 3");
 
 // asignación de la funcion llamada "dibujar" al evento de dibujo
 glutDisplayFunc(draw);
@@ -364,14 +497,25 @@ glutKeyboardFunc(normal_key);
 // asignación de la funcion llamada "tecla_Especial" al evento correspondiente
 glutSpecialFunc(special_key);
 
+ // Creamos menú
+glutCreateMenu(menu);
+glutAddMenuEntry("Girar pala positivo", 0);
+glutAddMenuEntry("Girar pala negativo", 1);
+glutAddMenuEntry("Activar animación", 2);
+glutAddMenuEntry("Desactivar animación", 3);
+glutAttachMenu(GLUT_LEFT_BUTTON);
+
+
+glutIdleFunc(animacion);
+
 // funcion de inicialización
 initialize();
 
 // creación del objeto ply
 ply.parametros(argv[1]);
-rotacion_ply.parametros_PLY(argv[2]);
 
-//ply = new _objeto_ply(argv[1]);
+// leer textura;
+id_tex=prepara_textura("./skybox.jpg");
 
 // inicio del bucle de eventos
 glutMainLoop();

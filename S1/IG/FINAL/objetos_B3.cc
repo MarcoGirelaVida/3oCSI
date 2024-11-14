@@ -41,10 +41,66 @@ void _triangulos3D::draw(_modo modo, Color color, float grosor, Coordenadas pos)
         case SOLID_COLORS:
             draw_solido_colores();
             break;
-    }
+        case SOLID_PHONG_FLAT:
+                draw_solido_phong_flat();
+                break;
+        case SOLID_PHONG_GOURAUD:
+                draw_solido_phong_gouraud();
+                break;
+
+	}
     glPopMatrix();
 }
 
+//*************************************************************************
+// normales 
+//*************************************************************************
+
+void _triangulos3D::calcular_normales_caras()
+{
+    size_t i, normales;
+    normales = caras.size();
+    normales_caras.resize(normales);
+
+    for (size_t i = 0; i < normales; i++)
+    {
+        _vertex3f va = invertir_n == false ? vertices[caras[i]._0] - vertices[caras[i]._1] : vertices[caras[i]._1] - vertices[caras[i]._2];
+        _vertex3f vb = invertir_n == false ? vertices[caras[i]._1] - vertices[caras[i]._2] : vertices[caras[i]._0] - vertices[caras[i]._1];
+        normales_caras[i] = va.cross_product(vb);
+        normales_caras[i].normalize();
+    }
+    calculadas_normales_caras = true;
+}
+
+//*************************************************************************
+
+void _triangulos3D::calcular_normales_vertices()
+{
+    // Se suman las normales de las caras adyacentes a cada vértice
+    float modulo;
+    if (!calculadas_normales_caras)
+        calcular_normales_caras();
+    normales_vertices.resize(vertices.size());
+
+    for (size_t i = 0; i < vertices.size(); i++)
+        normales_vertices[i] = _vertex3f(0.0, 0.0, 0.0);
+
+    for (size_t i = 0; i < caras.size(); i++)
+    {
+        normales_vertices[caras[i]._0] += normales_caras[i];
+        normales_vertices[caras[i]._1] += normales_caras[i];
+        normales_vertices[caras[i]._2] += normales_caras[i];
+    }
+
+    for (size_t i = 0; i < vertices.size(); i++)
+    {
+        modulo = normales_vertices[i].module();
+        if (modulo > 0.0)
+            normales_vertices[i] /= modulo;
+    }
+}
+
+//*************************************************************************
 void _puntos3D::draw_puntos(Color color, int grosor)
 {
     glPointSize(grosor);
@@ -75,13 +131,10 @@ void _triangulos3D::draw_solido(Color color)
     glBegin(GL_TRIANGLES);
         for (size_t i = 0; i < caras.size(); i++)
         {
-            glNormal3fv((GLfloat *)&normales[caras[i]._0]);
             glVertex3fv((GLfloat *)&vertices[caras[i]._0]);
 
-            glNormal3fv((GLfloat *)&normales[caras[i]._1]);
             glVertex3fv((GLfloat *)&vertices[caras[i]._1]);
 
-            glNormal3fv((GLfloat *)&normales[caras[i]._2]);
             glVertex3fv((GLfloat *)&vertices[caras[i]._2]);
         }
     glEnd();
@@ -100,6 +153,34 @@ void _triangulos3D::draw_solido_colores( )
         }
     glEnd();
 }
+
+//*************************************************************************
+// dibujar en modo sólido con iluminación
+//*************************************************************************
+
+void _triangulos3D::draw_solido_phong_flat()
+{
+
+}
+
+
+
+void _triangulos3D::draw_solido_phong_gouraud()
+{
+
+}
+
+
+//*************************************************************************
+// dibujar con distintos modos
+//*************************************************************************
+
+
+void _triangulos3D::draw_solido_textura(int etiqueta)
+{
+
+}
+
 
 //*************************************************************************
 // COLORES
@@ -163,15 +244,12 @@ void _objeto_ply::parametros(char *archivo)
 
     vertices.resize(num_vertices);
     caras.resize(num_caras);
-    normales.resize(num_vertices);
     // vértices
     for (size_t i = 0; i < num_vertices; i++)
     {
         vertices[i].x = ver_ply[3 * i];
         vertices[i].y = ver_ply[3 * i + 1];
         vertices[i].z = ver_ply[3 * i + 2];
-
-        normales[i] = _vertex3f(0.0, 0.0, 0.0);
     }
 
     // vértices
@@ -183,6 +261,7 @@ void _objeto_ply::parametros(char *archivo)
     }
 
     colors_random();
+    calcular_normales_vertices();
 }
 
 //************************************************************************
@@ -236,7 +315,6 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
     num_aux = perfil.size();
     if (tipo == 2) num_aux = 1;
     vertices.resize(num_aux * num);
-    normales.resize(num_aux * num);
 
     size_t num_revoluciones = static_cast<size_t>((porcentaje_revolucion / 100.0) * num);
 
@@ -250,19 +328,6 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
                             perfil[i].z * cos(2.0 * M_PI * j / (1.0 * num));
             vertice_aux.y = perfil[i].y;
             vertices[i + j * num_aux] = vertice_aux;
-
-            // Calculo las normales de cada vertice
-            if (perfil[i].x != 0 || perfil[i].z != 0) {  // Evita el eje de rotación
-                normal_aux.x = vertice_aux.x;   // Las coordenadas del vértice proyectadas
-                normal_aux.z = vertice_aux.z;   // sobre el plano XZ proporcionan
-                normal_aux.y = 0;               // una dirección hacia fuera
-                float length = sqrt(normal_aux.x * normal_aux.x + normal_aux.z * normal_aux.z);
-                normal_aux.x /= length;         // Normaliza el vector
-                normal_aux.z /= length;
-            } else {
-                normal_aux = _vertex3f(0.0, 1.0, 0.0); // Normal en el eje de rotación
-            }
-            normales[i + j * num_aux] = normal_aux; // Almacena la normal del vértice
         }
     }
 
@@ -289,7 +354,6 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
     // tapa inferior
     if (tapa_inferior)
     {
-        normales.push_back({0, -1, 0});
         // punto central de la tapa
         vertice_aux.x = 0.0;
         if (tipo == 1)
@@ -308,15 +372,12 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
             cara_aux._2 = ((i + 1) % num) * num_aux;
             caras.push_back(cara_aux);
         }
-
-        //normales.push_back({0, -1, 0});
     }
     
     // tapa superior
 
     if (tapa_superior)
     {
-        normales.push_back({0, 1, 0});
         // punto central de la tapa
         vertice_aux.x = 0.0;
         vertice_aux.z = 0.0;
@@ -352,6 +413,7 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
 
     //colores de las caras
     colors_random();
+    calcular_normales_vertices();
 }
 
 
@@ -367,26 +429,12 @@ _extrusion::_extrusion(vector<_vertex3f> poligono, float x, float y, float z)
     // tratamiento de los vértice
     size_t num_aux=poligono.size();
     vertices.resize(num_aux * 2);
-    normales.resize(num_aux * 2);
     for (size_t i = 0; i < num_aux; i++)
     {
       vertices[2 * i]       = poligono[i];
       vertices[2 * i + 1].x = poligono[i].x + x;
       vertices[2 * i + 1].y = poligono[i].y + y;
       vertices[2 * i + 1].z = poligono[i].z + z;
-
-        // Calculo las normales de cada vertice
-        if (poligono[i].x != 0 || poligono[i].z != 0) {  // Evita el eje de rotación
-            normales[2 * i].x = poligono[i].x;   // Las coordenadas del vértice proyectadas
-            normales[2 * i].z = poligono[i].z;   // sobre el plano XZ proporcionan
-            normales[2 * i].y = 0;               // una dirección hacia fuera
-            float length = sqrt(normales[2 * i].x * normales[2 * i].x + normales[2 * i].z * normales[2 * i].z);
-            normales[2 * i].x /= length;         // Normaliza el vector
-            normales[2 * i].z /= length;
-        } else {
-            normales[2 * i] = _vertex3f(0.0, 1.0, 0.0); // Normal en el eje de rotación
-        }
-
     }
     
     // tratamiento de las caras 
@@ -406,6 +454,7 @@ _extrusion::_extrusion(vector<_vertex3f> poligono, float x, float y, float z)
    
     //colores de las caras
     colors_random();
+    calcular_normales_vertices();
 }
 
 //************************************************************************
@@ -416,7 +465,6 @@ _cubo::_cubo(float tam)
 {
     //vertices
     vertices.resize(8);
-    normales.resize(8);
     vertices[0].x = -tam;     vertices[0].y = -tam;     vertices[0].z = tam;
     vertices[1].x = tam;      vertices[1].y = -tam;     vertices[1].z = tam;
     vertices[2].x = tam;      vertices[2].y = tam;      vertices[2].z = tam;
@@ -425,14 +473,6 @@ _cubo::_cubo(float tam)
     vertices[5].x = tam;      vertices[5].y = -tam;     vertices[5].z = -tam;
     vertices[6].x = tam;      vertices[6].y = tam;      vertices[6].z = -tam;
     vertices[7].x = -tam;     vertices[7].y = tam;      vertices[7].z = -tam;
-    normales[0] = _vertex3f(0.0, 0.0, 1.0);
-    normales[1] = _vertex3f(0.0, 0.0, 1.0);
-    normales[2] = _vertex3f(0.0, 0.0, 1.0);
-    normales[3] = _vertex3f(0.0, 0.0, 1.0);
-    normales[4] = _vertex3f(0.0, 0.0, -1.0);
-    normales[5] = _vertex3f(0.0, 0.0, -1.0);
-    normales[6] = _vertex3f(0.0, 0.0, -1.0);
-    normales[7] = _vertex3f(0.0, 0.0, -1.0);
 
 
     // triangulos
@@ -452,23 +492,18 @@ _cubo::_cubo(float tam)
 
     //colores de las caras
     colors_random();
+    calcular_normales_vertices();
 }
 
 _piramide::_piramide(Coordenadas tam) : tam(tam)
 {
     //vertices 
     vertices.resize(5); 
-    normales.resize(5);
     vertices[0].x = -tam.x / 2;  vertices[0].y = 0;  vertices[0].z = 0;         // Vértice inferior izquierdo de la base
     vertices[1].x = tam.x / 2;   vertices[1].y = 0;  vertices[1].z = 0;         // Vértice inferior derecho de la base
     vertices[2].x = tam.x / 2;   vertices[2].y = tam.y;   vertices[2].z = 0;         // Vértice superior derecho de la base
     vertices[3].x = -tam.x / 2;  vertices[3].y = tam.y;   vertices[3].z = 0;         // Vértice superior izquierdo de la base
     vertices[4].x = 0;           vertices[4].y = 0;          vertices[4].z = tam.z;     // Vértice de la punta
-    normales[0] = _vertex3f(0.0, 0.0, -1.0);
-    normales[1] = _vertex3f(0.0, 0.0, -1.0);
-    normales[2] = _vertex3f(0.0, 0.0, -1.0);
-    normales[3] = _vertex3f(0.0, 0.0, -1.0);
-    normales[4] = _vertex3f(0.0, 0.0, 1.0);
 
 
     //caras
@@ -482,6 +517,7 @@ _piramide::_piramide(Coordenadas tam) : tam(tam)
 
     //colores de las caras
     colors_random();
+    calcular_normales_vertices();
 }
 
 _cilindro::_cilindro(float radio, float altura, size_t num)
@@ -937,7 +973,7 @@ _petalo_girasol::_petalo_girasol(Coordenadas punto_curva_1, Coordenadas punto_cu
                          t * t * t * puntos_control_izquierda[3].z;
 
             vertices.push_back({x_izq, y_izq, z_izq});
-            normales.push_back({0.0, 0.0, 0.0});
+            //normales.push_back({0.0, 0.0, 0.0});
         }
         // Caluculo los puntos de la curva de Bézier derecha
         for (size_t i = 0; i <= resolucion; ++i)
@@ -957,7 +993,7 @@ _petalo_girasol::_petalo_girasol(Coordenadas punto_curva_1, Coordenadas punto_cu
                          t * t * t * puntos_control_izquierda[3].z;
 
             vertices.push_back({x_der, y_der, z_izq});
-            normales.push_back({0.0, 0.0, 0.0});
+            //normales.push_back({0.0, 0.0, 0.0});
         }
         // Creo las caras uniendo los puntos
         for (size_t i = 0; i < resolucion; ++i) {
@@ -972,6 +1008,7 @@ _petalo_girasol::_petalo_girasol(Coordenadas punto_curva_1, Coordenadas punto_cu
 
         // Asigno los colores
         colors_random();
+        calcular_normales_vertices();
 }
 //void _petalo_girasol::draw(_modo modo, Color color, float grosor) // , Coordenadas pos)
 //{}
