@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/buscador_plagios.dir/src/tokenizador_wav.cc.o CMakeFiles/buscador_plagios.dir/lex.yy.cc.o -o bin/buscador_plagios
