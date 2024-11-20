@@ -10,37 +10,50 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Cosas de bison y lex
-FLEX_TARGET(Tokenizador
-    ${CMAKE_SOURCE_DIR}/gramaticas/tokenizador.l
-    ${CMAKE_BINARY_DIR}/lex.yy.c
-    COMPILE_FLAGS -+
+# Ubicación de los archivos fuente Lex y Yacc
+set(LEX_FILE ${CMAKE_SOURCE_DIR}/gramaticas/tokenizador.l)
+set(YACC_FILE ${CMAKE_SOURCE_DIR}/gramaticas/parser.y)
+
+# Archivos generados por Flex y Bison
+set(LEX_OUTPUT ${CMAKE_BINARY_DIR}/lex.yy.cc)
+set(YACC_OUTPUT ${CMAKE_BINARY_DIR}/y.tab.cc)
+set(YACC_HEADER ${CMAKE_BINARY_DIR}/y.tab.h)
+
+# Generación de los ficheros
+add_custom_command(
+    OUTPUT ${YACC_OUTPUT} ${YACC_HEADER}
+    COMMAND bison -d -o ${YACC_OUTPUT} ${YACC_FILE}
+    MAIN_DEPENDENCY ${YACC_FILE}
+    COMMENT "Generando el analizador sintáctico (Bison)"
 )
 
-BISON_TARGET(Parser
-    ${CMAKE_SOURCE_DIR}/gramaticas/parser.y     # Archivo .y
-    ${CMAKE_BINARY_DIR}/y.tab.c                 # Salida .c
-    DEFINES_FILE ${CMAKE_BINARY_DIR}/y.tab.h    # Salida .h
-    )
+add_custom_command(
+    OUTPUT ${LEX_OUTPUT}
+    COMMAND flex -o ${LEX_OUTPUT} ${LEX_FILE}
+    MAIN_DEPENDENCY ${LEX_FILE}
+    COMMENT "Generando el analizador léxico (Flex)"
+)
 
-# Include
-    include_directories(
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_BINARY_DIR}
-    )
+# Incluir los archivos generados como parte del proyecto
+add_library(lexer_parser ${LEX_OUTPUT} ${YACC_OUTPUT})
 
 # Fuentes
 file(GLOB SOURCES
-    "${CMAKE_SOURCE_DIR}/src/*.cc"
-    "${CMAKE_BINARY_DIR}/lex.yy.c"
-    "${CMAKE_BINARY_DIR}/y.tab.c"
+"${CMAKE_SOURCE_DIR}/src/*.cc"
+$(LEX_OUTPUT)
+$(YACC_OUTPUT)
 )
 
 
 # Ejecutable
 add_executable(marco_compiler ${SOURCES})
+target_link_libraries(marco_compiler lexer_parser)
 
-# Dependencias para que se ejecuten antes lex y yacc
-#add_dependencies(marco_compiler Tokenizador Parser)
+# Include
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_BINARY_DIR}
+)
 
 # Archivos específicos a eliminar con make clean
 add_custom_target(clean_test COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_SOURCE_DIR}/test/foo.cc)

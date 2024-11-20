@@ -1,11 +1,13 @@
 #include "compilador.hpp"
 #include "utils.hpp"
+#include "y.tab.h"
 
 #include <filesystem>
 #include <iostream>
 #include <fstream>
 using namespace std;
 
+/*************************************************************************/
 const string Compilador::NOMBRE_CPP_BASE = "foo.cc";
 /*************************************************************************/
 // Funciones principales

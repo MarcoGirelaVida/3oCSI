@@ -1,5 +1,6 @@
 %{
 #include "utils.hpp"
+#include <iostream>
 #include "y.tab.h" // Para tener los tokens declarados en yacc
 %}
 
@@ -16,7 +17,7 @@ TERMINAL        [;]
 
 
 [ \t\n]+            { /* Ignoro espacios y saltos de línea */ }
-.                   { printf(TEXTO_ROJO + "ERROR: Token desconocido: %s\n" + TEXTO_NORMAL, yytext); }
+.                   { cerr << TEXTO_ROJO << "ERROR: Token desconocido: " << TEXTO_NORMAL << endl; }
 
 %%
 
