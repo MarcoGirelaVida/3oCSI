@@ -1,7 +1,7 @@
 
 #ifndef COMPILADOR_H
 #define COMPILADOR_H
-#include "utils.hpp"
+#include "utils.hh"
 #include <string>
 #include <fstream>
 using namespace std;

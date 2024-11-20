@@ -1,6 +1,6 @@
-#include "compilador.hpp"
-#include "utils.hpp"
-#include "y.tab.h"
+#include "compilador.hh"
+#include "utils.hh"
+#include "parser.hh"
 
 #include <filesystem>
 #include <iostream>
@@ -8,6 +8,10 @@
 using namespace std;
 
 /*************************************************************************/
+int yydebug = 1;
+extern FILE *yyin;
+extern int yyparse(); 
+
 const string Compilador::NOMBRE_CPP_BASE = "foo.cc";
 /*************************************************************************/
 // Funciones principales

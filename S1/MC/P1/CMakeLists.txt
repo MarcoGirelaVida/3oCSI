@@ -9,15 +9,24 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Archivos de utilidades
+set(UTILS_SOURCES ${CMAKE_SOURCE_DIR}/src/utils.cc)
+set(UTILS_HEADERS ${CMAKE_SOURCE_DIR}/include/utils.hh)
+add_library(utils ${UTILS_SOURCES})
+target_include_directories(utils PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+
 # Cosas de bison y lex
 # Ubicación de los archivos fuente Lex y Yacc
 set(LEX_FILE ${CMAKE_SOURCE_DIR}/gramaticas/tokenizador.l)
 set(YACC_FILE ${CMAKE_SOURCE_DIR}/gramaticas/parser.y)
 
 # Archivos generados por Flex y Bison
-set(LEX_OUTPUT ${CMAKE_BINARY_DIR}/lex.yy.cc)
-set(YACC_OUTPUT ${CMAKE_BINARY_DIR}/y.tab.cc)
-set(YACC_HEADER ${CMAKE_BINARY_DIR}/y.tab.h)
+set(LEX_OUTPUT ${CMAKE_BINARY_DIR}/tokenizador.cc)
+set(YACC_OUTPUT ${CMAKE_BINARY_DIR}/parser.cc)
+set(YACC_HEADER ${CMAKE_BINARY_DIR}/parser.hh)
+
+
 
 # Generación de los ficheros
 add_custom_command(
@@ -30,30 +39,26 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${LEX_OUTPUT}
     COMMAND flex -o ${LEX_OUTPUT} ${LEX_FILE}
-    MAIN_DEPENDENCY ${LEX_FILE}
+    MAIN_DEPENDENCY ${LEX_FILE} ${YACC_HEADER}
     COMMENT "Generando el analizador léxico (Flex)"
 )
 
 # Incluir los archivos generados como parte del proyecto
 add_library(lexer_parser ${LEX_OUTPUT} ${YACC_OUTPUT})
+target_include_directories(lexer_parser PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
+target_link_libraries(lexer_parser utils)
 
 # Fuentes
 file(GLOB SOURCES
 "${CMAKE_SOURCE_DIR}/src/*.cc"
-$(LEX_OUTPUT)
-$(YACC_OUTPUT)
 )
 
 
 # Ejecutable
 add_executable(marco_compiler ${SOURCES})
-target_link_libraries(marco_compiler lexer_parser)
-
-# Include
-include_directories(
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_BINARY_DIR}
-)
+add_dependencies(marco_compiler lexer_parser)
+target_link_libraries(marco_compiler lexer_parser utils)
+target_include_directories(marco_compiler PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
 
 # Archivos específicos a eliminar con make clean
 add_custom_target(clean_test COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_SOURCE_DIR}/test/foo.cc)

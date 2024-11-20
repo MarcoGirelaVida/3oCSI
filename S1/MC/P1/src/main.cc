@@ -2,8 +2,8 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
-#include "utils.hpp"
-#include "compilador.hpp"
+#include "utils.hh"
+#include "compilador.hh"
 using namespace std;
 
 void mostrar_ayuda()

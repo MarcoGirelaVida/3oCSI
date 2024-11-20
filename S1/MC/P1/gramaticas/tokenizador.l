@@ -1,23 +1,25 @@
 %{
-#include "utils.hpp"
+#include "utils.hh"
 #include <iostream>
-#include "y.tab.h" // Para tener los tokens declarados en yacc
+#include "parser.hh"
 %}
 
-NUMERO          [0-9]+
-PALABRA         [a-zA-Z_]+
-TIPO            [int|char|float|double]
-OPERADOR        [+-*]
-ABRE_SECCION    [({]
-CIERRA_SECCION  [)}]
-ASIGNACION      [=]
-TERMINAL        [;]
 
 %%
 
 
-[ \t\n]+            { /* Ignoro espacios y saltos de línea */ }
-.                   { cerr << TEXTO_ROJO << "ERROR: Token desconocido: " << TEXTO_NORMAL << endl; }
+[0-9]+                          { return NUMERO; }
+[a-zA-Z_]+                      { return PALABRA; }
+"int"|"char"|"float"|"double"   { return TIPO; }
+=                               { return ASIGNACION; }
+;                               { return TERMINAL; }
+[+\-*]                          { return OPERADOR; }
+[({]                            { return ABRE_SECCION; }
+[)}]                            { return CIERRA_SECCION; }
+"start"                         { return APERTURA_PROGRAMA; }
+"end"                           { return TERMINAL_PROGRAMA; }
+[ \t\n]+                        { /* Ignoro espacios y saltos de línea */ }
+.                               { cerr << TEXTO_ROJO << "ERROR: Token desconocido: " << TEXTO_NORMAL << endl; }
 
 %%
 
