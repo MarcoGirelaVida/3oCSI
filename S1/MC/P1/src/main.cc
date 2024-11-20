@@ -16,14 +16,14 @@ void mostrar_ayuda()
     cout << endl;
     cout << "OPCIONES:" << TEXTO_NORMAL << endl;
     cout << left;
-    cout << setw(ancho_columna)<< "  -debug"                        << "Activar el modo debug" << TEXTO_NORMAL << endl;
+    cout << setw(ancho_columna)<< "  --verbose"                     << "Activar el modo debug" << TEXTO_NORMAL << endl;
     cout << setw(ancho_columna)<< "  -h/--help"                     << "Mostrar esta ayuda" << TEXTO_NORMAL << endl;
     cout << setw(ancho_columna)<< "  -cpp"                          << "Conservar el fichero intermedio \"./foo.cc\" al compilar" << TEXTO_NORMAL << endl;
-    cout << setw(ancho_columna)<< "  -opcion_cpp <opcion_de_c++>"   << "Opciones de compilación de c++ (-Og, --Wall...)" << TEXTO_NORMAL << endl;
+    cout << setw(ancho_columna)<< "  --opcion_cpp <opcion_de_c++>"   << "Opciones de compilación de c++ (-Og, --Wall...)" << TEXTO_NORMAL << endl;
     cout << TEXTO_NORMAL << endl;
     cout << "EJEMPLOS:" << TEXTO_NORMAL << endl;
     cout << "  Uso básico:"     << "\tmarco_compiler mi_programa.marco mi_ejecutable" << TEXTO_NORMAL << endl;
-    cout << "  Uso avanzado:"   << "\tmarco_compiler mi_programa.marco mi_ejecutable -debug -cpp -opcion_cpp: -Og -opcion_cpp: --Wall" << TEXTO_NORMAL << endl;
+    cout << "  Uso avanzado:"   << "\tmarco_compiler mi_programa.marco mi_ejecutable --vebose -cpp --opcion_cpp: -Og --opcion_cpp: --Wall" << TEXTO_NORMAL << endl;
 }
 
 int main(int argc, char *argv[])
@@ -35,7 +35,12 @@ int main(int argc, char *argv[])
     const unsigned char num_args_opcionales = 4;
     if (argc < num_args_obligatorios or argc > (num_args_obligatorios + num_args_opcionales))
     {
-        cerr << TEXTO_ROJO << "ERROR: Argumentos incorrectos" << TEXTO_NORMAL << endl;
+        cerr << TEXTO_ROJO << "ERROR: Número de argumentos incorrectos" << TEXTO_NORMAL << endl;
+        for (size_t i = 0; i < argc; i++)
+        {
+            cerr << "argv[" << i << "] = " << argv[i] << endl;
+        }
+        
         mostrar_ayuda();
         exit(1);
     }
@@ -53,30 +58,30 @@ int main(int argc, char *argv[])
     const string ejecutable = argv[arg_i++];
 
     // Procesamiento de argumentos opcionales
-    bool modo_debug = false;
+    bool modo_verboso = false;
     bool conservar_cpp = true;
     string argumentos_compilacion_cpp;
     while (arg_i < argc)
     {
         const string arg_i_str = string(argv[arg_i]);
-        if (arg_i_str == "-debug")
+        if (arg_i_str == "--verbose")
         {
-            cerr << "MODO DEBUG ACTIVADO" << TEXTO_NORMAL << endl;
-            modo_debug = true;
+            cerr << TEXTO_AZUL << "MODO VERBOSO ACTIVADO" << TEXTO_NORMAL << endl;
+            modo_verboso = true;
             arg_i++;
         }
         else if (arg_i_str == "-cpp")
         {
             conservar_cpp = false;
-            if (modo_debug)
-                cerr << "CONSERVAR FICHERO INTERMEDIO CPP ACTIVADO" << TEXTO_NORMAL << endl;
+            if (modo_verboso)
+                cerr << TEXTO_AZUL << "CONSERVAR FICHERO INTERMEDIO CPP ACTIVADO" << TEXTO_NORMAL << endl;
         }
         else if (arg_i_str == "-h" or arg_i_str == "--help")
         {
             mostrar_ayuda();
             exit(0);
         }
-        else if (arg_i_str == "-opcion_cpp")
+        else if (arg_i_str == "--opcion_cpp")
         {
             if (arg_i == argc - 1)
             {
@@ -86,8 +91,8 @@ int main(int argc, char *argv[])
             }
 
             argv++;
-            if (modo_debug)
-                cerr << "ARGUMENTO DE COMPILACION C++ AÑADIDO: " << argv[arg_i] << TEXTO_NORMAL << endl;
+            if (modo_verboso)
+                cerr << TEXTO_AZUL << "ARGUMENTO DE COMPILACION C++ AÑADIDO: " << argv[arg_i] << TEXTO_NORMAL << endl;
             argumentos_compilacion_cpp += string(argv[arg_i]) + " ";
         }
         else
@@ -106,7 +111,7 @@ int main(int argc, char *argv[])
     /*****************************************************************************/
     
     Compilador compilador(fichero_marco);
-    compilador.modo_debug(modo_debug);
+    compilador.modo_verboso(modo_verboso);
     compilador.compilar(ejecutable, argumentos_compilacion_cpp, conservar_cpp);
 
     return 0;

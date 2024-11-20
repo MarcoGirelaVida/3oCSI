@@ -9,9 +9,9 @@ using namespace std;
 class Compilador
 {
 private:
-    static constexpr const char* FICHERO_CPP = "foo.cc";
+    static const string NOMBRE_CPP_BASE;
     const string nombre_fuente;
-    bool MODO_DEBUG = false;
+    bool MODO_VERBOSO = false;
 
 
     ifstream fuente;
@@ -22,17 +22,16 @@ public:
     // Funciones principales
     /*************************************************************************/
     Compilador(const string &fichero_marco);
-    void modo_debug(bool modo) { MODO_DEBUG = modo; }
+    void modo_verboso(bool modo) { MODO_VERBOSO = modo; }
 
     // Compila directamente a ejecutable
-    void compilar(const string &ejecutable, const string variables_compilacion, const bool conservar_cpp);
+    void compilar(const string &ejecutable, const string &variables_compilacion, const bool conservar_cpp);
 private:
 
     /*************************************************************************/
     // De compilacion
     /*************************************************************************/
-    void compilar_to_cpp();
-    void compilar_to_ejecutable(const string &ejecutable, const string variables_compilacion, bool conservar_cpp);
+    void compilar_to_cpp(const string &FICHERO_CPP = NOMBRE_CPP_BASE);
 
     /*************************************************************************/
     // De escribir cosas

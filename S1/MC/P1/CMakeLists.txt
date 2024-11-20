@@ -3,27 +3,45 @@ cmake_minimum_required(VERSION 3.10)
 # Nombre del proyecto
 project(CompiladorMarcoToCpp)
 find_package(FLEX REQUIRED)
+find_package(BISON REQUIRED)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Directorio de encabezados
-include_directories(include)
+# Cosas de bison y lex
+FLEX_TARGET(Tokenizador
+    ${CMAKE_SOURCE_DIR}/gramaticas/tokenizador.l
+    ${CMAKE_BINARY_DIR}/lex.yy.c
+    COMPILE_FLAGS -+
+)
 
-# Archivos fuente
-file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cc")
-set(LEX_FILE "${CMAKE_SOURCE_DIR}/gramaticas/tokenizador.l")
-FLEX_TARGET(Lexico ${LEX_FILE} ${CMAKE_BINARY_DIR}/lex.yy.cc COMPILE_FLAGS -+)
-#add_flex_files(${FLEX_Lexico_OUTPUTS})
-set_source_files_properties(${FLEX_Lexico_OUTPUTS} PROPERTIES GENERATED TRUE)
-list(APPEND SOURCES ${FLEX_Lexico_OUTPUTS})
+BISON_TARGET(Parser
+    ${CMAKE_SOURCE_DIR}/gramaticas/parser.y     # Archivo .y
+    ${CMAKE_BINARY_DIR}/y.tab.c                 # Salida .c
+    DEFINES_FILE ${CMAKE_BINARY_DIR}/y.tab.h    # Salida .h
+    )
+
+# Include
+    include_directories(
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_BINARY_DIR}
+    )
+
+# Fuentes
+file(GLOB SOURCES
+    "${CMAKE_SOURCE_DIR}/src/*.cc"
+    "${CMAKE_BINARY_DIR}/lex.yy.c"
+    "${CMAKE_BINARY_DIR}/y.tab.c"
+)
+
 
 # Ejecutable
 add_executable(marco_compiler ${SOURCES})
-#target_link_libraries(marco_compiler ${FLEX_LIBRARIES})
+
+# Dependencias para que se ejecuten antes lex y yacc
+#add_dependencies(marco_compiler Tokenizador Parser)
 
 # Archivos específicos a eliminar con make clean
-#set(CANCIONES_TOKENIZADAS ${CMAKE_SOURCE_DIR}/canciones/*_tokens.txt)
-#add_custom_target(clean_extra COMMAND ${CMAKE_COMMAND} -E rm -f ${CANCIONES_TOKENIZADAS})
-#add_custom_target(clean_all DEPENDS clean clean_extra)
+add_custom_target(clean_test COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_SOURCE_DIR}/test/foo.cc)
+add_custom_target(clean_all DEPENDS clean clean_test)
