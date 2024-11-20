@@ -1,0 +1,60 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) marco compiler basico",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd":      "${workspaceFolder}/S1/MC/P1",
+            "program":  "${workspaceFolder}/S1/MC/P1/build/bin/marco_compiler",
+            "args": [
+                "./test/fuente.marco",
+                "./test/ejecutable.bin -cpp"
+            ],
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+        },
+        {
+            "name": "(gdb) marco compiler verbose",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd":      "${workspaceFolder}/S1/MC/P1",
+            "program":  "${workspaceFolder}/S1/MC/P1/build/bin/marco_compiler",
+            "args": [
+                "./test/fuente.marco",
+                "./test/ejecutable.bin",
+                "--verbose",
+                "-cpp"
+            ],
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+        },
+        
+    ]
+}

@@ -1,0 +1,24 @@
+{
+    "folders": [
+        {
+            "path": ".."
+        }
+    ],
+    "settings": {
+        // Configuraciones comunes a todos los proyectos
+        "editor.tabSize": 4,
+        "editor.formatOnSave": false,
+        "C_Cpp.default.includePath": [
+            "${workspaceFolder}/**"
+        ],
+        "C_Cpp.default.cStandard": "c11",
+        "C_Cpp.default.cppStandard": "c++17",
+        "C_Cpp.default.compilerPath": "/usr/bin/g++",
+        "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+        "cmake.generator": "Ninja",
+        "cmake.configureOnOpen": true,
+        "cmake.buildDirectory":  "${workspaceFolder}/S1/MC/P1/build",
+        "cmake.sourceDirectory": "${workspaceFolder}/S1/MC/P1",
+    }
+}
