@@ -7,7 +7,7 @@
 #include <math.h>
 #include <string>
 #include <vector>
-#include "objetos_B3.h"
+#include "objetos_final.hh"
 using namespace std;
 
 // Para las texturas
@@ -177,7 +177,6 @@ void change_observer()
 
 void draw_axis()
 {
-    //glDisable(GL_LIGHTING);
     glLineWidth(2);
     glBegin(GL_LINES);
         // eje X, color rojo
@@ -302,7 +301,6 @@ std::string to_string_with_precision(float value, int precision = 2) {
 }
 void printear_info()
 {
-    //glDisable(GL_LIGHTING);
     glPushMatrix();
         char *modo_interfaz_str;
         switch (modo_interfaz)
@@ -398,12 +396,13 @@ void draw_controles()
 }
 void configuracion_luz()
 {
+    // CREAR UNA CLASE EXTRA PARA LA LUZ
     //cerr << "Color cielo: " << escena_p3.sol.color_cielo.actual.r << " " << escena_p3.sol.color_cielo.actual.g << " " << sol.color_cielo.actual.b << endl;
     escena_p3.sol.color_cielo.cambiar_a_final();
     glClearColor(escena_p3.sol.color_cielo.actual.r, escena_p3.sol.color_cielo.actual.g, escena_p3.sol.color_cielo.actual.b, 1);
     // Configuración de la luz
     GLfloat luz_ambiental[]={0.05,0.05,0.05,1.0},
-            luz_difusa[]={1.0,1.0,1.0,1.0},
+            luz_difusa[]={1.0,1.0,1.0,1.0}, // Difusa y especular iguales
             luz_especular[]={1.0,1.0,1.0,1.0},
             luz_posicion[]={0.0,0.0,20.0,1.0};
                 
@@ -421,11 +420,15 @@ void draw(void)
 {
     clean_window();
     change_observer();
-    draw_controles();
-    configuracion_luz();
-    draw_objects();
-    draw_axis();
-    printear_info();
+    if (mostrar_controles)
+        draw_controles();
+    else
+    {
+        configuracion_luz();
+        draw_objects();
+        draw_axis();
+        printear_info();
+    }
     glutSwapBuffers();
 }
 
@@ -529,6 +532,9 @@ void normal_key(unsigned char tecla_pulsada, int x, int y)
 	case '2':   modo = EDGES;           break;
 	case '3':   modo = SOLID;           break;
 	case '4':   modo = SOLID_COLORS;    break;
+    case '5':   modo = SOLID_PHONG_FLAT;break;
+    case '6':   modo = SOLID_PHONG_GOURAUD;break;
+    case '7':   modo = SOLID_TEXTURE;   break;
 
     case 'O':   t_objeto = OBJETO_PLY;  break;	
     case 'R':   t_objeto = ROTACION;    break;
@@ -876,8 +882,6 @@ void initialize(void)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_NORMALIZE);
-    glShadeModel(GL_SMOOTH);
 
     change_projection();
     glViewport(0,0,Window_width,Window_high);

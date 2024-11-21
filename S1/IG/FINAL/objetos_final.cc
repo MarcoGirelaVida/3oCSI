@@ -2,7 +2,7 @@
 // Práctica 3 
 //**************************************************************************
 
-#include "objetos_B3.h"
+#include "objetos_final.hh"
 #include "file_ply_stl.hpp"
 #include <time.h> 
 
@@ -17,7 +17,8 @@ _puntos3D::_puntos3D() {}
 // _triangulos3D
 //*************************************************************************
 
-_triangulos3D::_triangulos3D() {}
+_triangulos3D::_triangulos3D()
+{}
 
 //*************************************************************************
 // MODOS DE DIBUJO
@@ -66,7 +67,25 @@ void _triangulos3D::calcular_normales_caras()
     {
         _vertex3f va = invertir_n == false ? vertices[caras[i]._0] - vertices[caras[i]._1] : vertices[caras[i]._1] - vertices[caras[i]._2];
         _vertex3f vb = invertir_n == false ? vertices[caras[i]._1] - vertices[caras[i]._2] : vertices[caras[i]._0] - vertices[caras[i]._1];
+
+        // Producto cruzado hecho a mano con matematicas
+        /*
+        normales_caras[i].x = va.y * vb.z - va.z * vb.y;
+        normales_caras[i].y = va.z * vb.x - va.x * vb.z;
+        normales_caras[i].z = va.x * vb.y - va.y * vb.x;
+        */
         normales_caras[i] = va.cross_product(vb);
+
+        // Normalización hecha a mano con matematicas
+        /*
+        float modulo = sqrt(normales_caras[i].x * normales_caras[i].x + normales_caras[i].y * normales_caras[i].y + normales_caras[i].z * normales_caras[i].z);
+        if (modulo > 0.0)
+        {
+            normales_caras[i].x /= modulo;
+            normales_caras[i].y /= modulo;
+            normales_caras[i].z /= modulo;
+        }
+        */
         normales_caras[i].normalize();
     }
     calculadas_normales_caras = true;
@@ -94,9 +113,17 @@ void _triangulos3D::calcular_normales_vertices()
 
     for (size_t i = 0; i < vertices.size(); i++)
     {
-        modulo = normales_vertices[i].module();
+        // Normalización hecha a mano con matematicas
+        /*
+        float modulo = sqrt(normales_vertices[i].x * normales_vertices[i].x + normales_vertices[i].y * normales_vertices[i].y + normales_vertices[i].z * normales_vertices[i].z);
         if (modulo > 0.0)
-            normales_vertices[i] /= modulo;
+        {
+            normales_vertices[i].x /= modulo;
+            normales_vertices[i].y /= modulo;
+            normales_vertices[i].z /= modulo;
+        }
+        */
+        normales_vertices[i].normalize();
     }
 }
 
@@ -161,13 +188,56 @@ void _triangulos3D::draw_solido_colores( )
 void _triangulos3D::draw_solido_phong_flat()
 {
 
+    glShadeModel(GL_FLAT);
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_LIGHTING);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &ambiente);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &difuso);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, brillo);
+
+    glBegin(GL_TRIANGLES);
+        for (size_t i = 0; i < caras.size(); i++)
+        {
+            glNormal3fv((GLfloat *) &normales_caras[i]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+        }
+    glEnd();
+
+    glDisable(GL_LIGHTING);
 }
 
 
 
 void _triangulos3D::draw_solido_phong_gouraud()
 {
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_LIGHTING);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &ambiente);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &difuso);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, brillo);
 
+    glBegin(GL_TRIANGLES);
+        for (size_t i = 0; i < caras.size(); i++)
+        {
+            glNormal3fv((GLfloat *) &normales_vertices[caras[i]._0]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
+            glNormal3fv((GLfloat *) &normales_vertices[caras[i]._1]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+            glNormal3fv((GLfloat *) &normales_vertices[caras[i]._2]);
+            glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+        }
+    glEnd();
+
+    glDisable(GL_LIGHTING);
 }
 
 
@@ -416,8 +486,12 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
     if (tipo == 1)
     {
         calcular_normales_caras();
+        normales_vertices.resize(vertices.size());
         for (size_t i = 0; i < vertices.size(); i++)
-            vertices[i].normalize();
+        {
+            _vertex3f normal = vertices[i];
+            normales_vertices.push_back(normal.normalize());
+        }
     }
     else
         calcular_normales_vertices();
@@ -666,17 +740,6 @@ void _sol::actualizar_sol_hora(GLfloat hora)
     GLfloat angulo = (M_PI / 24.0) * hora;
     posicion.x = punto_minimo_x * cos(angulo);
     posicion.y = punto_algido_y * sin(angulo);
-
-
-    //// Actualizo el color y posicion de la luz
-    //luz_ambiente.actualizar_hora(hora);
-    //GLfloat color_luz_normal[] = {color_sol.actual.r, color_sol.actual.g, color_sol.actual.b, 1.0};
-    //GLfloat color_luz_ambiente[] = {luz_ambiente.actual.r, luz_ambiente.actual.g, luz_ambiente.actual.b, 1.0};
-    //GLfloat posicion_luz[] = {0.0, 0.0, 0.0, 0.0};
-    //glLightfv(GL_LIGHT0, GL_AMBIENT, color_luz_ambiente);
-    //glLightfv(GL_LIGHT0, GL_DIFFUSE, color_luz_normal);
-    //glLightfv(GL_LIGHT0, GL_SPECULAR, color_luz_normal);
-    //glLightfv(GL_LIGHT0, GL_POSITION, posicion_luz);
 }
 
 void _nube::draw(_modo modo, float grosor)

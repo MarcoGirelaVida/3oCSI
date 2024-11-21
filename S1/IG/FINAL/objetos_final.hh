@@ -328,10 +328,10 @@ public:
     bool calculadas_normales_caras = false;
 
     // material
-    _vertex4f ambiente;            //coeficientes ambiente 
-    _vertex4f difuso;              //coeficientes difuso
-    _vertex4f especular;           //coeficiente especular
-    float brillo;                  //exponente del brillo 
+    _vertex4f ambiente = _vertex4f(0.8,0.0,0.2,1.0);    //coeficientes ambiente 
+    _vertex4f difuso = _vertex4f(0.8,0.0,0.2,1.0);      //coeficientes difuso
+    _vertex4f especular = _vertex4f(0.5,0.5,0.5,1.0);   //coeficiente especular
+    float brillo = 80;                                  //exponente del brillo 
 
     bool invertir_n = false;             // 1 en caso de invertir direcciones normales
 public:

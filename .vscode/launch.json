@@ -55,6 +55,34 @@
             "externalConsole": false,
             "MIMode": "gdb",
         },
-        
+// Practica IG
+        {
+            "name": "(gdb) PRACTICA FINAL",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd":      "${workspaceFolder}/S1/IG",
+            "program":  "${workspaceFolder}/S1/IG/",
+            "args": [
+                "./test/fuente.marco",
+                "./test/ejecutable.bin",
+                "--verbose",
+                "-cpp"
+            ],
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+        },
     ]
 }

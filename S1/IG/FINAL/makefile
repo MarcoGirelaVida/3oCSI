@@ -1,9 +1,9 @@
 .PHONY: x clean tar
 
-EJECUTABLE= practica_objetos_B3
+EJECUTABLE= practica_final
 
-MODULOS:= practica_objetos_B3.o\
-         objetos_B3.o\
+MODULOS:= practica_final.o\
+         objetos_final.o\
          file_ply_stl.o\
       
 LIBS:= -lglut -lGLU -lGL -lsupc++ -lm -lc -lstdc++ -lpthread -L/usr/lib/nvidia-331
