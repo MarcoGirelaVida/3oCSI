@@ -16,8 +16,8 @@
 [+\-*]                          { return OPERADOR; }
 [({]                            { return ABRE_SECCION; }
 [)}]                            { return CIERRA_SECCION; }
-"start"                         { return APERTURA_PROGRAMA; }
-"end"                           { return TERMINAL_PROGRAMA; }
+"inicio_programa_marco"                         { return APERTURA_PROGRAMA; }
+"fin_programa_marco"                            { return TERMINAL_PROGRAMA; }
 [ \t\n]+                        { /* Ignoro espacios y saltos de línea */ }
 .                               { cerr << TEXTO_ROJO << "ERROR: Token desconocido: " << TEXTO_NORMAL << endl; }
 
