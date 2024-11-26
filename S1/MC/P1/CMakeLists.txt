@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Nombre del proyecto
-project(CompiladorMarcoToCpp)
+project(InterpreteMarcoToCpp)
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 
@@ -55,10 +55,10 @@ file(GLOB SOURCES
 
 
 # Ejecutable
-add_executable(marco_compiler ${SOURCES})
-add_dependencies(marco_compiler lexer_parser)
-target_link_libraries(marco_compiler lexer_parser utils)
-target_include_directories(marco_compiler PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
+add_executable(marco_language ${SOURCES})
+add_dependencies(marco_language lexer_parser)
+target_link_libraries(marco_language lexer_parser utils)
+target_include_directories(marco_language PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
 
 # Archivos específicos a eliminar con make clean
 add_custom_target(clean_test COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_SOURCE_DIR}/test/foo.cc)

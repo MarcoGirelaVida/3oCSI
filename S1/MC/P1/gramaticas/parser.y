@@ -10,27 +10,27 @@ void yyerror(const char* msg)
 }
 %}
 %debug
+%union {
+    char tipo_dato;
+}
 
-%token NUMERO PALABRA TIPO OPERADOR ABRE_SECCION CIERRA_SECCION ASIGNACION TERMINAL APERTURA_PROGRAMA TERMINAL_PROGRAMA
+%token <tipo_dato> ID_VARIABLE NUMERO
+%token LOGIC_ASIGNACION LOGIC_CIERRA_CONTEXTO LOGIC_IF LOGIC_THEN LOGIC_FOR LOGIC_DO LOGIC_WHILE LOGIC_TERMINAL_PROGRAMA //LOGIC_UNTIL LOGIC_REPEAT LOGIC_BREAK LOGIC_CONTINUE
+%token ARIT_MAS ARIT_MENOS ARIT_MULT ARIT_DIV
+%token BOOL_AND BOOL_OR BOOL_NOT BOOL_IGUAL BOOL_DISTINTO BOOL_MAYOR BOOL_MAYORIGUAL BOOL_MENOR BOOL_MENORIGUAL BOOL_TRUE BOOL_FALSE
+//%token PALABRA TIPO OPERADOR ABRE_SECCION CIERRA_SECCION TERMINAL APERTURA_PROGRAMA TERMINAL_PROGRAMA
 
 %%
 
-start : APERTURA_PROGRAMA cuerpo TERMINAL_PROGRAMA
-    {
-        std::cout << "Programa analizado correctamente" << std::endl;
-    }
-    ;
+variable: ID_VARIABLE
+        {
+            // Mirar en la tabla de símbolos del contexto correspondiente si la variable ya existe
+            // Si no existe, añadir a la tabla de símbolos 
+        }
+        ;
 
-cuerpo : instruccion
-       | cuerpo instruccion
-       ;
-
-instruccion : TIPO PALABRA ASIGNACION expresion TERMINAL
-            | PALABRA OPERADOR PALABRA TERMINAL
-            ;
-
-expresion : NUMERO
-          | PALABRA
-          ;
-
+asignacion_variable: ID_VARIABLE LOGIC_ASIGNACION variable
+        {
+        }
+        ;
 %%

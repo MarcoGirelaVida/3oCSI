@@ -3,27 +3,26 @@
 #include <iostream>
 #include <fstream>
 #include "utils.hh"
-#include "compilador.hh"
+#include "interprete.hh"
 using namespace std;
 
 void mostrar_ayuda()
 {
     const unsigned char ancho_columna = 30;
-    cout << "USO: \"marco_compiler fuente.marco ejecutable [OPCIONES]\"" << TEXTO_NORMAL << endl;
+    cout << "USO: \"marco_language fuente.marco [OPCIONES]\"" << TEXTO_NORMAL << endl;
     cout << left;
-    cout << setw(ancho_columna) << "  fuente.marco" << "Fichero en lenguaje marco que desea compilar" << TEXTO_NORMAL << endl;
-    cout << setw(ancho_columna) << "  ejecutable" << "Nombre del ejecutable que se desea obtener" << TEXTO_NORMAL << endl;
+    cout << setw(ancho_columna) << "  fuente.marco" << "Fichero en lenguaje marco que desea ejecutar" << TEXTO_NORMAL << endl;
     cout << endl;
     cout << "OPCIONES:" << TEXTO_NORMAL << endl;
     cout << left;
     cout << setw(ancho_columna)<< "  --verbose"                     << "Activar el modo debug" << TEXTO_NORMAL << endl;
     cout << setw(ancho_columna)<< "  -h/--help"                     << "Mostrar esta ayuda" << TEXTO_NORMAL << endl;
-    cout << setw(ancho_columna)<< "  -cpp"                          << "Conservar el fichero intermedio \"./foo.cc\" al compilar" << TEXTO_NORMAL << endl;
-    cout << setw(ancho_columna)<< "  --opcion_cpp <opcion_de_c++>"   << "Opciones de compilación de c++ (-Og, --Wall...)" << TEXTO_NORMAL << endl;
+    //cout << setw(ancho_columna)<< "  -cpp <ejecutable>"             << "Conservar el fichero intermedio \"./foo.cc\" al compilar" << TEXTO_NORMAL << endl;
+    //cout << setw(ancho_columna)<< "  --opcion_cpp <opcion_de_c++>"   << "Opciones de compilación de c++ (-Og, --Wall...)" << TEXTO_NORMAL << endl;
     cout << TEXTO_NORMAL << endl;
     cout << "EJEMPLOS:" << TEXTO_NORMAL << endl;
-    cout << "  Uso básico:"     << "\tmarco_compiler mi_programa.marco mi_ejecutable" << TEXTO_NORMAL << endl;
-    cout << "  Uso avanzado:"   << "\tmarco_compiler mi_programa.marco mi_ejecutable --vebose -cpp --opcion_cpp: -Og --opcion_cpp: --Wall" << TEXTO_NORMAL << endl;
+    cout << "  Uso básico:"     << "\tmarco_language mi_programa.marco -- verbose" << TEXTO_NORMAL << endl;
+    //cout << "  Uso avanzado:"   << "\tmarco_language mi_programa.marco --vebose -cpp --opcion_cpp: -Og --opcion_cpp: --Wall" << TEXTO_NORMAL << endl;
 }
 
 int main(int argc, char *argv[])
@@ -110,9 +109,9 @@ int main(int argc, char *argv[])
     // Compilación a c++
     /*****************************************************************************/
     
-    Compilador compilador(fichero_marco);
-    compilador.modo_verboso(modo_verboso);
-    compilador.compilar(ejecutable, argumentos_compilacion_cpp, conservar_cpp);
+    Interprete interprete(fichero_marco);
+    interprete.modo_verboso(modo_verboso);
+    interprete.ejecutar(ejecutable, argumentos_compilacion_cpp, conservar_cpp);
 
     return 0;
 }

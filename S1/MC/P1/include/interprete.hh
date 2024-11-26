@@ -1,12 +1,12 @@
 
-#ifndef COMPILADOR_H
-#define COMPILADOR_H
+#ifndef INTERPRETE_H
+#define INTERPRETE_H
 #include "utils.hh"
 #include <string>
 #include <fstream>
 using namespace std;
 
-class Compilador
+class Interprete
 {
 private:
     static const string NOMBRE_CPP_BASE;
@@ -21,11 +21,10 @@ public:
     /*************************************************************************/
     // Funciones principales
     /*************************************************************************/
-    Compilador(const string &fichero_marco);
+    Interprete(const string &fichero_marco);
     void modo_verboso(bool modo) { MODO_VERBOSO = modo; }
 
-    // Compila directamente a ejecutable
-    void compilar(const string &ejecutable, const string &variables_compilacion, const bool conservar_cpp);
+    void ejecutar(const string &ejecutable, const string &variables_compilacion, const bool conservar_cpp);
 private:
 
     /*************************************************************************/
@@ -34,10 +33,8 @@ private:
     void compilar_to_cpp(const string &FICHERO_CPP = NOMBRE_CPP_BASE);
 
     /*************************************************************************/
-    // De escribir cosas
+    // 
     /*************************************************************************/
-    void abrir_main();
-    void cerrar_main();
 };
 
 #endif

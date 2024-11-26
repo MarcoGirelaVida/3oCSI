@@ -1,4 +1,4 @@
-#include "compilador.hh"
+#include "interprete.hh"
 #include "utils.hh"
 #include "parser.hh"
 
@@ -12,11 +12,11 @@ int yydebug = 1;
 extern FILE *yyin;
 extern int yyparse(); 
 
-const string Compilador::NOMBRE_CPP_BASE = "foo.cc";
+const string Interprete::NOMBRE_CPP_BASE = "foo.cc";
 /*************************************************************************/
 // Funciones principales
 /*************************************************************************/
-Compilador::Compilador(const string &fichero_marco) : fuente(fichero_marco), nombre_fuente(fichero_marco)
+Interprete::Interprete(const string &fichero_marco) : fuente(fichero_marco), nombre_fuente(fichero_marco)
 {
     // Abro fichero en lenguaje marco
     if (!fuente)
@@ -29,8 +29,8 @@ Compilador::Compilador(const string &fichero_marco) : fuente(fichero_marco), nom
     destino.clear();
 }
 
-//Compilador::~Compilador(){}
-void Compilador::compilar(const string &ejecutable, const string &variables_compilacion, const bool conservar_cpp)
+//Interprete::~Interprete(){}
+void Interprete::ejecutar(const string &ejecutable, const string &variables_compilacion, const bool conservar_cpp)
 {
     // Nombre el fichero_cpp en base a FICHERO_CPP_BASE y la ubicación del ejecutable
     const string FICHERO_CPP = filesystem::path(ejecutable).parent_path().string() + "/" + NOMBRE_CPP_BASE;
@@ -53,7 +53,7 @@ void Compilador::compilar(const string &ejecutable, const string &variables_comp
 /*************************************************************************/
 // Funciones de compilacion
 /*************************************************************************/
-void Compilador::compilar_to_cpp(const string &FICHERO_CPP)
+void Interprete::compilar_to_cpp(const string &FICHERO_CPP)
 {
     /*****************************************************************************/
     // Administracion de ficheros
@@ -68,7 +68,7 @@ void Compilador::compilar_to_cpp(const string &FICHERO_CPP)
     }
 
     /*****************************************************************************/
-    // Compilador
+    // Interprete
     /*****************************************************************************/
 
 
@@ -78,20 +78,9 @@ void Compilador::compilar_to_cpp(const string &FICHERO_CPP)
 }
 
 /*************************************************************************/
-// Funciones de escribir cosas
+// 
 /*************************************************************************/
-void Compilador::abrir_main()
-{
-    destino += "#include <iostream>\n";
-    destino += "using namespace std;\n";
-    destino += "int main()\n";
-    destino += "{\n";
-}
 
-void Compilador::cerrar_main()
-{
-    destino += "}\n";
-}
 /*************************************************************************/
 // 
 /*************************************************************************/
