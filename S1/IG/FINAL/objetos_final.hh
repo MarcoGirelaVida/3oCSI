@@ -340,10 +340,10 @@ public:
     void draw_aristas(Color color, int grosor);
     void draw_solido(Color color);
     void draw_solido_colores();
-    void    draw_solido_phong_flat();
-    void    draw_solido_phong_gouraud();
+    void    draw_solido_phong_flat(Color color, Color especular, float brillo);
+    void    draw_solido_phong_gouraud(Color color, Color especular, float brillo);
     void    draw_solido_textura(int etiqueta);
-    void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default);
+    void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default, Color especular = Color(0.9f,0.9,0.9,1.0), float brillo = 80);
 
     void colors_random();
     void colors_chess(float r1, float g1, float b1, float r2, float g2, float b2);
@@ -401,6 +401,11 @@ public:
     _cubo(float tam=0.5);
 };
 
+class _cubo_tex: public _triangulos3D
+{
+public:
+    _cubo_tex(float tam=0.5);
+};
 class _piramide: public _triangulos3D
 {
 public:

@@ -2,24 +2,33 @@
 #include "utils.hh"
 #include <iostream>
 #include "parser.hh"
+using namespace std;
 %}
 
-MAYUSCULA [A-Z]
-TEXTO     [a-zA-Z_]+
-NUMERO    [0-9]+
+%option noyywrap
+%option c++
+
+MAYUSCULA       [A-Z]
+TEXTO           [a-zA-Z0-9_]+
+NUMERO_ENTERO   [0-9]+
 
 %%
 
-{NUMERO}                        { return NUMERO; }
-{MAYUSCULA}-{TEXTO}             { return ID_VARIABLE; }
+{MAYUSCULA}-{TEXTO}             { return yylval.str = new string (yytext); return VARIABLE; }
+{NUMERO_ENTERO}                 { return NUMERO_ENTERO; }
+{NUMERO_ENTERO}.{NUMERO_ENTERO} { return NUMERO_FLOAT; }
 
 "->"                            { return LOGIC_ASIGNACION; }
-"---"                           { return LOGIC_CIERRA_CONTEXTO; }
-"SI"                            { return LOGIC_IF; }
-"ENTONCES"                      { return LOGIC_THEN; }
-"POR"                           { return LOGIC_FOR; }
-"HACER"                         { return LOGIC_DO; }
-"MIENTRAS"                      { return LOGIC_WHILE; }
+"|__"                           { return LOGIC_CIERRA_CONTEXTO; }
+"¿("                            { return LOGIC_IF; }
+")?-->"                         { return LOGIC_THEN; }
+"|X--"                          { return LOGIC_ELSE; }
+"FOR"                           { return LOGIC_FOR; }
+"FROM"                          { return LOGIC_FROM; }
+"TO"                            { return LOGIC_TO; }
+"BY_STEP"                       { return LOGIC_STEP; }
+"REPEAT-->"                     { return LOGIC_DO_BUCLES; }
+"WHILE"                         { return LOGIC_WHILE; }
 //[EOF]                         { return LOGIC_TERMINAL_PROGRAMA; }
 
 //"COMENTARIO"{TEXTO}[\n]       { return LOGIC_COMENTARIO; }
@@ -27,23 +36,24 @@ NUMERO    [0-9]+
 "-"                             { return ARIT_MENOS; }
 "*"                             { return ARIT_MULT; }
 "/"                             { return ARIT_DIV; }
+"("                             { return ARIT_ABRE_PARENTESIS; }
+")"                             { return ARIT_CIERRA_PARENTESIS; }
 
-"Y"                             { return BOOL_AND; }
-"O"                             { return BOOL_OR; }
-"NO"                            { return BOOL_NOT; }
-"="                             { return BOOL_IGUAL; }
-"NO="                            { return BOOL_DISTINTO; }
+"^"                             { return BOOL_AND; }
+"v"                             { return BOOL_OR; }
+"~"                             { return BOOL_NOT; }
+"=="                            { return BOOL_IGUAL; }
+"~="                            { return BOOL_DISTINTO; }
 ">"                             { return BOOL_MAYOR; }
 ">="                            { return BOOL_MAYORIGUAL; }
 "<"                             { return BOOL_MENOR; }
 "<="                            { return BOOL_MENORIGUAL; }
-"VERDADERO"                     { return BOOL_TRUE; }
-"FALSO"                         { return BOOL_FALSE; }
+"TRUE"                          { return BOOL_TRUE; }
+"FALSE"                         { return BOOL_FALSE; }
 
 [ \t\n]+                        { /* Ignoro espacios y saltos de línea */ }
 .                               { cerr << TEXTO_ROJO << "ERROR: Token desconocido: " << yytext << TEXTO_NORMAL << endl; }
 
 %%
 
-int yywrap()
-{ return 1; }
+int yyFlexLexer::yylex();

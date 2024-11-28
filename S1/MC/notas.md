@@ -20,6 +20,7 @@
 - Dado que las variables tendrán el formato SIGLA_TIPO-nombre_variable NO HAY que hacer declaraciones, con nombrar una variable ya la declaras, te alerta si intentas usarla sin inicializarla, en el AST habrá que poner un valor default a las variables y si al usarla tiene el valor default dar warning
 - Internamente las expresiones aritméticas (y por tanto los números sueltos también) son variables
 - AL FINAL VA A SER UN INTERPRETE EN LUGAR DE UN COMPILADOR
+- Se conserva el comportamiento de c++ de que si sumas un float y un int de da un float...
 
 ## Cuestiones / Reflexiones en general
 

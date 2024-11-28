@@ -11,8 +11,8 @@
 using namespace std;
 
 // Para las texturas
-//#include "CImg.h"
-//using namespace cimg_library;
+#include "CImg.h"
+using namespace cimg_library;
 
 
 GLfloat hora = 0.0;
@@ -53,6 +53,7 @@ typedef enum
     CONO,
     ESFERA, 
     EXTRUSION,
+    CUBO_TEX,
 
     // PRACTICA 3
     SUELO,
@@ -80,7 +81,7 @@ int ultima_pos_raton_y = 0;
 bool boton_rotacion_pulsado = false;
 bool boton_movimiento_pulsado = false;
 _punto_en_calibracion punto_en_calibracion=PUNTO_1;
-_tipo_objeto    t_objeto=NUBE;
+_tipo_objeto    t_objeto=CUBO_TEX;
 _modo           modo=SOLID;
 _modo_interfaz  modo_interfaz=_modo_interfaz::DEFAULT;
 _variable_seleccionada variable_seleccionada = HORA;
@@ -122,7 +123,7 @@ _cabeza_girasol cabeza_girasol;
 _tallo_girasol tallo_girasol;
 _hoja_girasol hoja_girasol;
 _girasol girasol;
-
+_cubo_tex cubo_tex;
 // ESCENA
 _escena_P3 escena_p3;
 
@@ -230,7 +231,15 @@ void draw_objects()
         case EXTRUSION:
             extrusion->draw(modo,{1.0f,0.0f,0.0f},5);
             break;
-
+        case CUBO_TEX:
+            {
+                glPushMatrix();
+                glScalef(50, 50, 50);
+                cubo_tex.draw_solido_textura(id_tex);
+                glPopMatrix();
+                molino.draw(modo);
+            }
+            break;
         // PRACTICA 3
         case SUELO:
             suelo.draw(modo);
@@ -401,7 +410,7 @@ void configuracion_luz()
     escena_p3.sol.color_cielo.cambiar_a_final();
     glClearColor(escena_p3.sol.color_cielo.actual.r, escena_p3.sol.color_cielo.actual.g, escena_p3.sol.color_cielo.actual.b, 1);
     // Configuración de la luz
-    GLfloat luz_ambiental[]={0.05,0.05,0.05,1.0},
+    GLfloat luz_ambiental[]={0.5,0.5,0.5,1.0}, // Es la que tiene cuando no le da la luz, entonces es una fracción
             luz_difusa[]={1.0,1.0,1.0,1.0}, // Difusa y especular iguales
             luz_especular[]={1.0,1.0,1.0,1.0},
             luz_posicion[]={0.0,0.0,20.0,1.0};
@@ -410,7 +419,7 @@ void configuracion_luz()
     glLightfv(GL_LIGHT1, GL_AMBIENT, luz_ambiental);
     glLightfv(GL_LIGHT1, GL_DIFFUSE, luz_difusa);
     glLightfv(GL_LIGHT1, GL_SPECULAR, luz_especular);
-    glLightfv(GL_LIGHT1, GL_POSITION, luz_posicion);
+    glLightfv(GL_LIGHT1, GL_POSITION, (GLfloat *) &escena_p3.sol.posicion);
 
     glDisable(GL_LIGHT0);
     glEnable(GL_LIGHT1);  
@@ -892,7 +901,7 @@ void initialize(void)
 int prepara_textura (char *file)
 {
     int tex_id;
-    /*
+    
     //Dejar comentado hasta no incorporar texturas
     vector<unsigned char> data; 
     CImg<unsigned char> image;
@@ -920,7 +929,7 @@ int prepara_textura (char *file)
     //TRASFIERE LOS DATOS A GPU
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(),
         0, GL_RGB, GL_UNSIGNED_BYTE, &data[0]);
-    */
+    
     return tex_id;
 }
 

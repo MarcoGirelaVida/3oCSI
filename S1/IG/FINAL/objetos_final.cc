@@ -24,7 +24,7 @@ _triangulos3D::_triangulos3D()
 // MODOS DE DIBUJO
 //*************************************************************************
 
-void _triangulos3D::draw(_modo modo, Color color, float grosor, Coordenadas pos) // , Coordenadas pos)
+void _triangulos3D::draw(_modo modo, Color color, float grosor, Coordenadas pos, Color especular, float brillo)
 {
     glPushMatrix();
     glTranslatef(pos.x, pos.y, pos.z);
@@ -43,10 +43,10 @@ void _triangulos3D::draw(_modo modo, Color color, float grosor, Coordenadas pos)
             draw_solido_colores();
             break;
         case SOLID_PHONG_FLAT:
-                draw_solido_phong_flat();
+                draw_solido_phong_flat(color, especular, brillo);
                 break;
         case SOLID_PHONG_GOURAUD:
-                draw_solido_phong_gouraud();
+                draw_solido_phong_gouraud(color, especular, brillo);
                 break;
 
 	}
@@ -185,7 +185,7 @@ void _triangulos3D::draw_solido_colores( )
 // dibujar en modo sólido con iluminación
 //*************************************************************************
 
-void _triangulos3D::draw_solido_phong_flat()
+void _triangulos3D::draw_solido_phong_flat(Color color, Color especular, float brillo)
 {
 
     glShadeModel(GL_FLAT);
@@ -193,8 +193,8 @@ void _triangulos3D::draw_solido_phong_flat()
     glEnable(GL_LIGHTING);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &ambiente);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &difuso);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &color);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, brillo);
 
@@ -213,15 +213,15 @@ void _triangulos3D::draw_solido_phong_flat()
 
 
 
-void _triangulos3D::draw_solido_phong_gouraud()
+void _triangulos3D::draw_solido_phong_gouraud(Color color, Color especular, float brillo)
 {
     glShadeModel(GL_SMOOTH);
     glEnable(GL_NORMALIZE);
     glEnable(GL_LIGHTING);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &ambiente);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &difuso);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &color);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, brillo);
 
@@ -248,7 +248,23 @@ void _triangulos3D::draw_solido_phong_gouraud()
 
 void _triangulos3D::draw_solido_textura(int etiqueta)
 {
+glEnable(GL_TEXTURE_2D);
+glBindTexture(GL_TEXTURE_2D, etiqueta);
+glColor3f(1.0, 1.0, 1.0);
+glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+glBegin(GL_TRIANGLES);
+    for (size_t i = 0; i < caras.size(); i++)
+    {
+        glTexCoord2f(texturas_vertices[caras[i]._0].x, texturas_vertices[caras[i]._0].y);
+        glVertex3fv((GLfloat *) &vertices[caras[i]._0]);
 
+        glTexCoord2f(texturas_vertices[caras[i]._1].x, texturas_vertices[caras[i]._1].y);
+        glVertex3fv((GLfloat *) &vertices[caras[i]._1]);
+
+        glTexCoord2f(texturas_vertices[caras[i]._2].x, texturas_vertices[caras[i]._2].y);
+        glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
+    }
+glEnd();
 }
 
 
@@ -576,6 +592,58 @@ _cubo::_cubo(float tam)
     calcular_normales_vertices();
 }
 
+_cubo_tex::_cubo_tex(float tam)
+{
+    //texturas_vertices
+    vertices.resize(14);
+    vertices[0].x = -tam;     vertices[0].y = -tam;      vertices[0].z = tam; 
+    vertices[1].x = tam;     vertices[1].y = -tam;      vertices[1].z = tam; 
+    vertices[2].x = tam;     vertices[2].y = -tam;      vertices[2].z = -tam; 
+    vertices[3].x = -tam;     vertices[3].y = -tam;      vertices[3].z = -tam; 
+    vertices[4].x = -tam;     vertices[4].y = tam;      vertices[4].z = tam;
+    vertices[5].x = tam;     vertices[5].y = tam;      vertices[5].z = tam;
+    vertices[6].x = tam;     vertices[6].y = tam;      vertices[6].z = -tam;
+    vertices[7].x = -tam;     vertices[7].y = tam;      vertices[7].z = -tam;
+    // vertices extra para las texturas
+    vertices[8].x  = -tam;      vertices[8].y = -tam;     vertices[8].z  = tam;
+    vertices[9].x  = -tam;      vertices[9].y = tam;     vertices[9].z  = tam;
+    vertices[10].x = -tam;     vertices[10].y = -tam;     vertices[10].z = tam;
+    vertices[11].x = -tam;     vertices[11].y = tam;     vertices[11].z = tam;
+    vertices[12].x = -tam;     vertices[12].y = -tam;     vertices[12].z = -tam;
+    vertices[13].x = -tam;     vertices[13].y = tam;     vertices[13].z = -tam;
+
+    // triangulos
+    caras.resize(12);
+    caras[0]._0 = 6;    caras[0]._1 = 1;    caras[0]._2 = 4;
+    caras[1]._0 = 1;    caras[1]._1 = 5;    caras[1]._2 = 4;
+    caras[2]._0 = 1;    caras[2]._1 = 2;    caras[2]._2 = 5;
+    caras[3]._0 = 2;    caras[3]._1 = 6;    caras[3]._2 = 5;
+    caras[4]._0 = 2;    caras[4]._1 = 3;    caras[4]._2 = 6;
+    caras[5]._0 = 3;    caras[5]._1 = 7;    caras[5]._2 = 6;
+    caras[6]._0 = 3;    caras[6]._1 = 8;    caras[6]._2 = 7;
+    caras[7]._0 = 8;    caras[7]._1 = 9;    caras[7]._2 = 7;
+    caras[8]._0 = 10;   caras[8]._1 = 12;   caras[8]._2 = 1;
+    caras[9]._0 = 2;    caras[9]._1 = 12;   caras[9]._2 = 1;
+    caras[10]._0 =5;    caras[10]._1 =6;    caras[10]._2= 11;
+    caras[11]._0 =6;    caras[11]._1 =13;   caras[11]._2= 11;
+
+    texturas_vertices.resize(14);
+    texturas_vertices[0]._0 = 0.0;  texturas_vertices[0]._1 = 0.5;
+    texturas_vertices[1]._0 = 0.25;  texturas_vertices[1]._1 = 0.5;
+    texturas_vertices[2]._0 = 0.5;  texturas_vertices[2]._1 = 0.5;
+    texturas_vertices[3]._0 = 0.75;  texturas_vertices[3]._1 = 0.5;
+    texturas_vertices[4]._0 = 0.0;  texturas_vertices[4]._1 = 0.25;
+    texturas_vertices[5]._0 = 0.25;  texturas_vertices[5]._1 = 0.25;
+    texturas_vertices[6]._0 = 0.5;  texturas_vertices[6]._1 = 0.25;
+    texturas_vertices[7]._0 = 0.25;  texturas_vertices[7]._1 = 0.75;
+    texturas_vertices[8]._0 = 1.0;  texturas_vertices[8]._1 = 0.5;
+    texturas_vertices[9]._0 = 1.0;  texturas_vertices[9]._1 = 0.25;
+    texturas_vertices[10]._0 = 0.5;  texturas_vertices[10]._1 = 0.75;
+    texturas_vertices[11]._0 = 0.25;  texturas_vertices[11]._1 = 0.0;
+    texturas_vertices[12]._0 = 0.25;  texturas_vertices[12]._1 = 0.75;
+    texturas_vertices[13]._0 = 0.5;  texturas_vertices[13]._1 = 0.0; 
+}
+
 _piramide::_piramide(Coordenadas tam) : tam(tam)
 {
     //vertices 
@@ -720,6 +788,10 @@ void _sol::draw(_modo modo, float grosor) // , Coordenadas pos)
         posicion.z = posicion_original.z;
         glTranslatef(posicion.x, posicion.y, posicion.z);
         glColor4f(color_sol.actual.r, color_sol.actual.g, color_sol.actual.b, color_sol.actual.a);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &color_sol.actual);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &color_sol.actual);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &material_especular.actual);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80);
         glutSolidSphere(radio, resolucion, resolucion);
     glPopMatrix();
 }
