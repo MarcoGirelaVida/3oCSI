@@ -10,7 +10,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-BISON_TARGET(parser ${CMAKE_SOURCE_DIR}/gramaticas/parser.yy ${CMAKE_BINARY_DIR}/parser.tab.cc)
+BISON_TARGET(parser ${CMAKE_SOURCE_DIR}/gramaticas/parser.yy ${CMAKE_BINARY_DIR}/parser.tab.cc COMPILE_FLAGS "-Wcounterexamples --verbose")
 FLEX_TARGET(lexer ${CMAKE_SOURCE_DIR}/gramaticas/lexer.l ${CMAKE_BINARY_DIR}/lexer.yy.cc)
 ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 

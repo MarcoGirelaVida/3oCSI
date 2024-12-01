@@ -1,55 +1,96 @@
-
 %{
-#include <string>
+# include <cerrno>
+# include <climits>
+# include <cstdlib>
+# include <cstring> // strerror
+# include <string>
 #include <iostream>
-
 /* Sobreescribo la función yylex de flex con la mia*/
+#include "parser.tab.hh"
 #include "tokenizador.hh"
-#undef  YY_DECL
-#define YY_DECL int Interprete::Interprete_Tokenizador::yylex(Interprete::Interprete_Parser::semantic_type * const lval, Interprete::Interprete_Parser::location_type *loc)
-
-using token = Interprete::Interprete_Parser::token;
-
-/* el fin del fichero es un token en lugar de null */
-#define yyterminate() return( token::FIN_FICHERO )
-
-/* No sé para qué sirve pero hay que ponerlo porque sino no funciona */
-#define YY_NO_UNISTD_H
-
-/* macro para actualizar la localización automaticamente */
-#define YY_USER_ACTION loc->step(); loc->columns(yyleng);
+using Parser = Interprete::Interprete_Parser; // Sino es un coñazo
+#undef YY_DECL
+#define YY_DECL int Interprete::Interprete_Tokenizador::yylex(Parser::semantic_type * const lval, Parser::location_type *loc)
 %}
 
 %option debug
 %option nodefault
-%option yyclass="Interprete::Interprete_Tokenizador"
 %option noyywrap
 %option c++
+%option yyclass="Interprete::Interprete_Tokenizador"
+
+%{
 
 
-MAYUSCULA       [A-Z]
-TEXTO           [a-zA-Z0-9_]+
-NUMERO_ENTERO   [0-9]+
+/* el fin del fichero es un token en lugar de null */
+#define yyterminate() return(Parser::token::FIN_FICHERO)
 
-%%
-%{          /** Simpre que empieza a ejecutarse lex iguala yylval a lval **/
-            yylval = lval;
-            std::cerr << "Token leido: " << yytext << std::endl;
+/* No sé para qué sirve pero hay que ponerlo porque sino no funciona */
+#define YY_NO_UNISTD_H
 %}
 
-{MAYUSCULA}-{TEXTO}                                 { yylval->build<std::string>(yytext);   return token::VARIABLE; }
-{NUMERO_ENTERO}|{NUMERO_ENTERO}\.{NUMERO_ENTERO}     { yylval->build<float>(strtof(yytext, NULL));         return token::NUMERO; }
-"+"                             { return '+'; }
-"-"                             { return '-'; }
-"*"                             { return '*'; }
-"/"                             { return '/'; }
-"("                             { return '('; }
-")"                             { return ')'; }
-[ \t\n]+                        { /* Ignoro espacios y saltos de línea */ }
-.                               { std::cerr << "ERROR: Token desconocido: " << yytext << std::endl; }
+%{
+// Constructores de tokens
+//Parser::symbol_type make_NUMERO (const std::string &s, const Parser::location_type& loc);
+%}
+
+MAYUSCULA       [A-Z]
+TEXTO           [a-zA-Z_0-9]+
+NUMERO_ENTERO   [0-9]+
+ESPACIO_BLANCO  [ \t\r]
+
+%{
+    #define YY_USER_ACTION loc->step(); loc->columns(yyleng);
+%}
+%%
+%{
+    // Este código se ejecuta cada vez que se encuentra un token
+    // Actualizo la localización y valor
+    //Interprete::location& loc = drv.location;
+    yylval = lval;
+    //std::cerr << "Token leido: " << yytext << std::endl;
+%}
+{ESPACIO_BLANCO}+               { /* no hacer nada */ }
+\n+                             { loc->lines(yyleng); }
+
+{MAYUSCULA}-{TEXTO}                                     {   yylval->build<std::string>(yytext);
+                                                            return Parser::token::IDENTIFICADOR; }
+{NUMERO_ENTERO}                                         {   yylval->build<int>(std::stoi(yytext));
+                                                            return Parser::token::ENTERO; }
+{NUMERO_ENTERO}\.{NUMERO_ENTERO}                        {   yylval->build<float>(std::stof(yytext));
+                                                            return Parser::token::FLOAT; }
+"->"                                                    { return Parser::token::ASIGNACION; }
+
+"+"                                                     { return Parser::token::MAS; }
+"-"                                                     { return Parser::token::MENOS; }
+"*"                                                     { return Parser::token::MULT; }
+"/"                                                     { return Parser::token::DIVISION; }
+
+"("                                                     { return Parser::token::ABRE_PAREN; }
+")"                                                     { return Parser::token::CIERRA_PAREN; }
+
+.   { throw Parser::syntax_error (*loc, "token no reconocido: " + std::string(yytext)); }
 %%
 /*
-"->"                            { return token::LOGIC_ASIGNACION; }
+// Copiado y pegado de la documentación de bison:
+// https://www.gnu.org/software/bison/manual/bison.html#A-Simple-C_002b_002b-Example
+// Basicamente crea otro constructor de numero con un string y cuando ya lo tiene como
+// un float se lo pasa al contructor original
+// CUIDADO!! Al llamar al contrcutor hay que llamar a este, no el verdadero
+Parser::symbol_type
+make_NUMERO (const std::string &s, const Parser::location_type& loc)
+{
+    errno = 0;
+    char *end = nullptr;
+    float f = strtof(s.c_str(), &end);
+
+    // Verifica si la conversión fue exitosa
+    if (end == s.c_str() || *end != '\0' || errno == ERANGE)
+        throw Parser::syntax_error(loc, "float is out of range or invalid: " + s);
+
+    return Parser::token::NUMERO((float) f, loc);
+}
+
 "|__"                           { return token::LOGIC_CIERRA_CONTEXTO; }
 "¿("                            { return token::LOGIC_IF; }
 ")?-->"                         { return token::LOGIC_THEN; }
