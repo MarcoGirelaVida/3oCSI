@@ -1,5 +1,0 @@
-/home/marco/Repos/3oCSI/S1/MC/P1/build/CMakeFiles/buscador_plagios.dir
-/home/marco/Repos/3oCSI/S1/MC/P1/build/CMakeFiles/clean_extra.dir
-/home/marco/Repos/3oCSI/S1/MC/P1/build/CMakeFiles/clean_all.dir
-/home/marco/Repos/3oCSI/S1/MC/P1/build/CMakeFiles/edit_cache.dir
-/home/marco/Repos/3oCSI/S1/MC/P1/build/CMakeFiles/rebuild_cache.dir

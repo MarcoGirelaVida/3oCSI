@@ -1,65 +1,33 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Nombre del proyecto
-project(InterpreteMarcoToCpp)
-find_package(FLEX REQUIRED)
+project(InterpreteMarco CXX)
+
 find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-register")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Archivos de utilidades
-set(UTILS_SOURCES ${CMAKE_SOURCE_DIR}/src/utils.cc)
-set(UTILS_HEADERS ${CMAKE_SOURCE_DIR}/include/utils.hh)
-add_library(utils ${UTILS_SOURCES})
-target_include_directories(utils PUBLIC ${CMAKE_SOURCE_DIR}/include)
+BISON_TARGET(parser ${CMAKE_SOURCE_DIR}/gramaticas/parser.yy ${CMAKE_BINARY_DIR}/parser.tab.cc)
+FLEX_TARGET(lexer ${CMAKE_SOURCE_DIR}/gramaticas/lexer.l ${CMAKE_BINARY_DIR}/lexer.yy.cc)
+ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 
+add_executable ( marco_language
+    ${CMAKE_SOURCE_DIR}/src/main.cc
+    ${CMAKE_SOURCE_DIR}/src/interprete.cc
+    ${CMAKE_SOURCE_DIR}/src/utils.cc
 
-# Cosas de bison y lex
-# Ubicación de los archivos fuente Lex y Yacc
-set(LEX_FILE ${CMAKE_SOURCE_DIR}/gramaticas/tokenizador.l)
-set(YACC_FILE ${CMAKE_SOURCE_DIR}/gramaticas/parser.y)
-
-# Archivos generados por Flex y Bison
-set(LEX_OUTPUT ${CMAKE_BINARY_DIR}/tokenizador.cc)
-set(YACC_OUTPUT ${CMAKE_BINARY_DIR}/parser.cc)
-set(YACC_HEADER ${CMAKE_BINARY_DIR}/parser.hh)
-
-
-
-# Generación de los ficheros
-add_custom_command(
-    OUTPUT ${YACC_OUTPUT} ${YACC_HEADER}
-    COMMAND bison -d -o ${YACC_OUTPUT} ${YACC_FILE}
-    MAIN_DEPENDENCY ${YACC_FILE}
-    COMMENT "Generando el analizador sintáctico (Bison)"
+    ${FLEX_lexer_OUTPUTS}
+    ${BISON_parser_OUTPUTS}
 )
-
-add_custom_command(
-    OUTPUT ${LEX_OUTPUT}
-    COMMAND flex -o ${LEX_OUTPUT} ${LEX_FILE}
-    MAIN_DEPENDENCY ${LEX_FILE} ${YACC_HEADER}
-    COMMENT "Generando el analizador léxico (Flex)"
+target_include_directories ( marco_language PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${FLEX_INCLUDE_DIRS}
+        ${CMAKE_BINARY_DIR}
 )
+set_property(TARGET marco_language PROPERTY CXX_STANDARD 14)
 
-# Incluir los archivos generados como parte del proyecto
-add_library(lexer_parser ${LEX_OUTPUT} ${YACC_OUTPUT})
-target_include_directories(lexer_parser PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
-target_link_libraries(lexer_parser utils)
-
-# Fuentes
-file(GLOB SOURCES
-"${CMAKE_SOURCE_DIR}/src/*.cc"
-)
-
-
-# Ejecutable
-add_executable(marco_language ${SOURCES})
-add_dependencies(marco_language lexer_parser)
-target_link_libraries(marco_language lexer_parser utils)
-target_include_directories(marco_language PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR})
-
-# Archivos específicos a eliminar con make clean
-add_custom_target(clean_test COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_SOURCE_DIR}/test/foo.cc)
-add_custom_target(clean_all DEPENDS clean clean_test)
+#enable_testing()
+#add_test(NAME basic COMMAND ${CMAKE_SOURCE_DIR}/test/fuente.marco WORKING_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -2,7 +2,6 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
-#include "utils.hh"
 #include "interprete.hh"
 using namespace std;
 
@@ -109,9 +108,9 @@ int main(int argc, char *argv[])
     // Compilación a c++
     /*****************************************************************************/
     
-    Interprete interprete(fichero_marco);
-    interprete.modo_verboso(modo_verboso);
-    interprete.ejecutar(ejecutable, argumentos_compilacion_cpp, conservar_cpp);
-
+    Interprete::Interprete_Driver interprete;
+    interprete.set_modo_verboso(modo_verboso);
+    interprete.ejecutar(fichero_marco, true);
+    cerr << TEXTO_AZUL << "EJECUTADO" << TEXTO_NORMAL << endl;
     return 0;
 }
