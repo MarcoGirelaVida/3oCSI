@@ -69,6 +69,7 @@ ESPACIO_BLANCO  [ \t\r]
 "("                                                     { return Parser::token::ABRE_PAREN; }
 ")"                                                     { return Parser::token::CIERRA_PAREN; }
 
+"MUESTRAME"                                             { return Parser::token::PRINT; }
 .   { throw Parser::syntax_error (*loc, "token no reconocido: " + std::string(yytext)); }
 %%
 /*

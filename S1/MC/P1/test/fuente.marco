@@ -1,5 +1,2 @@
-inicio_programa_marco
-
-45.45 + 5.5 * 2.5 - 5.5 / 2.5
-
-fin_programa_marco
+T-mi_variable -> 45.45 + 5.5 * 2.5 - 5.5 / 2.5
+MUESTRAME 3.5 + 10.2

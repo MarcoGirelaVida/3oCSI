@@ -32,7 +32,7 @@ cosas de bison:
 
 //%define parse.trace true // Para que muestre la traza de la pila, se incluye en debug
 %define parse.error detailed // Para que muestre los errores de forma más detallada
-//%define parse.lac full // Para que lea con anticipación porque sino puede dar errores falsos
+%define parse.lac full // Para que lea con anticipación porque sino puede dar errores falsos
 
 %code{
     #include <iostream>
@@ -61,7 +61,9 @@ cosas de bison:
 ;
 %token <int>    ENTERO  "Entero"
 %token <float>  FLOAT   "Float"
-%nterm <int>    expr_arit
+%nterm <float>    expr_arit
+
+%token PRINT "print"
 //%token LOGIC_ASIGNACION LOGIC_CIERRA_CONTEXTO LOGIC_IF LOGIC_THEN LOGIC_FROM LOGIC_TO LOGIC_STEP LOGIC_FOR LOGIC_DO_BUCLES LOGIC_WHILE LOGIC_TERMINAL_PROGRAMA //LOGIC_UNTIL LOGIC_REPEAT LOGIC_BREAK LOGIC_CONTINUE
 //%token BOOL_AND BOOL_OR BOOL_NOT BOOL_IGUAL BOOL_DISTINTO BOOL_MAYOR BOOL_MAYORIGUAL BOOL_MENOR BOOL_MENORIGUAL BOOL_TRUE BOOL_FALSE
 //%token PALABRA TIPO OPERADOR ABRE_SECCION CIERRA_SECCION TERMINAL APERTURA_PROGRAMA TERMINAL_PROGRAMA
@@ -86,6 +88,7 @@ definiciones:
         Además siempre las nuevas cosas se ponen a la derecha de las antiguas
         "después de leer un número cualquiera de definiciones, intenta leer una nueva
         definición hasta que no puedas leer más*/
+        | definiciones llamada_funcion
         /*
         | programa_marco error
         */
@@ -116,7 +119,7 @@ asignacion:
 %left "-" "+";
 %left "*" "/";
 expr_arit:
-        "Entero"
+        "Float"
         | "Identificador"
         {
             // Comprobar que la variable es un número
@@ -156,7 +159,13 @@ expr_arit:
         //    $$ = -$2;
         //}
         ;
-    
+
+llamada_funcion:
+        PRINT expr_arit
+        {
+            cout << (float) $2 << endl;
+        }
+        ;
 %%
 
 void Interprete::Interprete_Parser::error(const location_type &localizacion_error, const string &error_msg)

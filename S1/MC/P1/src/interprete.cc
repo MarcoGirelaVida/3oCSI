@@ -69,7 +69,7 @@ Interprete::Interprete_Driver::leer_input(istream &input_fuente)
     }
 
     // Ejecuto el parser (si no devuelve 0 es que ha habido un error)
-    parser->set_debug_level(MODO_VERBOSO);
+    parser->set_debug_level(false);
     if(parser->parse())
     {
         cerr << TEXTO_ROJO << "ERROR: Al ejecutar el parser" << TEXTO_NORMAL << endl;
