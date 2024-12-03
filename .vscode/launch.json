@@ -2,14 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) marco compiler basico",
+            "name": "(gdb) test interprete marco",
             "type": "cppdbg",
             "request": "launch",
             "cwd":      "${workspaceFolder}/S1/MC/P1",
             "program":  "${workspaceFolder}/S1/MC/P1/build/bin/marco_language",
             "args": [
                 "./test/fuente.marco",
-                "./test/ejecutable.bin -cpp"
+                "--test"
             ],
             "setupCommands": [
                 {
@@ -28,16 +28,15 @@
             "MIMode": "gdb",
         },
         {
-            "name": "(gdb) marco compiler verbose",
+            "name": "(gdb) interprete marco test con ayuda",
             "type": "cppdbg",
             "request": "launch",
             "cwd":      "${workspaceFolder}/S1/MC/P1",
             "program":  "${workspaceFolder}/S1/MC/P1/build/bin/marco_language",
             "args": [
                 "./test/fuente.marco",
-                "./test/ejecutable.bin",
-                "--verbose",
-                "-cpp"
+                "--help",
+                "--test"
             ],
             "setupCommands": [
                 {
@@ -63,10 +62,6 @@
             "cwd":      "${workspaceFolder}/S1/IG",
             "program":  "${workspaceFolder}/S1/IG/",
             "args": [
-                "./test/fuente.marco",
-                "./test/ejecutable.bin",
-                "--verbose",
-                "-cpp"
             ],
             "setupCommands": [
                 {
