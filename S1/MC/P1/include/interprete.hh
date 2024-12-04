@@ -1,9 +1,20 @@
 
 #ifndef INTERPRETE_H
 #define INTERPRETE_H
-#include <istream>
-#include <filesystem>
+
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <cstring>
+#include <unordered_map>
+#include <variant>
+#include <vector>
+#include <stack>
+#include <exception>
+#include <filesystem>
+#include <array>
+
 
 #include "utils.hh"
 #include "tokenizador.hh"
@@ -19,6 +30,7 @@ private:
     Interprete::Interprete_Tokenizador *tokenizador = nullptr;
 
     // Aquí debo declarar el AST
+    
 
     bool MODO_VERBOSO = false;
 

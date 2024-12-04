@@ -53,7 +53,7 @@ ESPACIO_BLANCO  [ \t\r]
 {ESPACIO_BLANCO}+               { /* no hacer nada */ }
 \n+                             { loc->lines(yyleng); }
 
-{MAYUSCULA}-{TEXTO}                                     {   yylval->build<std::string>(yytext);
+{MAYUSCULA}-{TEXTO}|"C"{MAYUSCULA}-{TEXTO}              {   yylval->build<std::string>(yytext);
                                                             return Parser::token::IDENTIFICADOR; }
 {NUMERO_ENTERO}                                         {   yylval->build<int>(std::stoi(yytext));
                                                             return Parser::token::ENTERO; }
@@ -92,6 +92,9 @@ make_NUMERO (const std::string &s, const Parser::location_type& loc)
     return Parser::token::NUMERO((float) f, loc);
 }
 
+// En caso de que no quiera tener distincciones de tipos
+//{TEXTO}                                                 {   yylval->build<std::string>(yytext);
+//                                                            return Parser::token::IDENTIFICADOR; }
 "|__"                           { return token::LOGIC_CIERRA_CONTEXTO; }
 "¿("                            { return token::LOGIC_IF; }
 ")?-->"                         { return token::LOGIC_THEN; }
