@@ -331,7 +331,7 @@ public:
     _vertex4f ambiente = _vertex4f(0.8,0.0,0.2,1.0);    //coeficientes ambiente 
     _vertex4f difuso = _vertex4f(0.8,0.0,0.2,1.0);      //coeficientes difuso
     _vertex4f especular = _vertex4f(0.5,0.5,0.5,1.0);   //coeficiente especular
-    float brillo = 80;                                  //exponente del brillo 
+    float brillo = 40;                                  //exponente del brillo 
 
     bool invertir_n = false;             // 1 en caso de invertir direcciones normales
 public:
@@ -340,10 +340,10 @@ public:
     void draw_aristas(Color color, int grosor);
     void draw_solido(Color color);
     void draw_solido_colores();
-    void    draw_solido_phong_flat(Color color, Color especular, float brillo);
-    void    draw_solido_phong_gouraud(Color color, Color especular, float brillo);
+    void    draw_solido_phong_flat(Color color, GLfloat ratio_difuso, Color especular, float brillo);
+    void    draw_solido_phong_gouraud(Color color, GLfloat ratio_difuso, Color especular, float brillo);
     void    draw_solido_textura(int etiqueta);
-    void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default, Color especular = Color(0.9f,0.9,0.9,1.0), float brillo = 80);
+    void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default, GLfloat ratio_difuso = 0.8, Color especular = Color(0.6f,0.6,0.6,1.0), float brillo = 20);
 
     void colors_random();
     void colors_chess(float r1, float g1, float b1, float r2, float g2, float b2);
@@ -501,15 +501,12 @@ public:
     //_color luz_ambiente_mediodia = {0.6f, 0.6f, 0.6f};
     //_color luz_ambiente_atardecer = {0.4f, 0.2f, 0.1f};
     Color color_cielo = Color({0.6f, 0.3f, 0.2f}, {102u, 151, 200});
-    Color color_luz_ambiente = Color({0.2f, 0.1f, 0.1f, 1.0f}, {0.4f, 0.4f, 0.4f, 1.0f});
-    Color color_luz_difusa = Color({0.6f, 0.3f, 0.2f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
-    Color color_luz_especular = Color({0.9f, 0.6f, 0.3f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
-    Color brillo_material = Color({0.2f, 0.0f, 0.0f}, {0.8f, 0.0f, 0.0f});
-    Color material_especular = Color({0.8f, 0.6f, 0.4f}, { 1.0f, 1.0f, 1.0f});
+    Color color_luz_difusa_especular = Color({0.2f, 0.1f, 0.1f, 1.0f}, {0.4f, 0.4f, 0.4f, 1.0f});
+    Color material_especular = Color(1.0f, 1.0f, 1.0f, 1.0f);
     //Color luz_ambiente;
 
 
-    _sol(GLfloat radio = 1, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol({243u, 159, 25}, {247u, 221, 116}) {};
+    _sol(GLfloat radio = 1, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol({0.3f, 0.1, 0.04}, {1.0f, 0.95, 0.85}) {};
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);, Coordenadas pos = coordenadas_default
     void actualizar_sol_hora(GLfloat hora);     
 };

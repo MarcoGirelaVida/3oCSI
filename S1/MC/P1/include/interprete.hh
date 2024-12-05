@@ -72,7 +72,7 @@ private:
     Interprete::Interprete_Tokenizador *tokenizador = nullptr;
 
     // Aquí debo declarar el AST
-    Interprete::Contexto contexto_actual;
+    Interprete::Contexto *contexto_actual = nullptr;
 
     bool MODO_VERBOSO = false;
 
@@ -87,6 +87,16 @@ public:
 
     void ejecutar(const string &fichero_fuente, const bool linea_a_linea);
     void ejecutar(istream &input_puente, const bool linea_a_linea);
+
+    void push_contexto()
+    {
+        Interprete::Contexto nuevo_contexto = Contexto(contexto_actual);
+    }
+
+    void pop_contexto()
+    {
+        
+    }
 
 private:
     /*************************************************************************/
@@ -117,7 +127,7 @@ public:
     :   contexto_padre(contexto_padre),
         profundidad(contexto_padre ? contexto_padre->profundidad + 1 : 0)
     {}
-
+ 
     size_t get_profundidad() const { return profundidad; }
 
     // Agregar o actualizar una variable en el contexto actual

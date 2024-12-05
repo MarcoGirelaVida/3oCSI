@@ -237,7 +237,7 @@ void draw_objects()
                 glScalef(50, 50, 50);
                 cubo_tex.draw_solido_textura(id_tex);
                 glPopMatrix();
-                molino.draw(modo);
+                //molino.draw(modo);
             }
             break;
         // PRACTICA 3
@@ -298,8 +298,14 @@ void draw_objects()
                 break;
             }
         case ESCENA_FINAL:
+        {
+            glPushMatrix();
+            glScalef(50, 50, 50);
+            cubo_tex.draw_solido_textura(id_tex);
+            glPopMatrix();
             escena_p3.draw(modo);
             break;
+        }
 	}
 
 }
@@ -410,19 +416,27 @@ void configuracion_luz()
     escena_p3.sol.color_cielo.cambiar_a_final();
     glClearColor(escena_p3.sol.color_cielo.actual.r, escena_p3.sol.color_cielo.actual.g, escena_p3.sol.color_cielo.actual.b, 1);
     // Configuración de la luz
-    GLfloat luz_ambiental[]={0.5,0.5,0.5,1.0}, // Es la que tiene cuando no le da la luz, entonces es una fracción
-            luz_difusa[]={1.0,1.0,1.0,1.0}, // Difusa y especular iguales
-            luz_especular[]={1.0,1.0,1.0,1.0},
-            luz_posicion[]={0.0,0.0,20.0,1.0};
-                
-            
+    GLfloat luz_ambiental[]=    {0.05,0.05,0.05,0.0}, // Es la que tiene cuando no le da la luz, entonces es una fracción
+            luz_difusa[]    =   {0.5,0.5,0.5,0.5}, // Difusa y especular iguales
+            luz_especular[] =   {0.5,0.5,0.5,0.5},
+            luz_posicion[]  =   {0.0,0.0,0.0,0.0};
+
     glLightfv(GL_LIGHT1, GL_AMBIENT, luz_ambiental);
     glLightfv(GL_LIGHT1, GL_DIFFUSE, luz_difusa);
     glLightfv(GL_LIGHT1, GL_SPECULAR, luz_especular);
-    glLightfv(GL_LIGHT1, GL_POSITION, (GLfloat *) &escena_p3.sol.posicion);
+    glLightfv(GL_LIGHT1, GL_POSITION, luz_posicion);
+
+    GLfloat luz_difusa_sol[]    =   {1.0,1.0,1.0,1.0}, // Difusa y especular iguales
+            luz_especular_sol[] =   {1.0,1.0,1.0,1.0};            
+            
+    glLightfv(GL_LIGHT2, GL_AMBIENT, (GLfloat *) &escena_p3.sol.color_sol.actual);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, luz_difusa_sol);
+    glLightfv(GL_LIGHT2, GL_SPECULAR, luz_especular_sol);
+    glLightfv(GL_LIGHT2, GL_POSITION, (GLfloat *) &escena_p3.sol.posicion);
 
     glDisable(GL_LIGHT0);
-    glEnable(GL_LIGHT1);  
+    glEnable(GL_LIGHT1);
+    glEnable(GL_LIGHT2);  
 }
 
 void draw(void)
@@ -983,7 +997,7 @@ int main(int argc, char *argv[] )
     glutAddMenuEntry("GIRASOL", 2);
     glutAddMenuEntry("NUBE", 3);
     glutAddMenuEntry("LLUVIA", 4);
-    glutAttachMenu(GLUT_LEFT_BUTTON);
+    //glutAttachMenu(GLUT_LEFT_BUTTON);
     // Control del ratón
     glutMouseFunc(botones_raton);
     glutMotionFunc(movimiento_raton);
