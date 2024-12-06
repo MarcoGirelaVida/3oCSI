@@ -235,6 +235,7 @@ void draw_objects()
             {
                 glPushMatrix();
                 glScalef(50, 50, 50);
+                glTranslatef(0, 0.5, 0);
                 cubo_tex.draw_solido_textura(id_tex);
                 glPopMatrix();
                 //molino.draw(modo);
@@ -300,7 +301,8 @@ void draw_objects()
         case ESCENA_FINAL:
         {
             glPushMatrix();
-            glScalef(50, 50, 50);
+            glScalef(20, 20, 20);
+            //glTranslatef(0, 0.5, 0);
             cubo_tex.draw_solido_textura(id_tex);
             glPopMatrix();
             escena_p3.draw(modo);
@@ -429,10 +431,13 @@ void configuracion_luz()
     GLfloat luz_difusa_sol[]    =   {1.0,1.0,1.0,1.0}, // Difusa y especular iguales
             luz_especular_sol[] =   {1.0,1.0,1.0,1.0};            
             
-    glLightfv(GL_LIGHT2, GL_AMBIENT, (GLfloat *) &escena_p3.sol.color_sol.actual);
+    GLfloat *luz_ambiental_sol = (GLfloat *) &escena_p3.sol.color_sol.actual;
+    glLightfv(GL_LIGHT2, GL_AMBIENT, luz_ambiental_sol);
+    //glLightfv(GL_LIGHT2, GL_AMBIENT, luz_difusa_sol);
     glLightfv(GL_LIGHT2, GL_DIFFUSE, luz_difusa_sol);
     glLightfv(GL_LIGHT2, GL_SPECULAR, luz_especular_sol);
-    glLightfv(GL_LIGHT2, GL_POSITION, (GLfloat *) &escena_p3.sol.posicion);
+    GLfloat posicion_sol[] = {escena_p3.sol.posicion.x, escena_p3.sol.posicion.y, escena_p3.sol.posicion.z, 1.0};
+    glLightfv(GL_LIGHT2, GL_POSITION, posicion_sol);
 
     glDisable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
@@ -929,19 +934,32 @@ int prepara_textura (char *file)
         unsigned char *r = image.data(x, y, 0, 0);
         unsigned char *g = image.data(x, y, 0, 1);
         unsigned char *b = image.data(x, y, 0, 2);
+        //unsigned char *a = image.data(x, y, 0, 3);
         data.push_back(*r);
         data.push_back(*g);
         data.push_back(*b);
+        //data.push_back(*a);
+        if (image.spectrum() == 4) {
+            unsigned char *a = image.data(x, y, 0, 3);
+            data.push_back(*a);
+        }
         }
 
     glGenTextures(1,(GLuint *) &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+
     //TRASFIERE LOS DATOS A GPU
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(),
+    if (image.spectrum() == 4)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+    else
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(),
         0, GL_RGB, GL_UNSIGNED_BYTE, &data[0]);
     
     return tex_id;
@@ -1005,7 +1023,13 @@ int main(int argc, char *argv[] )
     glutDisplayFunc(draw);
     glutIdleFunc(animacion);
     initialize();
-    id_tex=prepara_textura("./skybox.jpg");
+    //glDisable(GL_LIGHTING);
+    //glDisable(GL_BLEND);
+    //glDepthMask(GL_FALSE);
+    id_tex=prepara_textura("./campo.png");
+    //glEnable(GL_LIGHTING);
+    //glEnable(GL_BLEND);
+    //glDepthMask(GL_TRUE);
 
 
     // funcion de inicialización

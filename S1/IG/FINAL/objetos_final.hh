@@ -343,7 +343,7 @@ public:
     void    draw_solido_phong_flat(Color color, GLfloat ratio_difuso, Color especular, float brillo);
     void    draw_solido_phong_gouraud(Color color, GLfloat ratio_difuso, Color especular, float brillo);
     void    draw_solido_textura(int etiqueta);
-    void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default, GLfloat ratio_difuso = 0.8, Color especular = Color(0.6f,0.6,0.6,1.0), float brillo = 20);
+    void draw(_modo modo, Color color = Color::c_default, float grosor = 5, Coordenadas pos = coordenadas_default, GLfloat ratio_difuso = 1, Color especular = Color(0.6f,0.6,0.6,1.0), float brillo = 20);
 
     void colors_random();
     void colors_chess(float r1, float g1, float b1, float r2, float g2, float b2);
@@ -506,7 +506,7 @@ public:
     //Color luz_ambiente;
 
 
-    _sol(GLfloat radio = 1, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol({0.3f, 0.1, 0.04}, {1.0f, 0.95, 0.85}) {};
+    _sol(GLfloat radio = 1, Coordenadas pos = coordenadas_default) : radio(radio), posicion(pos), color_sol({0.3f, 0.1, 0.04}, {0.7f, 0.65, 0.55}) {};
     void draw(_modo modo, float grosor = 5); // , Coordenadas pos = coordenadas_default);, Coordenadas pos = coordenadas_default
     void actualizar_sol_hora(GLfloat hora);     
 };

@@ -194,7 +194,7 @@ void _triangulos3D::draw_solido_phong_flat(Color color, GLfloat ratio_difuso, Co
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &color.actual);
-    Color color_difuso = color.actual * ratio_difuso;
+    Color color_difuso = color.actual; //* ratio_difuso;
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &(color_difuso));
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, brillo);
@@ -222,7 +222,7 @@ void _triangulos3D::draw_solido_phong_gouraud(Color color, GLfloat ratio_difuso,
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat *) &color.actual);
-    Color color_difuso = color.actual * ratio_difuso;
+    Color color_difuso = color.actual; //* ratio_difuso;
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (GLfloat *) &(color_difuso));
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat *) &especular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, brillo);
@@ -252,7 +252,7 @@ void _triangulos3D::draw_solido_textura(int etiqueta)
 {
 glEnable(GL_TEXTURE_2D);
 glBindTexture(GL_TEXTURE_2D, etiqueta);
-glColor3f(1.0, 1.0, 1.0);
+glColor4f(1.0, 1.0, 1.0, 1.0);
 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 glBegin(GL_TRIANGLES);
     for (size_t i = 0; i < caras.size(); i++)
@@ -267,6 +267,8 @@ glBegin(GL_TRIANGLES);
         glVertex3fv((GLfloat *) &vertices[caras[i]._2]);
     }
 glEnd();
+glBindTexture(GL_TEXTURE_2D, 0); // Desvincula la textura
+glDisable(GL_TEXTURE_2D);        // Deshabilita las texturas
 }
 
 
@@ -501,17 +503,17 @@ void _rotacion::parametros(vector<_vertex3f> perfil, size_t num, bool tapa_infer
 
     //colores de las caras
     colors_random();
-    if (tipo == 1)
-    {
-        calcular_normales_caras();
-        normales_vertices.resize(vertices.size());
-        for (size_t i = 0; i < vertices.size(); i++)
-        {
-            _vertex3f normal = vertices[i];
-            normales_vertices.push_back(normal.normalize());
-        }
-    }
-    else
+    //if (tipo == 1)
+    //{
+    //    calcular_normales_caras();
+    //    normales_vertices.resize(vertices.size());
+    //    for (size_t i = 0; i < vertices.size(); i++)
+    //    {
+    //        _vertex3f normal = vertices[i];
+    //        normales_vertices.push_back(normal.normalize());
+    //    }
+    //}
+    //else
         calcular_normales_vertices();
 }
 
@@ -598,8 +600,8 @@ _cubo_tex::_cubo_tex(float tam)
 {
     //texturas_vertices
     vertices.resize(14);
-    vertices[0].x = -tam;       vertices[0].y = tam;      vertices[0].z = -tam; 
-    vertices[1].x = tam;        vertices[1].y = tam;      vertices[1].z = -tam; 
+    vertices[0].x = -tam;       vertices[0].y = -tam;      vertices[0].z = tam; 
+    vertices[1].x = tam;        vertices[1].y = -tam;      vertices[1].z = tam; 
     vertices[2].x = tam;     vertices[2].y = -tam;      vertices[2].z = -tam; 
     vertices[3].x = -tam;     vertices[3].y = -tam;      vertices[3].z = -tam; 
     vertices[4].x = -tam;     vertices[4].y = tam;      vertices[4].z = tam;
@@ -616,7 +618,7 @@ _cubo_tex::_cubo_tex(float tam)
 
     // triangulos
     caras.resize(12);
-    caras[0]._0 = 6;    caras[0]._1 = 1;    caras[0]._2 = 4;
+    caras[0]._0 = 0;    caras[0]._1 = 1;    caras[0]._2 = 4;
     caras[1]._0 = 1;    caras[1]._1 = 5;    caras[1]._2 = 4;
     caras[2]._0 = 1;    caras[2]._1 = 2;    caras[2]._2 = 5;
     caras[3]._0 = 2;    caras[3]._1 = 6;    caras[3]._2 = 5;
@@ -624,10 +626,10 @@ _cubo_tex::_cubo_tex(float tam)
     caras[5]._0 = 3;    caras[5]._1 = 7;    caras[5]._2 = 6;
     caras[6]._0 = 3;    caras[6]._1 = 8;    caras[6]._2 = 7;
     caras[7]._0 = 8;    caras[7]._1 = 9;    caras[7]._2 = 7;
-    caras[8]._0 = 10;   caras[8]._1 = 12;   caras[8]._2 = 1;
-    caras[9]._0 = 2;    caras[9]._1 = 12;   caras[9]._2 = 1;
-    caras[10]._0 =5;    caras[10]._1 =6;    caras[10]._2= 11;
-    caras[11]._0 =6;    caras[11]._1 =13;   caras[11]._2= 11;
+    caras[8]._0 = 5;    caras[8]._1 = 6;    caras[8]._2 = 11;
+    caras[9]._0 = 6;    caras[9]._1 = 13;   caras[9]._2 = 11;
+    caras[10]._0 =10;   caras[10]._1 =12;   caras[10]._2= 1;
+    caras[11]._0 =12;   caras[11]._1 =2;    caras[11]._2= 1;
 
     texturas_vertices.resize(14);
     texturas_vertices[0]._0 = 0.0;  texturas_vertices[0]._1 = 0.5;
@@ -637,63 +639,17 @@ _cubo_tex::_cubo_tex(float tam)
     texturas_vertices[4]._0 = 0.0;  texturas_vertices[4]._1 = 0.25;
     texturas_vertices[5]._0 = 0.25;  texturas_vertices[5]._1 = 0.25;
     texturas_vertices[6]._0 = 0.5;  texturas_vertices[6]._1 = 0.25;
-    texturas_vertices[7]._0 = 0.25;  texturas_vertices[7]._1 = 0.75;
+    texturas_vertices[7]._0 = 0.75;  texturas_vertices[7]._1 = 0.25;
+
     texturas_vertices[8]._0 = 1.0;  texturas_vertices[8]._1 = 0.5;
     texturas_vertices[9]._0 = 1.0;  texturas_vertices[9]._1 = 0.25;
-    texturas_vertices[10]._0 = 0.5;  texturas_vertices[10]._1 = 0.75;
+    texturas_vertices[10]._0 = 0.25;  texturas_vertices[10]._1 = 0.75;
     texturas_vertices[11]._0 = 0.25;  texturas_vertices[11]._1 = 0.0;
-    texturas_vertices[12]._0 = 0.25;  texturas_vertices[12]._1 = 0.75;
+    texturas_vertices[12]._0 = 0.5;  texturas_vertices[12]._1 = 0.75;
     texturas_vertices[13]._0 = 0.5;  texturas_vertices[13]._1 = 0.0; 
-/*
-    //texturas_vertices
-    vertices.resize(14);
-    vertices[0].x = -tam;     vertices[0].y = -tam;      vertices[0].z = tam; 
-    vertices[1].x = tam;     vertices[1].y = -tam;      vertices[1].z = tam; 
-    vertices[2].x = tam;     vertices[2].y = -tam;      vertices[2].z = -tam; 
-    vertices[3].x = -tam;     vertices[3].y = -tam;      vertices[3].z = -tam; 
-    vertices[4].x = -tam;     vertices[4].y = tam;      vertices[4].z = tam;
-    vertices[5].x = tam;     vertices[5].y = tam;      vertices[5].z = tam;
-    vertices[6].x = tam;     vertices[6].y = tam;      vertices[6].z = -tam;
-    vertices[7].x = -tam;     vertices[7].y = tam;      vertices[7].z = -tam;
-    // vertices extra para las texturas
-    vertices[8].x  = -tam;      vertices[8].y = -tam;     vertices[8].z  = tam;
-    vertices[9].x  = -tam;      vertices[9].y = tam;     vertices[9].z  = tam;
-    vertices[10].x = -tam;     vertices[10].y = -tam;     vertices[10].z = tam;
-    vertices[11].x = -tam;     vertices[11].y = tam;     vertices[11].z = tam;
-    vertices[12].x = -tam;     vertices[12].y = -tam;     vertices[12].z = -tam;
-    vertices[13].x = -tam;     vertices[13].y = tam;     vertices[13].z = -tam;
 
-    // triangulos
-    caras.resize(12);
-    caras[0]._0 = 6;    caras[0]._1 = 1;    caras[0]._2 = 4;
-    caras[1]._0 = 1;    caras[1]._1 = 5;    caras[1]._2 = 4;
-    caras[2]._0 = 1;    caras[2]._1 = 2;    caras[2]._2 = 5;
-    caras[3]._0 = 2;    caras[3]._1 = 6;    caras[3]._2 = 5;
-    caras[4]._0 = 2;    caras[4]._1 = 3;    caras[4]._2 = 6;
-    caras[5]._0 = 3;    caras[5]._1 = 7;    caras[5]._2 = 6;
-    caras[6]._0 = 3;    caras[6]._1 = 8;    caras[6]._2 = 7;
-    caras[7]._0 = 8;    caras[7]._1 = 9;    caras[7]._2 = 7;
-    caras[8]._0 = 10;   caras[8]._1 = 12;   caras[8]._2 = 1;
-    caras[9]._0 = 2;    caras[9]._1 = 12;   caras[9]._2 = 1;
-    caras[10]._0 =5;    caras[10]._1 =6;    caras[10]._2= 11;
-    caras[11]._0 =6;    caras[11]._1 =13;   caras[11]._2= 11;
-
-    texturas_vertices.resize(14);
-    texturas_vertices[0]._0 = 0.0;  texturas_vertices[0]._1 = 0.5;
-    texturas_vertices[1]._0 = 0.25;  texturas_vertices[1]._1 = 0.5;
-    texturas_vertices[2]._0 = 0.5;  texturas_vertices[2]._1 = 0.5;
-    texturas_vertices[3]._0 = 0.75;  texturas_vertices[3]._1 = 0.5;
-    texturas_vertices[4]._0 = 0.0;  texturas_vertices[4]._1 = 0.25;
-    texturas_vertices[5]._0 = 0.25;  texturas_vertices[5]._1 = 0.25;
-    texturas_vertices[6]._0 = 0.5;  texturas_vertices[6]._1 = 0.25;
-    texturas_vertices[7]._0 = 0.25;  texturas_vertices[7]._1 = 0.75;
-    texturas_vertices[8]._0 = 1.0;  texturas_vertices[8]._1 = 0.5;
-    texturas_vertices[9]._0 = 1.0;  texturas_vertices[9]._1 = 0.25;
-    texturas_vertices[10]._0 = 0.5;  texturas_vertices[10]._1 = 0.75;
-    texturas_vertices[11]._0 = 0.25;  texturas_vertices[11]._1 = 0.0;
-    texturas_vertices[12]._0 = 0.25;  texturas_vertices[12]._1 = 0.75;
-    texturas_vertices[13]._0 = 0.5;  texturas_vertices[13]._1 = 0.0; 
-*/
+    colors_random();
+    calcular_normales_vertices();
 }
 
 _piramide::_piramide(Coordenadas tam) : tam(tam)
@@ -1491,16 +1447,16 @@ void _molino::draw(_modo modo, float grosor) // , Coordenadas pos)
             // Lo subo al tejado
             glTranslatef(0.0, altura_casa, 0.0);
             // Lo elevo sobre el nivel base
-            Color material_especular_tejado(0.0f, 0.0, 0.0, 1.0);
-            GLfloat brillo_tejado = 5.0f;
-            tejado.draw(modo, color_molino_tejado, grosor, coordenadas_default, 0.2, material_especular_tejado, brillo_tejado);
+            Color material_especular_tejado(1.0f, 1.0, 1.0, 1.0);
+            GLfloat brillo_tejado = 70.0f; // Ls tan tan alto porque si no no se ve
+            tejado.draw(modo, color_molino_tejado, grosor, coordenadas_default, 1, material_especular_tejado, brillo_tejado);
         glPopMatrix();
         // Dibulo la casa
         glPushMatrix();
             //cerr << "Hola hoal2" << endl;
-            Color material_especular_casa(1.0f, 1.0, 1.0, 1.0);
-            GLfloat brillo_casa = 100.0f;
-            casa.draw(modo, color_molino_casa, grosor, coordenadas_default, 0.9, material_especular_casa, brillo_casa);
+            Color material_especular_casa(0.0f, 0.0, 0.0, 1.0);
+            GLfloat brillo_casa = 5.0f;
+            casa.draw(modo, color_molino_casa, grosor, coordenadas_default, 1, material_especular_casa, brillo_casa);
         glPopMatrix();
 
         // Dibujo la hélice
