@@ -6,14 +6,6 @@ using namespace std;
 // Funciones principales
 /*************************************************************************/
 
-Interprete::Interprete_Driver::~Interprete_Driver()
-{
-    delete(parser);
-    parser = nullptr;
-    delete(tokenizador);
-    tokenizador = nullptr;
-}
-
 void
 Interprete::Interprete_Driver::leer_fuente(const string &fichero_fuente)
 {
@@ -42,10 +34,9 @@ Interprete::Interprete_Driver::leer_input(istream &input_fuente)
     // porque lo considera un error, es por eso que he puesto que falle si fail o bad
 
     // Intento crear el tokenizador
-    delete(tokenizador);
     try
     {
-        tokenizador = new Interprete::Interprete_Tokenizador( &input_fuente );
+        tokenizador = make_unique<Interprete::Interprete_Tokenizador>(&input_fuente);
     }
     catch( bad_alloc &ba )
     {
@@ -54,10 +45,9 @@ Interprete::Interprete_Driver::leer_input(istream &input_fuente)
     }
 
     // Intento crear el parser
-    delete(parser); 
     try
     {
-        parser = new Interprete::Interprete_Parser((*tokenizador), (*this));
+        parser = make_unique<Interprete::Interprete_Parser>((*tokenizador), (*this));
     }
     catch( bad_alloc &ba )
     {
@@ -72,6 +62,8 @@ Interprete::Interprete_Driver::leer_input(istream &input_fuente)
         cerr << TEXTO_ROJO << "ERROR: Al ejecutar el parser" << TEXTO_NORMAL << endl;
         exit( EXIT_FAILURE );
     }
+    else
+        cerr << TEXTO_VERDE << "EJECUCIÓN DEL PARSER COMPLETADA" << TEXTO_NORMAL << endl;
 }
 
 void

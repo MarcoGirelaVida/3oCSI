@@ -65,14 +65,52 @@ public:
     static bool es_mismo_tipo(const tipo_variable & valor, const char prefijo_tipo);
     static bool es_mismo_tipo(const tipo_variable & valor, const string identificador);
 };
+
+// Clase para manejar el contexto y la tabla de símbolos
+class Contexto
+{
+private:
+    unordered_map<string, tipo_variable> tabla_simbolos_local;
+    shared_ptr<Contexto> contexto_padre;
+    const size_t profundidad;
+
+public:
+    // Uso shared_ptr para que se libere memoria cuando ya no se va a usar más un contexto (una función por ejemplo)
+    Contexto(shared_ptr<Contexto> contexto_padre = nullptr)
+    :   contexto_padre(contexto_padre),
+        profundidad(contexto_padre != nullptr ? contexto_padre->profundidad + 1 : 0)
+    {}
+ 
+    size_t get_profundidad() const { return profundidad; }
+
+    // Agregar o actualizar una variable en el contexto actual
+    void definir(const string& identificador, tipo_variable valor);
+
+    // Obtener una variable (busca en el contexto actual y padres)
+    tipo_variable valor_de(const string& identificador) const;
+
+    shared_ptr<Contexto> push_contexto()
+    {
+        return make_shared<Contexto>(Contexto(*this));
+    }
+
+    shared_ptr<Contexto> pop_contexto()
+    {
+        if (contexto_padre == nullptr)
+        {
+            throw runtime_error("Error: No se puede hacer más pops");
+        }
+        return contexto_padre;
+    }
+};
 class Interprete_Driver
 {
 private:
-    Interprete::Interprete_Parser *parser = nullptr;
-    Interprete::Interprete_Tokenizador *tokenizador = nullptr;
+    unique_ptr<Interprete::Interprete_Parser> parser;
+    unique_ptr<Interprete::Interprete_Tokenizador> tokenizador;
 
     // Aquí debo declarar el AST
-    Interprete::Contexto *contexto_actual = nullptr;
+    shared_ptr<Contexto> contexto_actual;
 
     bool MODO_VERBOSO = false;
 
@@ -80,8 +118,12 @@ public:
     /*************************************************************************/
     // Funciones principales
     /*************************************************************************/
-    Interprete_Driver() = default;
-    virtual ~Interprete_Driver();
+    Interprete_Driver()
+    :   parser(nullptr),
+        tokenizador(nullptr),
+        contexto_actual(make_shared<Contexto>())
+    {}
+    virtual ~Interprete_Driver() = default;
 
     void set_modo_verboso(bool modo) { MODO_VERBOSO = modo; }
 
@@ -90,12 +132,12 @@ public:
 
     void push_contexto()
     {
-        Interprete::Contexto nuevo_contexto = Contexto(contexto_actual);
+        contexto_actual = contexto_actual->push_contexto();
     }
 
     void pop_contexto()
     {
-        
+        contexto_actual = contexto_actual->pop_contexto();
     }
 
 private:
@@ -110,31 +152,6 @@ private:
     // De compilacion
     /*************************************************************************/
     //void compilar_to_cpp(const string &FICHERO_CPP = NOMBRE_CPP_BASE, const string &ejecutable, const string &variables_compilacion, const bool conservar_cpp);
-
-};
-
-// Clase para manejar el contexto y la tabla de símbolos
-class Contexto
-{
-private:
-    unordered_map<string, tipo_variable> tabla_simbolos_local;
-    shared_ptr<Contexto> contexto_padre;
-    const size_t profundidad;
-
-public:
-    // Uso shared_ptr para que se libere memoria cuando ya no se va a usar más un contexto (una función por ejemplo)
-    Contexto(shared_ptr<Contexto> contexto_padre = nullptr)
-    :   contexto_padre(contexto_padre),
-        profundidad(contexto_padre ? contexto_padre->profundidad + 1 : 0)
-    {}
- 
-    size_t get_profundidad() const { return profundidad; }
-
-    // Agregar o actualizar una variable en el contexto actual
-    void definir(const string& identificador, tipo_variable valor);
-
-    // Obtener una variable (busca en el contexto actual y padres)
-    tipo_variable valor_de(const string& identificador) const;
 
 };
 

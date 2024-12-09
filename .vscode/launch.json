@@ -8,7 +8,7 @@
             "cwd":      "${workspaceFolder}/S1/MC/P1",
             "program":  "${workspaceFolder}/S1/MC/P1/build/bin/marco_language",
             "args": [
-                "./test/fuente.marco",
+                "./test/data/fuente.marco",
                 "--test"
             ],
             "setupCommands": [
@@ -34,7 +34,7 @@
             "cwd":      "${workspaceFolder}/S1/MC/P1",
             "program":  "${workspaceFolder}/S1/MC/P1/build/bin/marco_language",
             "args": [
-                "./test/fuente.marco",
+                "./test/data/fuente.marco",
                 "--help",
                 "--test"
             ],
