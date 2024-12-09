@@ -10,7 +10,8 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
-#include <stack>
+#include <list>
+#include <queue>
 #include <exception>
 #include <filesystem>
 #include <array>
@@ -66,11 +67,33 @@ public:
     static bool es_mismo_tipo(const tipo_variable & valor, const string identificador);
 };
 
+
+class Nodo_AST : public enable_shared_from_this<Nodo_AST>
+{
+public:
+    weak_ptr<Nodo_AST> padre;  
+    list<shared_ptr<Nodo_AST>> hijo;
+    tipo_variable valor;
+
+public:
+    virtual ~Nodo_AST() = default;
+
+    void add_hijo(const shared_ptr<Nodo_AST>& nuevo_hijo)
+    {
+        nuevo_hijo->padre = shared_from_this();
+        hijo.push_back(nuevo_hijo);
+    }
+
+    virtual string to_string() const = 0;
+};
+
+
 // Clase para manejar el contexto y la tabla de símbolos
 class Contexto
 {
 private:
     unordered_map<string, tipo_variable> tabla_simbolos_local;
+    unordered_map<string, queue<Nodo_AST>> funciones;
     shared_ptr<Contexto> contexto_padre;
     const size_t profundidad;
 
@@ -83,8 +106,12 @@ public:
  
     size_t get_profundidad() const { return profundidad; }
 
-    // Agregar o actualizar una variable en el contexto actual
+    // Añadir una variable al contexto actual
     void definir(const string& identificador, tipo_variable valor);
+
+    // Añadir una función al contexto actual
+    void definir_funcion(const string& identificador, Nodo_AST& funcion);
+
 
     // Obtener una variable (busca en el contexto actual y padres)
     tipo_variable valor_de(const string& identificador) const;
@@ -103,6 +130,7 @@ public:
         return contexto_padre;
     }
 };
+
 class Interprete_Driver
 {
 private:

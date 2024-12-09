@@ -198,7 +198,10 @@ tipo_variable Interprete::Tipos_Datos::valor_default(const size_t index)
 // Con identificador
 char Interprete::Tipos_Datos::prefijo(const string identificador)
 {
-    const string prefijo = identificador.substr(0, identificador.find('-'));
+    string prefijo = identificador.substr(0, identificador.find('-'));
+    if (prefijo.at(0) == 'F')
+        prefijo = prefijo.substr(0, prefijo.find('-'));
+
     if (prefijo.at(0) == 'C')
         return prefijo.at(1);
     else

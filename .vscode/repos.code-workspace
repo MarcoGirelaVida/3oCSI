@@ -83,7 +83,16 @@
             "cinttypes": "cpp",
             "typeinfo": "cpp",
             "variant": "cpp",
-            "cassert": "cpp"
+            "cassert": "cpp",
+            "any": "cpp",
+            "condition_variable": "cpp",
+            "csignal": "cpp",
+            "forward_list": "cpp",
+            "list": "cpp",
+            "map": "cpp",
+            "set": "cpp",
+            "unordered_set": "cpp",
+            "mutex": "cpp"
         },
     }
 }
