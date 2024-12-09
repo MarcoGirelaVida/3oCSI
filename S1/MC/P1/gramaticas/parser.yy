@@ -119,15 +119,15 @@ cosas de bison:
 
 // Un programa C es una serie de definiciones y declaraciones
 programa_marco:
-        "Fin del fichero"
-        | elementos_programa "Fin del fichero"
+        elementos_programa "Fin del fichero"
+        | "Fin del fichero"
         ;
 
 elementos_programa:
-        "Salto de linea"
-        | elemento_programa "Salto de linea"
+        elementos_programa elemento_programa "Salto de linea"
         | elementos_programa "Salto de linea"
-        | elementos_programa elemento_programa "Salto de linea"
+        | elemento_programa "Salto de linea"
+        | "Salto de linea"
         /* para hacerlo igual que C habria que añadir una regla para 
         las declaraciones pero ya he dicho que eso se hace automatico 
         Además siempre las nuevas cosas se ponen a la derecha de las antiguas
