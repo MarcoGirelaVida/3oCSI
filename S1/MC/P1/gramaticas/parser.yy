@@ -49,20 +49,62 @@ cosas de bison:
 // Le pongo los alias a los signos porque los hemos puesto con raw
 //%define api.token.prefix {TOKEN_}
 %token FIN_FICHERO 0 "Fin del fichero"
+%token SALTO_LINEA "Salto de linea"
 %token <std::string> IDENTIFICADOR "Identificador"
+%token <std::string> ID_FUNCION "Identificador_funcion"
+
+
 %token
-  ASIGNACION   "->"
-  MENOS         "-"
-  MAS           "+"
-  MULT          "*"
-  DIVISION      "/"
-  ABRE_PAREN    "("
-  CIERRA_PAREN  ")"
+    ASIGNACION        "->"
+
+    ABRE_CONTEXTO
+    CIERRA_CONTEXTO
+    IF
+    THEN
+    ELSE
+    ELSEIF
+    FOR
+    FROM
+    TO
+    STEP
+    DO_BUCLES
+    WHILE
+
+    BOOL_OR           "or"
+    BOOL_AND          "and"
+    BOOL_NOT          "not"
+    BOOL_IGUAL        "=="
+    BOOL_DISTINTO     "!="
+    BOOL_MAYOR        ">"
+    BOOL_MAYORIGUAL   ">="
+    BOOL_MENOR        "<"
+    BOOL_MENORIGUAL   "<="
+    BOOL_TRUE         "True"
+    BOOL_FALSE        "False"
+
+    MENOS             "-"
+    MAS               "+"
+    MULT              "*"
+    DIVISION          "/"
+
+    ABRE_PAREN        "("
+    CIERRA_PAREN      ")"
+    ABRE_CORCHETE     "["
+    CIERRA_CORCHETE   "]"
+    ABRE_LLAVE        "{"
+    CIERRA_LLAVE      "}"
+    COMA              ","
+    PUNTO_COMA        ";"
+    PUNTO             "."
+    DOS_PUNTOS        ":"
 ;
+
+
 %token <int>    ENTERO  "Entero"
 %token <float>  FLOAT   "Float"
-%nterm <float>    expr_arit
+%token <std::string>    STRING  "string"
 
+%token RETURN "return"
 %token PRINT "print"
 //%token LOGIC_ASIGNACION LOGIC_CIERRA_CONTEXTO LOGIC_IF LOGIC_THEN LOGIC_FROM LOGIC_TO LOGIC_STEP LOGIC_FOR LOGIC_DO_BUCLES LOGIC_WHILE LOGIC_TERMINAL_PROGRAMA //LOGIC_UNTIL LOGIC_REPEAT LOGIC_BREAK LOGIC_CONTINUE
 //%token BOOL_AND BOOL_OR BOOL_NOT BOOL_IGUAL BOOL_DISTINTO BOOL_MAYOR BOOL_MAYORIGUAL BOOL_MENOR BOOL_MENORIGUAL BOOL_TRUE BOOL_FALSE
@@ -77,94 +119,167 @@ cosas de bison:
 
 // Un programa C es una serie de definiciones y declaraciones
 programa_marco:
-        definiciones "Fin del fichero"
+        "Fin del fichero"
+        | elementos_programa "Fin del fichero"
         ;
 
-definiciones:
-        %empty
-        | definiciones asignacion
+elementos_programa:
+        "Salto de linea"
+        | elemento_programa "Salto de linea"
+        | elementos_programa "Salto de linea"
+        | elementos_programa elemento_programa "Salto de linea"
         /* para hacerlo igual que C habria que añadir una regla para 
         las declaraciones pero ya he dicho que eso se hace automatico 
         Además siempre las nuevas cosas se ponen a la derecha de las antiguas
         "después de leer un número cualquiera de definiciones, intenta leer una nueva
         definición hasta que no puedas leer más*/
-        | definiciones llamada_funcion
         /*
         | programa_marco error
         */
         ;
 
+elemento_programa: elemento_compuesto | elemento_simple;
+
+elemento_simple:
+        expresion
+        | asignacion
+        | return
+        ;
+    
+elemento_compuesto:
+        definicion_funcion
+        | condicional
+        | bucle_for
+        | bucle_while
+        ;
+
+//---ELEMENTOS SIMPLES---
 asignacion:
-        "Identificador" "->" expr_arit
+        "Identificador" "->" expresion
         {
-            //interprete_driver.tabla_simbolos[1] = 3
-            // Y creo un nodo asignación o algo así
         }
-        //| "Identificador" "->" expr_bool
-        //{
-        //    // Comprobar que sea un booleano
-        //}
-        //| "Identificador" "->" "Identificador"
-        //{
-        //    // Comprobar que los tipos de las variables son compatibles
-        //    // Dado que el atributo valor de las variables es siempre un string independientemente de su tipo,
-        //    // se puede hacer la asignación directamente sin hacer switch ni cosas por el estilo
-        //}
         | "Identificador" "->" error
         {
-            //Interprete::Interprete_Parser::error(location, "se ha asignado un tipo erroneo")
         }
         ;
 
-%left "-" "+";
-%left "*" "/";
-expr_arit:
-        "Float"
-        | "Identificador"
+return: "return" expresion
         {
-            // Comprobar que la variable es un número
-            //if (tabla_simbolos[variable].tipo != ENTERO && tabla_simbolos[variable].tipo != REAL)
-            //    yyerror("La variable " + variable + " no es un número");
         }
-        /*mandar warnings si los operandos son de tipos distintos*/
-        | expr_arit "+" expr_arit
+        | "return" error
         {
-            $$ = $1 + $3;
         }
-        | expr_arit "-" expr_arit
-        {
-            $$ = $1 - $3;
-        }
-        | expr_arit "*" expr_arit
-        {
-            $$ = $1 * $3;
-        }
-        | expr_arit "/" expr_arit
-        {
-            if ($3 == 0)
-            {
-                //yyerror("Se ha intentado dividir por 0, se usará 1 como dividendo");
-                //yyerrok;
-                $$ = $1 / 1;
-            }
-            else
-                $$ = $1 / $3;
-        }
-        | "(" expr_arit ")"
-        {
-            $$ = $2;
-        }
-        //| "-" expr_arit
-        //{
-        //    $$ = -$2;
-        //}
+        ;
+
+expresion: lista_ors;
+
+lista_ors:
+        lista_ors "or" lista_ands
+        | lista_ands
+        ;
+
+lista_ands:
+        lista_ands "and" lista_not
+        | lista_not
+        ;
+
+lista_not:
+        "not" lista_not
+        | lista_comparaciones
+        ;
+
+lista_comparaciones:
+        suma_resta comparacion
+        | suma_resta
+        ;
+
+comparacion:
+        "==" suma_resta
+        | "!=" suma_resta
+        | ">" suma_resta
+        | ">=" suma_resta
+        | "<" suma_resta
+        | "<=" suma_resta
+        ;
+
+suma_resta:
+        suma_resta "+" producto_division_modulo
+        | suma_resta "-" producto_division_modulo
+        | producto_division_modulo
+        ;
+
+producto_division_modulo:
+        producto_division_modulo "*" operando
+        | producto_division_modulo "/" operando
+        | operando
+        ;
+    
+operando:
+        "+" operando
+        | "-" operando
+        | llamada_funcion
         ;
 
 llamada_funcion:
-        PRINT expr_arit
-        {
-            cout << (float) $2 << endl;
-        }
+        llamada_funcion "(" argumentos ")"
+        //| llamada_funcion "[" argumentos "]"
+        | variable
+        ;
+
+variable:
+        "Identificador"
+        | "True"
+        | "False"
+        | "string"
+        | "Entero"
+        | "Float"
+        ;
+
+argumentos:
+        argumentos "," expresion
+        | expresion
+        ;
+//---ELEMENTOS COMPUESTOS---
+
+bloque:
+        ABRE_CONTEXTO elementos_programa CIERRA_CONTEXTO
+        | elemento_programa
+        ;
+
+// FUNCIONES
+definicion_funcion:
+        "Identificador_funcion" ABRE_PAREN lista_parametros CIERRA_PAREN bloque
+        ;
+
+lista_parametros:
+        lista_parametros "," IDENTIFICADOR
+        | IDENTIFICADOR
+        ;
+
+// CONDICIONALES
+condicional:
+        IF expresion THEN bloque condicional_elseif
+        | IF expresion THEN bloque ELSE bloque
+        | IF expresion THEN bloque
+        ;
+condicional_elseif:
+        ELSEIF expresion THEN bloque condicional_elseif
+        | ELSEIF expresion THEN bloque ELSE bloque
+        | ELSEIF expresion THEN bloque
+        ;
+
+// BUCLES
+bucle_for:
+        FOR expresion FROM expresion TO expresion STEP expresion DO_BUCLES bloque
+        | FOR expresion FROM expresion TO expresion DO_BUCLES bloque
+        | FROM expresion TO expresion STEP expresion DO_BUCLES bloque
+        | FROM expresion TO expresion DO_BUCLES bloque
+        | FOR expresion STEP expresion DO_BUCLES bloque
+        | FOR expresion DO_BUCLES bloque
+        ;
+
+bucle_while:
+        WHILE expresion DO_BUCLES bloque
         ;
 %%
 

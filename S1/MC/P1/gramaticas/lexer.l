@@ -32,11 +32,24 @@ using Parser = Interprete::Interprete_Parser; // Sino es un coñazo
 %{
 // Constructores de tokens
 //Parser::symbol_type make_NUMERO (const std::string &s, const Parser::location_type& loc);
+//CARACTER        \'{LETRA}\' 
 %}
 
 MAYUSCULA       [A-Z]
-TEXTO           [a-zA-Z_0-9]+
-NUMERO_ENTERO   [0-9]+
+LETRA           [a-zA-Z]
+DIGITO          [0-9]
+LETRA_DIGITO    {LETRA}|{DIGITO}
+NOMBRE_ID       {LETRA}({LETRA_DIGITO})*
+ID              {MAYUSCULA}-{NOMBRE_ID}
+ID_CONSTANTE    "C"{ID}
+ID_FUNCION      "F"-{NOMBRE_ID}
+ID_FUNCION_CONSTANTE "C"{ID_FUNCION}
+STRING          \"[^\"]*\"
+
+NUMERO_ENTERO   {DIGITO}+
+NUMERO_REAL     {NUMERO_ENTERO}\.{NUMERO_ENTERO}
+
+SALTO_LINEA     \n
 ESPACIO_BLANCO  [ \t\r]
 
 %{
@@ -50,26 +63,66 @@ ESPACIO_BLANCO  [ \t\r]
     yylval = lval;
     //std::cerr << "Token leido: " << yytext << std::endl;
 %}
-{ESPACIO_BLANCO}+               { /* no hacer nada */ }
-\n+                             { loc->lines(yyleng); }
+{ESPACIO_BLANCO}+                                       { /* no hacer nada */ }
+{SALTO_LINEA}+                                          { loc->lines(yyleng); return Parser::token::SALTO_LINEA; }
 
-{MAYUSCULA}-{TEXTO}|"C"{MAYUSCULA}-{TEXTO}              {   yylval->build<std::string>(yytext);
+{STRING}                                                {   yylval->build<std::string>(yytext);
+                                                            return Parser::token::STRING; }
+                                                        
+{ID}|{ID_CONSTANTE}                                     {   yylval->build<std::string>(yytext);
                                                             return Parser::token::IDENTIFICADOR; }
+{ID_FUNCION}|{ID_FUNCION_CONSTANTE}                     {   yylval->build<std::string>(yytext);
+                                                            return Parser::token::ID_FUNCION; }
 {NUMERO_ENTERO}                                         {   yylval->build<int>(std::stoi(yytext));
                                                             return Parser::token::ENTERO; }
-{NUMERO_ENTERO}\.{NUMERO_ENTERO}                        {   yylval->build<float>(std::stof(yytext));
+{NUMERO_REAL}                                           {   yylval->build<float>(std::stof(yytext));
                                                             return Parser::token::FLOAT; }
-"->"                                                    { return Parser::token::ASIGNACION; }
 
-"+"                                                     { return Parser::token::MAS; }
-"-"                                                     { return Parser::token::MENOS; }
-"*"                                                     { return Parser::token::MULT; }
-"/"                                                     { return Parser::token::DIVISION; }
+"->"                            { return Parser::token::ASIGNACION; }
+"|***"                          { return Parser::token::ABRE_CONTEXTO; }
+"|___"                          { return Parser::token::CIERRA_CONTEXTO; }
+"¿("                            { return Parser::token::IF; }
+")?-->"                         { return Parser::token::THEN; }
+"|X-->"                         { return Parser::token::ELSEIF; }
+"|X--"                          { return Parser::token::ELSE; }
+"FOR"                           { return Parser::token::FOR; }
+"FROM"                          { return Parser::token::FROM; }
+"TO"                            { return Parser::token::TO; }
+"BY_STEP"                       { return Parser::token::STEP; }
+"REPEAT-->"                     { return Parser::token::DO_BUCLES; }
+"WHILE"                         { return Parser::token::WHILE; }
+"DEVUELVE"                      { return Parser::token::RETURN; }
+"MUESTRAME"                     { return Parser::token::PRINT; }
 
-"("                                                     { return Parser::token::ABRE_PAREN; }
-")"                                                     { return Parser::token::CIERRA_PAREN; }
+"^"                             { return Parser::token::BOOL_AND; }
+"v"                             { return Parser::token::BOOL_OR; }
+"~"                             { return Parser::token::BOOL_NOT; }
+"=="                            { return Parser::token::BOOL_IGUAL; }
+"~="                            { return Parser::token::BOOL_DISTINTO; }
+">"                             { return Parser::token::BOOL_MAYOR; }
+">="                            { return Parser::token::BOOL_MAYORIGUAL; }
+"<"                             { return Parser::token::BOOL_MENOR; }
+"<="                            { return Parser::token::BOOL_MENORIGUAL; }
+"TRUE"                          { return Parser::token::BOOL_TRUE; }
+"FALSE"                         { return Parser::token::BOOL_FALSE; }
 
-"MUESTRAME"                                             { return Parser::token::PRINT; }
+"+"                             { return Parser::token::MAS; }
+"-"                             { return Parser::token::MENOS; }
+"*"                             { return Parser::token::MULT; }
+"/"                             { return Parser::token::DIVISION; }
+
+"("                             { return Parser::token::ABRE_PAREN; }
+")"                             { return Parser::token::CIERRA_PAREN; }
+"["                             { return Parser::token::ABRE_CORCHETE; }
+"]"                             { return Parser::token::CIERRA_CORCHETE; }
+"{"                             { return Parser::token::ABRE_LLAVE; }
+"}"                             { return Parser::token::CIERRA_LLAVE; }
+"."                             { return Parser::token::PUNTO; }
+";"                             { return Parser::token::PUNTO_COMA; }
+","                             { return Parser::token::COMA; }
+":"                             { return Parser::token::DOS_PUNTOS; }
+
+
 .   { throw Parser::syntax_error (*loc, "token no reconocido: " + std::string(yytext)); }
 %%
 /*
@@ -95,30 +148,9 @@ make_NUMERO (const std::string &s, const Parser::location_type& loc)
 // En caso de que no quiera tener distincciones de tipos
 //{TEXTO}                                                 {   yylval->build<std::string>(yytext);
 //                                                            return Parser::token::IDENTIFICADOR; }
-"|__"                           { return token::LOGIC_CIERRA_CONTEXTO; }
-"¿("                            { return token::LOGIC_IF; }
-")?-->"                         { return token::LOGIC_THEN; }
-"|X--"                          { return token::LOGIC_ELSE; }
-"FOR"                           { return token::LOGIC_FOR; }
-"FROM"                          { return token::LOGIC_FROM; }
-"TO"                            { return token::LOGIC_TO; }
-"BY_STEP"                       { return token::LOGIC_STEP; }
-"REPEAT-->"                     { return token::LOGIC_DO_BUCLES; }
-"WHILE"                         { return token::LOGIC_WHILE; }
 */
 
 /*
 //"COMENTARIO"{TEXTO}[\n]       { return token::LOGIC_COMENTARIO; }
 
-"^"                             { return token::BOOL_AND; }
-"v"                             { return token::BOOL_OR; }
-"~"                             { return token::BOOL_NOT; }
-"=="                            { return token::BOOL_IGUAL; }
-"~="                            { return token::BOOL_DISTINTO; }
-">"                             { return token::BOOL_MAYOR; }
-">="                            { return token::BOOL_MAYORIGUAL; }
-"<"                             { return token::BOOL_MENOR; }
-"<="                            { return token::BOOL_MENORIGUAL; }
-"TRUE"                          { return token::BOOL_TRUE; }
-"FALSE"                         { return token::BOOL_FALSE; }
 */

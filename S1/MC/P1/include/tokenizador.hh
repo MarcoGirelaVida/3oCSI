@@ -16,7 +16,8 @@ namespace Interprete{
 class Interprete_Tokenizador : public yyFlexLexer{
 
 public:
-   Interprete_Tokenizador(std::istream *input) : yyFlexLexer(input)
+   Interprete_Tokenizador(std::istream *input)
+   :  yyFlexLexer(input)
    {};
    virtual ~Interprete_Tokenizador() {};
 
