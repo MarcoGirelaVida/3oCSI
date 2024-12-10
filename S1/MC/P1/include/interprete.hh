@@ -127,6 +127,7 @@ public:
         {
             throw runtime_error("Error: No se puede hacer más pops");
         }
+        tabla_simbolos_local.clear();
         return contexto_padre;
     }
 };

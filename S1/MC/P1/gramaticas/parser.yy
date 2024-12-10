@@ -1,7 +1,7 @@
 /*
 cosas de bison:
 - $$ el valor semantico de la expresión
-- $1, $2, ... los valores semánticos de los elementos de la expresión
+- $1, $2, ... los valores semánticos de los instruccions de la expresión
 - #define YYSTYPE es el tipo de los valores semánticos en general (no se si se puede personalizar a uno concreto por cada uno)
 - Si es un solo caracter se puede poner directamente en la gramática (ejemplo: '+'), sin tener un token asociado
 - Por default se guarda $$ = $1, por ejemplo cuando haces expr: NUM, se guarda el valor semántico de NUM en $$
@@ -41,6 +41,7 @@ cosas de bison:
     #include "interprete.hh"
     using namespace std;
     using Parser = Interprete::Interprete_Parser;
+    using Nodo = Interprete::Nodo_AST;
 
 #undef yylex
 #define yylex tokenizador.yylex
@@ -110,23 +111,43 @@ cosas de bison:
 //%token BOOL_AND BOOL_OR BOOL_NOT BOOL_IGUAL BOOL_DISTINTO BOOL_MAYOR BOOL_MAYORIGUAL BOOL_MENOR BOOL_MENORIGUAL BOOL_TRUE BOOL_FALSE
 //%token PALABRA TIPO OPERADOR ABRE_SECCION CIERRA_SECCION TERMINAL APERTURA_PROGRAMA TERMINAL_PROGRAMA
 
+// Realmente un contexto es como una lista de instruccions con variables y funciones
+// CONTEXTOS
+%type <Interprete::Contexto> programa_marco
+%nterm <Interprete::Contexto> instrucciones bloque
 
+// INTRUCCIONES
+%nterm <Nodo::Intruccion> instruccion instruccion_simple instruccion_compuesto
+// Simples
+%nterm <Nodo::Intruccion> asignacion return
+// Compuestas
+%nterm <Nodo::Intruccion> definicion_funcion condicional condicional_elseif bucle_for bucle_while
 
+// EXPRESIONES
+%nterm <Nodo::Expresion> expresion lista_ors lista_ands lista_not lista_comparaciones suma_resta comparacion producto_division_modulo operando
+%nterm <Nodo::Expresion> expresion_primaria expresion_atomica
+
+// MISCELANIA
+%nterm <Nodo::Argumentos> argumentos
+%nterm <Nodo::Parametros> parametros
 %printer { yyo << $$; } <*>; // Para que imprima los valores semánticos de los tokens
-%%
 
+%%
+// SIEMPRE REGLA MÁS ESPECÍFICA PRIMERO, MÁS GENERAL DESPUÉS
 %start programa_marco;
 
 // Un programa C es una serie de definiciones y declaraciones
 programa_marco:
-        elementos_programa "Fin del fichero"
+        instrucciones "Fin del fichero"
         | "Fin del fichero"
         ;
 
-elementos_programa:
-        elementos_programa elemento_programa "Salto de linea"
-        | elementos_programa "Salto de linea"
-        | elemento_programa "Salto de linea"
+instrucciones:
+        instrucciones instruccion "Salto de linea"
+        // para que se puedan poner tantos saltos de linea como se quiera entre intrucción e intrucción
+        | instrucciones "Salto de linea"
+        // casos base
+        | instruccion "Salto de linea"
         | "Salto de linea"
         /* para hacerlo igual que C habria que añadir una regla para 
         las declaraciones pero ya he dicho que eso se hace automatico 
@@ -138,26 +159,43 @@ elementos_programa:
         */
         ;
 
-elemento_programa: elemento_compuesto | elemento_simple;
+// IMPORTANTE: Expresión simple debe ir después de compuesta
+// y expresión debe ir después de la asignación en intrucción simple, porque
+// las intrucciones compuestas se componen de simples y asignación puede empezar por una expresion
+// y por tanto dar lugar a mal parsing, aceptando la regla más general cuando debería aceptar la más específica
+// También se puede quitar y que todo sea solo intrucicones compuestas
+instruccion: instruccion_compuesto | instruccion_simple;
 
-elemento_simple:
-        expresion
-        | asignacion
-        | return
-        ;
-    
-elemento_compuesto:
+// Son aquellas intrucciones que tienen "mini programas" (contexto/bloque) dentro
+instruccion_compuesto:
         definicion_funcion
         | condicional
+        //| definicion_clase / struct
         | bucle_for
+        //| try_catch
         | bucle_while
         ;
 
-//---ELEMENTOS SIMPLES---
+// Son realmente las intrucciones de las que se compone un bloque,
+// que a su vez es lo que compone las intrucciones compuestas
+instruccion_simple:
+        asignacion
+        | expresion
+        | return
+        //| import / include
+        //| PASA / ASSERT
+        //| PARA
+        //| CONTINUA
+        //| intruccion global  / intrucción no-local
+        ;
+
+//---INSTRUCCIONES SIMPLES---
 asignacion:
-        "Identificador" "->" expresion
+        expresion_primaria "->" expresion
         {
+            // verificar que haya operador de asignación para ambos operandos
         }
+        //| "Identificador" OPERADOR_ASIGNACION expresion
         | "Identificador" "->" error
         {
         }
@@ -171,6 +209,45 @@ return: "return" expresion
         }
         ;
 
+//---INSTRUCCIONES COMPUESTOS---
+
+bloque:
+        ABRE_CONTEXTO instrucciones CIERRA_CONTEXTO
+        | instruccion
+        ;
+
+// FUNCIONES
+definicion_funcion:
+        "Identificador_funcion" ABRE_PAREN parametros CIERRA_PAREN bloque
+        ;
+
+// CONDICIONALES
+condicional:
+        IF expresion THEN bloque condicional_elseif
+        | IF expresion THEN bloque ELSE bloque
+        | IF expresion THEN bloque
+        ;
+condicional_elseif:
+        ELSEIF expresion THEN bloque condicional_elseif
+        | ELSEIF expresion THEN bloque ELSE bloque
+        | ELSEIF expresion THEN bloque
+        ;
+
+// BUCLES
+bucle_for:
+        FOR expresion FROM expresion TO expresion STEP expresion DO_BUCLES bloque
+        | FOR expresion FROM expresion TO expresion DO_BUCLES bloque
+        | FROM expresion TO expresion STEP expresion DO_BUCLES bloque
+        | FROM expresion TO expresion DO_BUCLES bloque
+        | FOR expresion STEP expresion DO_BUCLES bloque
+        | FOR expresion DO_BUCLES bloque
+        ;
+
+bucle_while:
+        WHILE expresion DO_BUCLES bloque
+        ;
+
+// ---- EXPRESIONES ----
 expresion: lista_ors;
 
 lista_ors:
@@ -217,69 +294,41 @@ producto_division_modulo:
 operando:
         "+" operando
         | "-" operando
-        | llamada_funcion
+        | expresion_primaria
         ;
 
-llamada_funcion:
-        llamada_funcion "(" argumentos ")"
-        //| llamada_funcion "[" argumentos "]"
-        | variable
+expresion_primaria:
+        expresion_primaria "."  "Identificador"
+        | expresion_primaria "(" argumentos ")"
+        {
+            // comprobar que el operador este implementado para los operandos
+        }
+        | expresion_primaria "[" expresion "]"
+        {
+            // comporabar que el operador este implementado para los operandos
+        }
+        | expresion_atomica
         ;
 
-variable:
+expresion_atomica:
         "Identificador"
         | "True"
         | "False"
         | "string"
         | "Entero"
         | "Float"
-        ;
+        //| vector_literal / lista_literal ...
+        //| NULL
 
+// ---- MISCELANIA ----
 argumentos:
         argumentos "," expresion
         | expresion
         ;
-//---ELEMENTOS COMPUESTOS---
 
-bloque:
-        ABRE_CONTEXTO elementos_programa CIERRA_CONTEXTO
-        | elemento_programa
-        ;
-
-// FUNCIONES
-definicion_funcion:
-        "Identificador_funcion" ABRE_PAREN lista_parametros CIERRA_PAREN bloque
-        ;
-
-lista_parametros:
-        lista_parametros "," IDENTIFICADOR
+parametros:
+        parametros "," IDENTIFICADOR
         | IDENTIFICADOR
-        ;
-
-// CONDICIONALES
-condicional:
-        IF expresion THEN bloque condicional_elseif
-        | IF expresion THEN bloque ELSE bloque
-        | IF expresion THEN bloque
-        ;
-condicional_elseif:
-        ELSEIF expresion THEN bloque condicional_elseif
-        | ELSEIF expresion THEN bloque ELSE bloque
-        | ELSEIF expresion THEN bloque
-        ;
-
-// BUCLES
-bucle_for:
-        FOR expresion FROM expresion TO expresion STEP expresion DO_BUCLES bloque
-        | FOR expresion FROM expresion TO expresion DO_BUCLES bloque
-        | FROM expresion TO expresion STEP expresion DO_BUCLES bloque
-        | FROM expresion TO expresion DO_BUCLES bloque
-        | FOR expresion STEP expresion DO_BUCLES bloque
-        | FOR expresion DO_BUCLES bloque
-        ;
-
-bucle_while:
-        WHILE expresion DO_BUCLES bloque
         ;
 %%
 
